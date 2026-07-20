@@ -12,10 +12,22 @@ ActiveTimerModel _$ActiveTimerModelFromJson(Map<String, dynamic> json) =>
       startedAt: const TimestampConverter().fromJson(
         json['startedAt'] as Timestamp?,
       ),
+      targetType: $enumDecodeNullable(
+        _$TimerTargetTypeEnumEnumMap,
+        json['targetType'],
+      ),
+      listId: json['listId'] as String?,
     );
 
 Map<String, dynamic> _$ActiveTimerModelToJson(ActiveTimerModel instance) =>
     <String, dynamic>{
       'targetId': instance.targetId,
       'startedAt': ?const TimestampConverter().toJson(instance.startedAt),
+      'targetType': ?_$TimerTargetTypeEnumEnumMap[instance.targetType],
+      'listId': ?instance.listId,
     };
+
+const _$TimerTargetTypeEnumEnumMap = {
+  TimerTargetTypeEnum.task: 'task',
+  TimerTargetTypeEnum.appointment: 'appointment',
+};

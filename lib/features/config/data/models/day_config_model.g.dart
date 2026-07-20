@@ -10,9 +10,11 @@ DayConfigModel _$DayConfigModelFromJson(Map<String, dynamic> json) =>
     DayConfigModel(
       availableMinutesPerDay:
           (json['availableMinutesPerDay'] as num?)?.toInt() ?? 480,
+      onboarded: json['onboarded'] as bool? ?? false,
     );
 
 Map<String, dynamic> _$DayConfigModelToJson(DayConfigModel instance) =>
     <String, dynamic>{
       'availableMinutesPerDay': instance.availableMinutesPerDay,
+      'onboarded': instance.onboarded,
     };
