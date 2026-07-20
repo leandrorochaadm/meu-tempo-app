@@ -44,6 +44,10 @@ import 'package:meu_tempo/features/task/data/repositories/task_repository_impl.d
     as _i1011;
 import 'package:meu_tempo/features/task/domain/repositories/task_repository.dart'
     as _i521;
+import 'package:meu_tempo/features/task/domain/usecases/add_subtask_use_case.dart'
+    as _i650;
+import 'package:meu_tempo/features/task/domain/usecases/build_task_tree_use_case.dart'
+    as _i27;
 import 'package:meu_tempo/features/task/domain/usecases/create_task_use_case.dart'
     as _i658;
 import 'package:meu_tempo/features/task/domain/usecases/watch_tasks_use_case.dart'
@@ -61,6 +65,9 @@ extension GetItInjectableX on _i174.GetIt {
     final firebaseModule = _$FirebaseModule();
     gh.lazySingleton<_i59.FirebaseAuth>(() => firebaseModule.firebaseAuth);
     gh.lazySingleton<_i974.FirebaseFirestore>(() => firebaseModule.firestore);
+    gh.lazySingleton<_i27.BuildTaskTreeUseCase>(
+      () => const _i27.BuildTaskTreeUseCase(),
+    );
     gh.lazySingleton<_i813.TaskListRemoteDataSource>(
       () => _i813.TaskListRemoteDataSourceImpl(
         gh<_i974.FirebaseFirestore>(),
@@ -100,6 +107,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i1046.WatchAuthStateUseCase>(
       () => _i1046.WatchAuthStateUseCase(gh<_i224.AuthRepository>()),
     );
+    gh.lazySingleton<_i650.AddSubtaskUseCase>(
+      () => _i650.AddSubtaskUseCase(gh<_i521.TaskRepository>()),
+    );
     gh.lazySingleton<_i658.CreateTaskUseCase>(
       () => _i658.CreateTaskUseCase(gh<_i521.TaskRepository>()),
     );
@@ -118,6 +128,8 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i1035.WatchTasksUseCase>(),
         gh<_i658.CreateTaskUseCase>(),
         gh<_i655.EnsureInboxExistsUseCase>(),
+        gh<_i650.AddSubtaskUseCase>(),
+        gh<_i27.BuildTaskTreeUseCase>(),
       ),
     );
     return this;

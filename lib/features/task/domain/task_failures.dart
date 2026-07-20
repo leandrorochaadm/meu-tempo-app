@@ -9,3 +9,8 @@ class EmptyTitleFailure extends Failure {
 class TaskNotFoundFailure extends Failure {
   const TaskNotFoundFailure();
 }
+
+/// Excede os 3 níveis (mãe → filha → neta): neta não pode ter filhas.
+class MaxLevelExceededFailure extends Failure {
+  const MaxLevelExceededFailure();
+}

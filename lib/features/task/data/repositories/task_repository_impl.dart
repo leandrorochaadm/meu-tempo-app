@@ -40,4 +40,18 @@ class TaskRepositoryImpl implements TaskRepository {
       return Left(e.toFailure());
     }
   }
+
+  @override
+  Future<Either<Failure, Unit>> setHasChildren(
+    String taskId,
+    bool value,
+  ) async {
+    try {
+      await _dataSource.setHasChildren(taskId, value);
+      return const Right(unit);
+    } on AppException catch (e, s) {
+      AppLogger.logError('setHasChildren falhou', error: e, stackTrace: s);
+      return Left(e.toFailure());
+    }
+  }
 }

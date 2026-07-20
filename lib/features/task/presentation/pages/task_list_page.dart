@@ -5,11 +5,12 @@ import '../../../../core/theme/theme_context_extensions.dart';
 import '../../../../core/ui/app_empty_state.dart';
 import '../../../../core/ui/app_list_skeleton.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
+import '../../domain/entities/task_node.dart';
 import '../bloc/task_list_bloc.dart';
 import '../widgets/quick_add_task_widget.dart';
-import '../widgets/task_card_widget.dart';
+import '../widgets/task_node_tile.dart';
 
-/// Listagem de tarefas + criação rápida (barra no topo).
+/// Listagem hierárquica de tarefas + criação rápida (barra no topo).
 class TaskListPage extends StatefulWidget {
   const TaskListPage({super.key});
 
@@ -19,6 +20,7 @@ class TaskListPage extends StatefulWidget {
 
 class _TaskListPageState extends State<TaskListPage> {
   bool _quickAddVisible = false;
+  TaskNode? _subtaskParent;
 
   @override
   void initState() {
@@ -26,8 +28,47 @@ class _TaskListPageState extends State<TaskListPage> {
     context.read<TaskListBloc>().add(const TaskListStarted());
   }
 
+  void _startSubtask(TaskNode parent) {
+    setState(() {
+      _subtaskParent = parent;
+      _quickAddVisible = true;
+    });
+  }
+
+  void _submit(String title) {
+    final bloc = context.read<TaskListBloc>();
+    final parent = _subtaskParent;
+    if (parent != null) {
+      bloc.add(SubtaskRequested(
+        parentId: parent.task.id,
+        parentLevel: parent.level,
+        listId: parent.task.listId,
+        title: title,
+      ));
+    } else {
+      bloc.add(TaskCreated(title));
+    }
+  }
+
+  /// Achata a árvore em ordem (pré-ordem) preservando a indentação por nível.
+  List<TaskNode> _flatten(List<TaskNode> roots) {
+    final out = <TaskNode>[];
+    void visit(TaskNode n) {
+      out.add(n);
+      for (final c in n.children) {
+        visit(c);
+      }
+    }
+
+    for (final r in roots) {
+      visit(r);
+    }
+    return out;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final parent = _subtaskParent;
     return Scaffold(
       appBar: AppBar(
         title: const Text('Meu Tempo'),
@@ -44,11 +85,12 @@ class _TaskListPageState extends State<TaskListPage> {
         top: false,
         child: Column(
           children: [
-            // Input SEMPRE no topo — o teclado (que sobe de baixo) não o cobre.
             if (_quickAddVisible)
               QuickAddTaskWidget(
-                onSubmit: (title) =>
-                    context.read<TaskListBloc>().add(TaskCreated(title)),
+                hint: parent == null
+                    ? 'Nova tarefa…'
+                    : 'Subtarefa de "${parent.task.title}"…',
+                onSubmit: _submit,
               ),
             Expanded(
               child: BlocConsumer<TaskListBloc, TaskListState>(
@@ -68,15 +110,10 @@ class _TaskListPageState extends State<TaskListPage> {
                         title: 'Sua lista está vazia',
                         message: 'Toque em + para criar sua primeira tarefa.',
                       ),
-                    TaskListLoaded(:final tasks) => ListView.separated(
-                        padding: EdgeInsets.all(context.space.lg),
-                        itemCount: tasks.length,
-                        separatorBuilder: (_, _) =>
-                            SizedBox(height: context.space.md),
-                        itemBuilder: (context, i) =>
-                            TaskCardWidget(task: tasks[i]),
+                    TaskListLoaded(:final roots) => _TaskTree(
+                        nodes: _flatten(roots),
+                        onAddSubtask: _startSubtask,
                       ),
-                    // Erro é mostrado via snackbar; mantém a última lista/vazio.
                     TaskListError() => const AppEmptyState(
                         icon: Icons.checklist_rounded,
                         title: 'Sua lista está vazia',
@@ -90,9 +127,30 @@ class _TaskListPageState extends State<TaskListPage> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => setState(() => _quickAddVisible = !_quickAddVisible),
+        onPressed: () => setState(() {
+          _quickAddVisible = !_quickAddVisible;
+          _subtaskParent = null;
+        }),
         child: Icon(_quickAddVisible ? Icons.close_rounded : Icons.add_rounded),
       ),
+    );
+  }
+}
+
+class _TaskTree extends StatelessWidget {
+  const _TaskTree({required this.nodes, required this.onAddSubtask});
+
+  final List<TaskNode> nodes;
+  final void Function(TaskNode parent) onAddSubtask;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.separated(
+      padding: EdgeInsets.all(context.space.lg),
+      itemCount: nodes.length,
+      separatorBuilder: (_, _) => SizedBox(height: context.space.sm),
+      itemBuilder: (context, i) =>
+          TaskNodeTile(node: nodes[i], onAddSubtask: onAddSubtask),
     );
   }
 }

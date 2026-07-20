@@ -10,4 +10,8 @@ abstract class TaskRepository {
 
   /// Cria uma tarefa (o `id` é gerado pelo Firestore) e devolve com o `id`.
   Future<Either<Failure, TaskEntity>> create(TaskEntity task);
+
+  /// Atualiza o flag `hasChildren` de uma tarefa (mantido pela camada data
+  /// ao criar/remover filhas — base do getter `isLeaf`).
+  Future<Either<Failure, Unit>> setHasChildren(String taskId, bool value);
 }

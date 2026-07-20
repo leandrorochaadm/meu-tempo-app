@@ -6,10 +6,17 @@ import '../../../../core/theme/theme_context_extensions.dart';
 /// jamais cobre o campo). Autofocus + ação "done" cria a tarefa e **reabre o
 /// campo focado** para lançar várias em sequência (H12).
 class QuickAddTaskWidget extends StatefulWidget {
-  const QuickAddTaskWidget({super.key, required this.onSubmit});
+  const QuickAddTaskWidget({
+    super.key,
+    required this.onSubmit,
+    this.hint = 'Nova tarefa…',
+  });
 
   /// Chamado com o título quando o usuário confirma (ação "done").
   final void Function(String title) onSubmit;
+
+  /// Texto do placeholder (muda ao adicionar subtarefa).
+  final String hint;
 
   @override
   State<QuickAddTaskWidget> createState() => _QuickAddTaskWidgetState();
@@ -52,7 +59,7 @@ class _QuickAddTaskWidgetState extends State<QuickAddTaskWidget> {
               onSubmitted: (_) => _submit(),
               style: context.text.bodyMedium,
               decoration: InputDecoration(
-                hintText: 'Nova tarefa…',
+                hintText: widget.hint,
                 hintStyle: context.text.bodySmall,
                 filled: true,
                 fillColor: colors.surface,

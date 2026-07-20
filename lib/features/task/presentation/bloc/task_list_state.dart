@@ -12,11 +12,13 @@ class TaskListLoading extends TaskListState {
 }
 
 class TaskListLoaded extends TaskListState {
-  const TaskListLoaded(this.tasks);
-  final List<TaskEntity> tasks;
+  const TaskListLoaded(this.roots);
+
+  /// Árvore de tarefas (raízes = mães), com agregação pronta nos [TaskNode].
+  final List<TaskNode> roots;
 
   @override
-  List<Object?> get props => [tasks];
+  List<Object?> get props => [roots];
 }
 
 class TaskListEmpty extends TaskListState {
