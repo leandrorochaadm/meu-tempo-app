@@ -18,6 +18,8 @@ import 'package:meu_tempo/features/task/domain/usecases/edit_task_use_case.dart'
 import 'package:meu_tempo/features/task/domain/usecases/get_prioritized_leaves_use_case.dart';
 import 'package:meu_tempo/features/task/domain/usecases/move_task_use_case.dart';
 import 'package:meu_tempo/features/task/domain/usecases/register_manual_time_use_case.dart';
+import 'package:meu_tempo/features/task/domain/usecases/restore_tasks_use_case.dart';
+import 'package:meu_tempo/features/task/domain/usecases/seed_first_access_use_case.dart';
 import 'package:meu_tempo/features/task/domain/usecases/start_timer_use_case.dart';
 import 'package:meu_tempo/features/task/domain/usecases/stop_timer_use_case.dart';
 import 'package:meu_tempo/features/task/domain/usecases/watch_active_timer_use_case.dart';
@@ -51,7 +53,15 @@ class _MockMove extends Mock implements MoveTaskUseCase {}
 
 class _MockWatchLists extends Mock implements WatchListsUseCase {}
 
+class _MockSeedFirstAccess extends Mock implements SeedFirstAccessUseCase {}
+
+class _MockRestore extends Mock implements RestoreTasksUseCase {}
+
 class _FakeNoParams extends Fake implements NoParams {}
+
+class _FakeSeedParams extends Fake implements SeedFirstAccessParams {}
+
+class _FakeRestoreParams extends Fake implements RestoreTasksParams {}
 
 class _FakeCreateParams extends Fake implements CreateTaskParams {}
 
@@ -85,6 +95,8 @@ void main() {
   late _MockEdit editTask;
   late _MockMove moveTask;
   late _MockWatchLists watchLists;
+  late _MockSeedFirstAccess seedFirstAccess;
+  late _MockRestore restoreTasks;
   const buildTree = BuildTaskTreeUseCase();
 
   const inbox = TaskListEntity(id: 'inbox', name: 'Entrada', isDefault: true);
@@ -106,6 +118,8 @@ void main() {
     registerFallbackValue(_FakeDeleteParams());
     registerFallbackValue(_FakeEditParams());
     registerFallbackValue(_FakeMoveParams());
+    registerFallbackValue(_FakeSeedParams());
+    registerFallbackValue(_FakeRestoreParams());
   });
 
   setUp(() {
@@ -122,7 +136,11 @@ void main() {
     editTask = _MockEdit();
     moveTask = _MockMove();
     watchLists = _MockWatchLists();
+    seedFirstAccess = _MockSeedFirstAccess();
+    restoreTasks = _MockRestore();
     when(() => ensureInbox(any())).thenAnswer((_) async => const Right(inbox));
+    when(() => seedFirstAccess(any()))
+        .thenAnswer((_) async => const Right(unit));
     when(() => watchLists(any())).thenAnswer(
       (_) => const Stream<Either<Failure, List<TaskListEntity>>>.empty(),
     );
@@ -149,6 +167,8 @@ void main() {
         editTask,
         moveTask,
         watchLists,
+        seedFirstAccess,
+        restoreTasks,
       );
 
   blocTest<TaskListBloc, TaskListState>(
@@ -313,7 +333,8 @@ void main() {
     build: () {
       when(() => watchTasks(any()))
           .thenAnswer((_) => Stream.value(const Right(<TaskEntity>[])));
-      when(() => deleteTask(any())).thenAnswer((_) async => const Right(unit));
+      when(() => deleteTask(any()))
+          .thenAnswer((_) async => Right([task]));
       return build();
     },
     act: (bloc) async {
@@ -325,6 +346,30 @@ void main() {
       final p = verify(() => deleteTask(captureAny())).captured.single
           as DeleteTaskParams;
       expect(p.taskId, 't1');
+    },
+  );
+
+  blocTest<TaskListBloc, TaskListState>(
+    'TaskDeletionUndone restaura a subárvore excluída',
+    build: () {
+      when(() => watchTasks(any()))
+          .thenAnswer((_) => Stream.value(const Right(<TaskEntity>[])));
+      when(() => deleteTask(any())).thenAnswer((_) async => Right([task]));
+      when(() => restoreTasks(any()))
+          .thenAnswer((_) async => const Right(unit));
+      return build();
+    },
+    act: (bloc) async {
+      bloc.add(const TaskListStarted());
+      await Future<void>.delayed(Duration.zero);
+      bloc.add(const DeleteRequested('t1'));
+      await Future<void>.delayed(Duration.zero);
+      bloc.add(const TaskDeletionUndone());
+    },
+    verify: (_) {
+      final p = verify(() => restoreTasks(captureAny())).captured.single
+          as RestoreTasksParams;
+      expect(p.tasks.single.id, 't1');
     },
   );
 

@@ -15,6 +15,7 @@ import '../../domain/entities/importance_enum.dart';
 import '../../domain/entities/prioritized_leaf.dart';
 import '../../domain/entities/task_entity.dart';
 import '../../domain/entities/task_node.dart';
+import '../../domain/entities/timer_target_type_enum.dart';
 import '../../domain/task_failures.dart';
 import '../../domain/usecases/add_subtask_use_case.dart';
 import '../../domain/usecases/build_task_tree_use_case.dart';
@@ -25,6 +26,8 @@ import '../../domain/usecases/edit_task_use_case.dart';
 import '../../domain/usecases/get_prioritized_leaves_use_case.dart';
 import '../../domain/usecases/move_task_use_case.dart';
 import '../../domain/usecases/register_manual_time_use_case.dart';
+import '../../domain/usecases/restore_tasks_use_case.dart';
+import '../../domain/usecases/seed_first_access_use_case.dart';
 import '../../domain/usecases/start_timer_use_case.dart';
 import '../../domain/usecases/stop_timer_use_case.dart';
 import '../../domain/usecases/watch_active_timer_use_case.dart';
@@ -53,6 +56,8 @@ class TaskListBloc extends Bloc<TaskListEvent, TaskListState> {
     this._editTask,
     this._moveTask,
     this._watchLists,
+    this._seedFirstAccess,
+    this._restoreTasks,
   ) : super(const TaskListLoading()) {
     on<TaskListStarted>(_onStarted);
     on<TaskListUpdated>(_onUpdated);
@@ -65,6 +70,7 @@ class TaskListBloc extends Bloc<TaskListEvent, TaskListState> {
     on<ManualTimeRequested>(_onManualTime);
     on<CompleteToggled>(_onCompleteToggled);
     on<DeleteRequested>(_onDeleteRequested);
+    on<TaskDeletionUndone>(_onDeletionUndone);
     on<EditRequested>(_onEditRequested);
     on<MoveRequested>(_onMoveRequested);
   }
@@ -84,6 +90,8 @@ class TaskListBloc extends Bloc<TaskListEvent, TaskListState> {
   final EditTaskUseCase _editTask;
   final MoveTaskUseCase _moveTask;
   final WatchListsUseCase _watchLists;
+  final SeedFirstAccessUseCase _seedFirstAccess;
+  final RestoreTasksUseCase _restoreTasks;
 
   StreamSubscription<Either<Failure, List<TaskEntity>>>? _tasksSub;
   StreamSubscription<Either<Failure, ActiveTimerEntity?>>? _timerSub;
@@ -93,6 +101,9 @@ class TaskListBloc extends Bloc<TaskListEvent, TaskListState> {
   List<TaskEntity> _latestTasks = const [];
   List<TaskListEntity> _lists = const [];
   String? _activeTaskId;
+
+  /// Última subárvore excluída, guardada para o "Desfazer" (H13).
+  List<TaskEntity> _lastDeleted = const [];
 
   Future<void> _onStarted(
     TaskListStarted event,
@@ -106,6 +117,12 @@ class TaskListBloc extends Bloc<TaskListEvent, TaskListState> {
       return;
     }
     _inboxListId = inbox.getRight().toNullable()!.id;
+
+    // Primeiro acesso: semeia uma tarefa-exemplo (idempotente).
+    await _seedFirstAccess(SeedFirstAccessParams(
+      today: DateTime.now(),
+      inboxListId: _inboxListId!,
+    ));
 
     await _tasksSub?.cancel();
     _tasksSub = _watchTasks(const NoParams())
@@ -198,11 +215,21 @@ class TaskListBloc extends Bloc<TaskListEvent, TaskListState> {
     final result = await _startTimer(
       StartTimerParams(
         targetId: event.taskId,
+        targetType: TimerTargetTypeEnum.task,
         targetIsLeaf: event.isLeaf,
+        listId: _listIdOf(event.taskId),
         now: DateTime.now(),
       ),
     );
     _handleWrite(result, emit);
+  }
+
+  /// Descobre a lista de uma folha já carregada (lookup, não regra de negócio).
+  String _listIdOf(String taskId) {
+    for (final t in _latestTasks) {
+      if (t.id == taskId) return t.listId;
+    }
+    return _inboxListId ?? '';
   }
 
   Future<void> _onTimerStop(
@@ -221,7 +248,9 @@ class TaskListBloc extends Bloc<TaskListEvent, TaskListState> {
       RegisterManualTimeParams(
         targetId: event.taskId,
         targetIsLeaf: event.isLeaf,
+        listId: _listIdOf(event.taskId),
         minutes: event.minutes,
+        now: DateTime.now(),
       ),
     );
     _handleWrite(result, emit);
@@ -242,6 +271,20 @@ class TaskListBloc extends Bloc<TaskListEvent, TaskListState> {
     Emitter<TaskListState> emit,
   ) async {
     final result = await _deleteTask(DeleteTaskParams(taskId: event.taskId));
+    result.match(
+      (failure) => emit(TaskListError(_mapFailure(failure))),
+      (removed) => _lastDeleted = removed,
+    );
+  }
+
+  Future<void> _onDeletionUndone(
+    TaskDeletionUndone event,
+    Emitter<TaskListState> emit,
+  ) async {
+    final removed = _lastDeleted;
+    if (removed.isEmpty) return;
+    _lastDeleted = const [];
+    final result = await _restoreTasks(RestoreTasksParams(tasks: removed));
     _handleWrite(result, emit);
   }
 

@@ -36,6 +36,19 @@ class _MigrationPageState extends State<MigrationPage> {
       ));
   }
 
+  void _discard(BuildContext context, TaskEntity task) {
+    final bloc = context.read<MigrationBloc>()..add(TaskDiscarded(task.id));
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(
+        content: Text('"${task.title}" descartada'),
+        action: SnackBarAction(
+          label: 'Desfazer',
+          onPressed: () => bloc.add(const TaskDiscardUndone()),
+        ),
+      ));
+  }
+
   @override
   Widget build(BuildContext context) {
     final today = DateTime.now();
@@ -67,9 +80,7 @@ class _MigrationPageState extends State<MigrationPage> {
                         task: pending[i],
                         today: today,
                         onMigrate: () => _migrate(context, pending[i]),
-                        onDiscard: () => context
-                            .read<MigrationBloc>()
-                            .add(TaskDiscarded(pending[i].id)),
+                        onDiscard: () => _discard(context, pending[i]),
                       ),
                     ),
             };

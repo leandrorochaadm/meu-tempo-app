@@ -9,6 +9,7 @@ import 'package:meu_tempo/features/migration/presentation/bloc/migration_bloc.da
 import 'package:meu_tempo/features/task/domain/entities/task_entity.dart';
 import 'package:meu_tempo/features/task/domain/usecases/delete_task_use_case.dart';
 import 'package:meu_tempo/features/task/domain/usecases/edit_task_use_case.dart';
+import 'package:meu_tempo/features/task/domain/usecases/restore_tasks_use_case.dart';
 import 'package:meu_tempo/features/task/domain/usecases/watch_tasks_use_case.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -20,6 +21,8 @@ class _MockDelete extends Mock implements DeleteTaskUseCase {}
 
 class _MockEdit extends Mock implements EditTaskUseCase {}
 
+class _MockRestore extends Mock implements RestoreTasksUseCase {}
+
 class _FakeNoParams extends Fake implements NoParams {}
 
 class _FakeMigrateParams extends Fake implements MigrateTaskParams {}
@@ -28,11 +31,14 @@ class _FakeDeleteParams extends Fake implements DeleteTaskParams {}
 
 class _FakeEditParams extends Fake implements EditTaskParams {}
 
+class _FakeRestoreParams extends Fake implements RestoreTasksParams {}
+
 void main() {
   late _MockWatchTasks watchTasks;
   late _MockMigrate migrate;
   late _MockDelete deleteTask;
   late _MockEdit editTask;
+  late _MockRestore restoreTasks;
   const getPending = GetPendingMigrationsUseCase();
 
   final overdue = TaskEntity(
@@ -48,6 +54,7 @@ void main() {
     registerFallbackValue(_FakeMigrateParams());
     registerFallbackValue(_FakeDeleteParams());
     registerFallbackValue(_FakeEditParams());
+    registerFallbackValue(_FakeRestoreParams());
   });
 
   setUp(() {
@@ -55,10 +62,17 @@ void main() {
     migrate = _MockMigrate();
     deleteTask = _MockDelete();
     editTask = _MockEdit();
+    restoreTasks = _MockRestore();
   });
 
-  MigrationBloc build() =>
-      MigrationBloc(watchTasks, getPending, migrate, deleteTask, editTask);
+  MigrationBloc build() => MigrationBloc(
+        watchTasks,
+        getPending,
+        migrate,
+        deleteTask,
+        editTask,
+        restoreTasks,
+      );
 
   blocTest<MigrationBloc, MigrationState>(
     'started emite Loaded com as pendências',
@@ -134,7 +148,8 @@ void main() {
     build: () {
       when(() => watchTasks(any()))
           .thenAnswer((_) => Stream.value(Right([overdue])));
-      when(() => deleteTask(any())).thenAnswer((_) async => const Right(unit));
+      when(() => deleteTask(any()))
+          .thenAnswer((_) async => Right([overdue]));
       return build();
     },
     act: (bloc) async {
@@ -146,6 +161,31 @@ void main() {
       final p = verify(() => deleteTask(captureAny())).captured.single
           as DeleteTaskParams;
       expect(p.taskId, 't1');
+    },
+  );
+
+  blocTest<MigrationBloc, MigrationState>(
+    'TaskDiscardUndone restaura a subárvore descartada',
+    build: () {
+      when(() => watchTasks(any()))
+          .thenAnswer((_) => Stream.value(Right([overdue])));
+      when(() => deleteTask(any()))
+          .thenAnswer((_) async => Right([overdue]));
+      when(() => restoreTasks(any()))
+          .thenAnswer((_) async => const Right(unit));
+      return build();
+    },
+    act: (bloc) async {
+      bloc.add(const MigrationStarted());
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+      bloc.add(const TaskDiscarded('t1'));
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+      bloc.add(const TaskDiscardUndone());
+    },
+    verify: (_) {
+      final p = verify(() => restoreTasks(captureAny())).captured.single
+          as RestoreTasksParams;
+      expect(p.tasks.single.id, 't1');
     },
   );
 }
