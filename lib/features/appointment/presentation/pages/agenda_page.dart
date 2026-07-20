@@ -63,7 +63,12 @@ class _AgendaPageState extends State<AgendaPage> {
                   title: 'Não foi possível carregar',
                   message: 'Tente novamente em instantes.',
                 ),
-              AgendaLoaded(:final appointments, :final fit) => Column(
+              AgendaLoaded(
+                :final appointments,
+                :final fit,
+                :final activeAppointmentId,
+              ) =>
+                Column(
                   children: [
                     _FitBanner(fit: fit),
                     Expanded(
@@ -80,6 +85,15 @@ class _AgendaPageState extends State<AgendaPage> {
                                   SizedBox(height: context.space.sm),
                               itemBuilder: (context, i) => _AppointmentTile(
                                 appointment: appointments[i],
+                                isActive:
+                                    appointments[i].id == activeAppointmentId,
+                                onToggleTimer: (start) =>
+                                    context.read<AgendaBloc>().add(
+                                          start
+                                              ? AppointmentTimerStarted(
+                                                  appointments[i].id)
+                                              : const AppointmentTimerStopped(),
+                                        ),
                                 onDelete: () => context.read<AgendaBloc>().add(
                                     AppointmentDeleted(appointments[i].id)),
                               ),
@@ -139,14 +153,23 @@ class _FitBanner extends StatelessWidget {
 }
 
 class _AppointmentTile extends StatelessWidget {
-  const _AppointmentTile({required this.appointment, required this.onDelete});
+  const _AppointmentTile({
+    required this.appointment,
+    required this.isActive,
+    required this.onToggleTimer,
+    required this.onDelete,
+  });
 
   final AppointmentEntity appointment;
+  final bool isActive;
+  final void Function(bool start) onToggleTimer;
   final VoidCallback onDelete;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final accent = isActive ? colors.timerActive : colors.info;
+    final spent = appointment.spentMinutes;
     return Container(
       padding: EdgeInsets.symmetric(
         horizontal: context.space.lg,
@@ -155,12 +178,12 @@ class _AppointmentTile extends StatelessWidget {
       decoration: BoxDecoration(
         color: colors.surface,
         borderRadius: context.radius.lgRadius,
-        border: Border(left: BorderSide(color: colors.info, width: 3)),
+        border: Border(left: BorderSide(color: accent, width: 3)),
       ),
       child: Row(
         children: [
           // Ícone próprio de compromisso (distinto do de tarefa).
-          Icon(Icons.event_rounded, color: colors.info, size: 22),
+          Icon(Icons.event_rounded, color: accent, size: 22),
           SizedBox(width: context.space.md),
           Expanded(
             child: Column(
@@ -171,11 +194,22 @@ class _AppointmentTile extends StatelessWidget {
                 Text(
                   '${TimeFormatter.clock(appointment.startMinute)}'
                   '–${TimeFormatter.clock(appointment.endMinute)}'
-                  ' · ${DurationFormatter.hm(appointment.durationMinutes)}',
+                  ' · ${DurationFormatter.hm(appointment.durationMinutes)}'
+                  '${spent > 0 ? ' · real ${DurationFormatter.hm(spent)}' : ''}',
                   style: context.text.labelSmall,
                 ),
               ],
             ),
+          ),
+          IconButton(
+            onPressed: () => onToggleTimer(!isActive),
+            icon: Icon(
+              isActive
+                  ? Icons.stop_circle_rounded
+                  : Icons.play_circle_rounded,
+              color: isActive ? colors.timerActive : colors.primary,
+            ),
+            tooltip: isActive ? 'Parar cronômetro' : 'Iniciar cronômetro',
           ),
           IconButton(
             onPressed: onDelete,

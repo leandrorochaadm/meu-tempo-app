@@ -56,4 +56,19 @@ class AppointmentRepositoryImpl implements AppointmentRepository {
       return Left(e.toFailure());
     }
   }
+
+  @override
+  Future<Either<Failure, Unit>> addSpentMinutes(
+    String appointmentId,
+    int minutes,
+  ) async {
+    try {
+      await _dataSource.addSpentMinutes(appointmentId, minutes);
+      return const Right(unit);
+    } on AppException catch (e, s) {
+      AppLogger.logError('addSpentMinutes appointment falhou',
+          error: e, stackTrace: s);
+      return Left(e.toFailure());
+    }
+  }
 }

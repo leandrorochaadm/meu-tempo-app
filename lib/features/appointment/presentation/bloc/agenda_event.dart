@@ -57,3 +57,23 @@ class AppointmentDeleted extends AgendaEvent {
   @override
   List<Object?> get props => [appointmentId];
 }
+
+class AgendaActiveTimerUpdated extends AgendaEvent {
+  const AgendaActiveTimerUpdated(this.result);
+  final Either<Failure, ActiveTimerEntity?> result;
+
+  @override
+  List<Object?> get props => [result];
+}
+
+class AppointmentTimerStarted extends AgendaEvent {
+  const AppointmentTimerStarted(this.appointmentId);
+  final String appointmentId;
+
+  @override
+  List<Object?> get props => [appointmentId];
+}
+
+class AppointmentTimerStopped extends AgendaEvent {
+  const AppointmentTimerStopped();
+}

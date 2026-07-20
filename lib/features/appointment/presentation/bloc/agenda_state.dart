@@ -12,13 +12,20 @@ class AgendaLoading extends AgendaState {
 }
 
 class AgendaLoaded extends AgendaState {
-  const AgendaLoaded({required this.appointments, required this.fit});
+  const AgendaLoaded({
+    required this.appointments,
+    required this.fit,
+    this.activeAppointmentId,
+  });
 
   final List<AppointmentEntity> appointments;
   final DayFit fit;
 
+  /// Compromisso com cronômetro em andamento (`null` quando nenhum).
+  final String? activeAppointmentId;
+
   @override
-  List<Object?> get props => [appointments, fit];
+  List<Object?> get props => [appointments, fit, activeAppointmentId];
 }
 
 class AgendaError extends AgendaState {

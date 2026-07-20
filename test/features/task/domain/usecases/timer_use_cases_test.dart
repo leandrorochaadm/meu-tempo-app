@@ -1,8 +1,12 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:meu_tempo/core/error/failures.dart';
+import 'package:meu_tempo/features/appointment/domain/repositories/appointment_repository.dart';
 import 'package:meu_tempo/features/task/domain/entities/active_timer_entity.dart';
+import 'package:meu_tempo/features/task/domain/entities/time_entry_entity.dart';
+import 'package:meu_tempo/features/task/domain/entities/timer_target_type_enum.dart';
 import 'package:meu_tempo/features/task/domain/repositories/task_repository.dart';
+import 'package:meu_tempo/features/task/domain/repositories/time_entry_repository.dart';
 import 'package:meu_tempo/features/task/domain/repositories/timer_repository.dart';
 import 'package:meu_tempo/features/task/domain/task_failures.dart';
 import 'package:meu_tempo/features/task/domain/usecases/register_manual_time_use_case.dart';
@@ -14,48 +18,131 @@ class _MockTimerRepo extends Mock implements TimerRepository {}
 
 class _MockTaskRepo extends Mock implements TaskRepository {}
 
+class _MockAppointmentRepo extends Mock implements AppointmentRepository {}
+
+class _MockTimeEntryRepo extends Mock implements TimeEntryRepository {}
+
 class _FakeActiveTimer extends Fake implements ActiveTimerEntity {}
+
+class _FakeTimeEntry extends Fake implements TimeEntryEntity {}
 
 void main() {
   late _MockTimerRepo timerRepo;
   late _MockTaskRepo taskRepo;
+  late _MockAppointmentRepo apptRepo;
+  late _MockTimeEntryRepo entryRepo;
   final now = DateTime(2026, 7, 20, 10, 30);
 
-  setUpAll(() => registerFallbackValue(_FakeActiveTimer()));
+  setUpAll(() {
+    registerFallbackValue(_FakeActiveTimer());
+    registerFallbackValue(_FakeTimeEntry());
+  });
 
   setUp(() {
     timerRepo = _MockTimerRepo();
     taskRepo = _MockTaskRepo();
+    apptRepo = _MockAppointmentRepo();
+    entryRepo = _MockTimeEntryRepo();
+    when(() => taskRepo.addSpentMinutes(any(), any()))
+        .thenAnswer((_) async => const Right(unit));
+    when(() => apptRepo.addSpentMinutes(any(), any()))
+        .thenAnswer((_) async => const Right(unit));
+    when(() => entryRepo.add(any())).thenAnswer((_) async => const Right(unit));
+    when(() => timerRepo.setActive(any()))
+        .thenAnswer((_) async => const Right(unit));
+    when(() => timerRepo.clear()).thenAnswer((_) async => const Right(unit));
   });
 
+  StartTimerUseCase startUseCase() =>
+      StartTimerUseCase(timerRepo, taskRepo, apptRepo, entryRepo);
+  StopTimerUseCase stopUseCase() =>
+      StopTimerUseCase(timerRepo, taskRepo, apptRepo, entryRepo);
+  RegisterManualTimeUseCase manualUseCase() =>
+      RegisterManualTimeUseCase(taskRepo, entryRepo);
+
   group('StartTimerUseCase', () {
-    test('recusa alvo que não é folha', () async {
-      final result = await StartTimerUseCase(timerRepo, taskRepo)(
-        StartTimerParams(targetId: 't1', targetIsLeaf: false, now: now),
+    test('recusa tarefa que não é folha', () async {
+      final result = await startUseCase()(
+        StartTimerParams(
+          targetId: 't1',
+          targetType: TimerTargetTypeEnum.task,
+          targetIsLeaf: false,
+          listId: 'l1',
+          now: now,
+        ),
       );
       expect(result, isA<Left<Failure, Unit>>());
       verifyNever(() => timerRepo.getActive());
     });
 
-    test('pausa o cronômetro anterior somando o tempo e inicia o novo',
+    test('compromisso pode iniciar mesmo com targetIsLeaf false', () async {
+      when(() => timerRepo.getActive())
+          .thenAnswer((_) async => const Right(null));
+
+      final result = await startUseCase()(
+        StartTimerParams(
+          targetId: 'a1',
+          targetType: TimerTargetTypeEnum.appointment,
+          targetIsLeaf: false,
+          listId: 'l1',
+          now: now,
+        ),
+      );
+
+      expect(result.isRight(), isTrue);
+      verify(() => timerRepo.setActive(any())).called(1);
+    });
+
+    test('pausa o anterior (tarefa) somando tempo e gravando registro',
         () async {
       final previous = ActiveTimerEntity(
         targetId: 'old',
+        targetType: TimerTargetTypeEnum.task,
+        listId: 'lOld',
         startedAt: now.subtract(const Duration(minutes: 25)),
       );
       when(() => timerRepo.getActive())
           .thenAnswer((_) async => Right(previous));
-      when(() => taskRepo.addSpentMinutes(any(), any()))
-          .thenAnswer((_) async => const Right(unit));
-      when(() => timerRepo.setActive(any()))
-          .thenAnswer((_) async => const Right(unit));
 
-      await StartTimerUseCase(timerRepo, taskRepo)(
-        StartTimerParams(targetId: 'new', targetIsLeaf: true, now: now),
+      await startUseCase()(
+        StartTimerParams(
+          targetId: 'new',
+          targetType: TimerTargetTypeEnum.task,
+          targetIsLeaf: true,
+          listId: 'lNew',
+          now: now,
+        ),
       );
 
       verify(() => taskRepo.addSpentMinutes('old', 25)).called(1);
+      verify(() => entryRepo.add(any())).called(1);
+      verifyNever(() => apptRepo.addSpentMinutes(any(), any()));
       verify(() => timerRepo.setActive(any())).called(1);
+    });
+
+    test('pausa o anterior (compromisso) somando no repo de compromisso',
+        () async {
+      final previous = ActiveTimerEntity(
+        targetId: 'appt',
+        targetType: TimerTargetTypeEnum.appointment,
+        listId: 'lA',
+        startedAt: now.subtract(const Duration(minutes: 10)),
+      );
+      when(() => timerRepo.getActive())
+          .thenAnswer((_) async => Right(previous));
+
+      await startUseCase()(
+        StartTimerParams(
+          targetId: 'new',
+          targetType: TimerTargetTypeEnum.task,
+          targetIsLeaf: true,
+          listId: 'lNew',
+          now: now,
+        ),
+      );
+
+      verify(() => apptRepo.addSpentMinutes('appt', 10)).called(1);
+      verifyNever(() => taskRepo.addSpentMinutes(any(), any()));
     });
   });
 
@@ -64,68 +151,71 @@ void main() {
       when(() => timerRepo.getActive())
           .thenAnswer((_) async => const Right(null));
 
-      final result = await StopTimerUseCase(timerRepo, taskRepo)(
-        StopTimerParams(now: now),
-      );
+      final result = await stopUseCase()(StopTimerParams(now: now));
 
       expect(result.isRight(), isTrue);
       verifyNever(() => taskRepo.addSpentMinutes(any(), any()));
+      verifyNever(() => entryRepo.add(any()));
     });
 
-    test('soma o tempo decorrido e limpa', () async {
+    test('soma o tempo na folha, grava registro e limpa', () async {
       final active = ActiveTimerEntity(
         targetId: 't1',
+        targetType: TimerTargetTypeEnum.task,
+        listId: 'l1',
         startedAt: now.subtract(const Duration(minutes: 40)),
       );
       when(() => timerRepo.getActive()).thenAnswer((_) async => Right(active));
-      when(() => taskRepo.addSpentMinutes(any(), any()))
-          .thenAnswer((_) async => const Right(unit));
-      when(() => timerRepo.clear()).thenAnswer((_) async => const Right(unit));
 
-      await StopTimerUseCase(timerRepo, taskRepo)(StopTimerParams(now: now));
+      await stopUseCase()(StopTimerParams(now: now));
 
       verify(() => taskRepo.addSpentMinutes('t1', 40)).called(1);
+      verify(() => entryRepo.add(any())).called(1);
       verify(() => timerRepo.clear()).called(1);
     });
   });
 
   group('RegisterManualTimeUseCase', () {
     test('recusa não-folha', () async {
-      final result = await RegisterManualTimeUseCase(taskRepo)(
-        const RegisterManualTimeParams(
+      final result = await manualUseCase()(
+        RegisterManualTimeParams(
           targetId: 't1',
           targetIsLeaf: false,
+          listId: 'l1',
           minutes: 30,
+          now: now,
         ),
       );
       expect(result, isA<Left<Failure, Unit>>());
     });
 
     test('recusa duração <= 0 com InvalidDurationFailure', () async {
-      final result = await RegisterManualTimeUseCase(taskRepo)(
-        const RegisterManualTimeParams(
+      final result = await manualUseCase()(
+        RegisterManualTimeParams(
           targetId: 't1',
           targetIsLeaf: true,
+          listId: 'l1',
           minutes: 0,
+          now: now,
         ),
       );
       result.getLeft().fold(() => fail('esperava Left'),
           (f) => expect(f, isA<InvalidDurationFailure>()));
     });
 
-    test('soma os minutos na folha', () async {
-      when(() => taskRepo.addSpentMinutes(any(), any()))
-          .thenAnswer((_) async => const Right(unit));
-
-      await RegisterManualTimeUseCase(taskRepo)(
-        const RegisterManualTimeParams(
+    test('soma os minutos na folha e grava o registro', () async {
+      await manualUseCase()(
+        RegisterManualTimeParams(
           targetId: 't1',
           targetIsLeaf: true,
+          listId: 'l1',
           minutes: 30,
+          now: now,
         ),
       );
 
       verify(() => taskRepo.addSpentMinutes('t1', 30)).called(1);
+      verify(() => entryRepo.add(any())).called(1);
     });
   });
 }

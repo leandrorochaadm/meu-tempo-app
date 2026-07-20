@@ -13,7 +13,12 @@ import 'package:meu_tempo/features/config/domain/entities/day_config_entity.dart
 import 'package:meu_tempo/features/config/domain/usecases/watch_config_use_case.dart';
 import 'package:meu_tempo/features/list/domain/entities/task_list_entity.dart';
 import 'package:meu_tempo/features/list/domain/usecases/ensure_inbox_exists_use_case.dart';
+import 'package:meu_tempo/features/task/domain/entities/active_timer_entity.dart';
 import 'package:meu_tempo/features/task/domain/entities/task_entity.dart';
+import 'package:meu_tempo/features/task/domain/entities/timer_target_type_enum.dart';
+import 'package:meu_tempo/features/task/domain/usecases/start_timer_use_case.dart';
+import 'package:meu_tempo/features/task/domain/usecases/stop_timer_use_case.dart';
+import 'package:meu_tempo/features/task/domain/usecases/watch_active_timer_use_case.dart';
 import 'package:meu_tempo/features/task/domain/usecases/watch_tasks_use_case.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -29,7 +34,17 @@ class _MockWatchTasks extends Mock implements WatchTasksUseCase {}
 
 class _MockEnsureInbox extends Mock implements EnsureInboxExistsUseCase {}
 
+class _MockStartTimer extends Mock implements StartTimerUseCase {}
+
+class _MockStopTimer extends Mock implements StopTimerUseCase {}
+
+class _MockWatchActiveTimer extends Mock implements WatchActiveTimerUseCase {}
+
 class _FakeDayParams extends Fake implements DayParams {}
+
+class _FakeStartParams extends Fake implements StartTimerParams {}
+
+class _FakeStopParams extends Fake implements StopTimerParams {}
 
 class _FakeNoParams extends Fake implements NoParams {}
 
@@ -44,6 +59,9 @@ void main() {
   late _MockWatchConfig watchConfig;
   late _MockWatchTasks watchTasks;
   late _MockEnsureInbox ensureInbox;
+  late _MockStartTimer startTimer;
+  late _MockStopTimer stopTimer;
+  late _MockWatchActiveTimer watchActiveTimer;
   const checkFits = CheckFitsInDayUseCase();
 
   const inbox = TaskListEntity(id: 'inbox', name: 'Entrada', isDefault: true);
@@ -53,6 +71,8 @@ void main() {
     registerFallbackValue(_FakeNoParams());
     registerFallbackValue(_FakeCreateParams());
     registerFallbackValue(_FakeDeleteParams());
+    registerFallbackValue(_FakeStartParams());
+    registerFallbackValue(_FakeStopParams());
   });
 
   setUp(() {
@@ -62,6 +82,9 @@ void main() {
     watchConfig = _MockWatchConfig();
     watchTasks = _MockWatchTasks();
     ensureInbox = _MockEnsureInbox();
+    startTimer = _MockStartTimer();
+    stopTimer = _MockStopTimer();
+    watchActiveTimer = _MockWatchActiveTimer();
     when(() => ensureInbox(any())).thenAnswer((_) async => const Right(inbox));
     when(() => watchConfig(any())).thenAnswer(
       (_) => const Stream<Either<Failure, DayConfigEntity>>.empty(),
@@ -69,6 +92,11 @@ void main() {
     when(() => watchTasks(any())).thenAnswer(
       (_) => const Stream<Either<Failure, List<TaskEntity>>>.empty(),
     );
+    when(() => watchActiveTimer(any())).thenAnswer(
+      (_) => const Stream<Either<Failure, ActiveTimerEntity?>>.empty(),
+    );
+    when(() => startTimer(any())).thenAnswer((_) async => const Right(unit));
+    when(() => stopTimer(any())).thenAnswer((_) async => const Right(unit));
   });
 
   AgendaBloc build() => AgendaBloc(
@@ -79,6 +107,9 @@ void main() {
         watchConfig,
         watchTasks,
         ensureInbox,
+        startTimer,
+        stopTimer,
+        watchActiveTimer,
       );
 
   AppointmentEntity appt(int start) => AppointmentEntity(
@@ -205,6 +236,27 @@ void main() {
       final p = verify(() => deleteAppt(captureAny())).captured.single
           as DeleteAppointmentParams;
       expect(p.appointmentId, 'a540');
+    },
+  );
+
+  blocTest<AgendaBloc, AgendaState>(
+    'AppointmentTimerStarted inicia o cronômetro com targetType appointment',
+    build: () {
+      when(() => watchAppts(any()))
+          .thenAnswer((_) => Stream.value(Right([appt(540)])));
+      return build();
+    },
+    act: (bloc) async {
+      bloc.add(const AgendaStarted());
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+      bloc.add(const AppointmentTimerStarted('a540'));
+    },
+    verify: (_) {
+      final p = verify(() => startTimer(captureAny())).captured.single
+          as StartTimerParams;
+      expect(p.targetId, 'a540');
+      expect(p.targetType, TimerTargetTypeEnum.appointment);
+      expect(p.listId, 'inbox');
     },
   );
 }
