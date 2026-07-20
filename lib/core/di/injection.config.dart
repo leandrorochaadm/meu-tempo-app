@@ -56,6 +56,8 @@ import 'package:meu_tempo/features/task/domain/usecases/build_task_tree_use_case
     as _i27;
 import 'package:meu_tempo/features/task/domain/usecases/create_task_use_case.dart'
     as _i658;
+import 'package:meu_tempo/features/task/domain/usecases/get_prioritized_leaves_use_case.dart'
+    as _i1067;
 import 'package:meu_tempo/features/task/domain/usecases/register_manual_time_use_case.dart'
     as _i1025;
 import 'package:meu_tempo/features/task/domain/usecases/start_timer_use_case.dart'
@@ -81,6 +83,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i974.FirebaseFirestore>(() => firebaseModule.firestore);
     gh.lazySingleton<_i27.BuildTaskTreeUseCase>(
       () => const _i27.BuildTaskTreeUseCase(),
+    );
+    gh.lazySingleton<_i1067.GetPrioritizedLeavesUseCase>(
+      () => const _i1067.GetPrioritizedLeavesUseCase(),
     );
     gh.lazySingleton<_i813.TaskListRemoteDataSource>(
       () => _i813.TaskListRemoteDataSourceImpl(
@@ -171,6 +176,7 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i655.EnsureInboxExistsUseCase>(),
         gh<_i650.AddSubtaskUseCase>(),
         gh<_i27.BuildTaskTreeUseCase>(),
+        gh<_i1067.GetPrioritizedLeavesUseCase>(),
         gh<_i397.WatchActiveTimerUseCase>(),
         gh<_i210.StartTimerUseCase>(),
         gh<_i726.StopTimerUseCase>(),

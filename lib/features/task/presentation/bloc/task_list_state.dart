@@ -12,16 +12,23 @@ class TaskListLoading extends TaskListState {
 }
 
 class TaskListLoaded extends TaskListState {
-  const TaskListLoaded(this.roots, {this.activeTaskId});
+  const TaskListLoaded(
+    this.roots, {
+    this.prioritized = const [],
+    this.activeTaskId,
+  });
 
   /// Árvore de tarefas (raízes = mães), com agregação pronta nos [TaskNode].
   final List<TaskNode> roots;
+
+  /// Folhas não concluídas ordenadas por prioridade (lista plana).
+  final List<PrioritizedLeaf> prioritized;
 
   /// Id da folha com cronômetro rodando (`null` = nenhum).
   final String? activeTaskId;
 
   @override
-  List<Object?> get props => [roots, activeTaskId];
+  List<Object?> get props => [roots, prioritized, activeTaskId];
 }
 
 class TaskListEmpty extends TaskListState {

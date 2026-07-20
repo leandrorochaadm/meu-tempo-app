@@ -9,12 +9,14 @@ import '../../../../core/error/failures.dart';
 import '../../../../core/usecase/usecase.dart';
 import '../../../list/domain/usecases/ensure_inbox_exists_use_case.dart';
 import '../../domain/entities/active_timer_entity.dart';
+import '../../domain/entities/prioritized_leaf.dart';
 import '../../domain/entities/task_entity.dart';
 import '../../domain/entities/task_node.dart';
 import '../../domain/task_failures.dart';
 import '../../domain/usecases/add_subtask_use_case.dart';
 import '../../domain/usecases/build_task_tree_use_case.dart';
 import '../../domain/usecases/create_task_use_case.dart';
+import '../../domain/usecases/get_prioritized_leaves_use_case.dart';
 import '../../domain/usecases/register_manual_time_use_case.dart';
 import '../../domain/usecases/start_timer_use_case.dart';
 import '../../domain/usecases/stop_timer_use_case.dart';
@@ -34,6 +36,7 @@ class TaskListBloc extends Bloc<TaskListEvent, TaskListState> {
     this._ensureInboxExists,
     this._addSubtask,
     this._buildTree,
+    this._getPrioritized,
     this._watchActiveTimer,
     this._startTimer,
     this._stopTimer,
@@ -54,6 +57,7 @@ class TaskListBloc extends Bloc<TaskListEvent, TaskListState> {
   final EnsureInboxExistsUseCase _ensureInboxExists;
   final AddSubtaskUseCase _addSubtask;
   final BuildTaskTreeUseCase _buildTree;
+  final GetPrioritizedLeavesUseCase _getPrioritized;
   final WatchActiveTimerUseCase _watchActiveTimer;
   final StartTimerUseCase _startTimer;
   final StopTimerUseCase _stopTimer;
@@ -111,7 +115,11 @@ class TaskListBloc extends Bloc<TaskListEvent, TaskListState> {
       emit(const TaskListEmpty());
       return;
     }
-    emit(TaskListLoaded(_buildTree(_latestTasks), activeTaskId: _activeTaskId));
+    emit(TaskListLoaded(
+      _buildTree(_latestTasks),
+      prioritized: _getPrioritized(_latestTasks, DateTime.now()),
+      activeTaskId: _activeTaskId,
+    ));
   }
 
   Future<void> _onCreated(

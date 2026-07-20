@@ -11,6 +11,7 @@ import 'package:meu_tempo/features/task/domain/task_failures.dart';
 import 'package:meu_tempo/features/task/domain/usecases/add_subtask_use_case.dart';
 import 'package:meu_tempo/features/task/domain/usecases/build_task_tree_use_case.dart';
 import 'package:meu_tempo/features/task/domain/usecases/create_task_use_case.dart';
+import 'package:meu_tempo/features/task/domain/usecases/get_prioritized_leaves_use_case.dart';
 import 'package:meu_tempo/features/task/domain/usecases/register_manual_time_use_case.dart';
 import 'package:meu_tempo/features/task/domain/usecases/start_timer_use_case.dart';
 import 'package:meu_tempo/features/task/domain/usecases/stop_timer_use_case.dart';
@@ -90,12 +91,15 @@ void main() {
     );
   });
 
+  const getPrioritized = GetPrioritizedLeavesUseCase();
+
   TaskListBloc build() => TaskListBloc(
         watchTasks,
         createTask,
         ensureInbox,
         addSubtask,
         buildTree,
+        getPrioritized,
         watchActiveTimer,
         startTimer,
         stopTimer,
