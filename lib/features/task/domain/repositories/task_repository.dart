@@ -17,4 +17,16 @@ abstract class TaskRepository {
 
   /// Acrescenta (delta) minutos de tempo real a uma folha.
   Future<Either<Failure, Unit>> addSpentMinutes(String taskId, int delta);
+
+  /// Leitura pontual de todas as tarefas do usuário.
+  Future<Either<Failure, List<TaskEntity>>> getTasks();
+
+  /// Marca/desmarca uma tarefa como concluída.
+  Future<Either<Failure, Unit>> setDone(String taskId, bool value);
+
+  /// Substitui o documento da tarefa (edição/mover).
+  Future<Either<Failure, Unit>> update(TaskEntity task);
+
+  /// Remove uma tarefa (o chamador cuida da cascata).
+  Future<Either<Failure, Unit>> delete(String taskId);
 }

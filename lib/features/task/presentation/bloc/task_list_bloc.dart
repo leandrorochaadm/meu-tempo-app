@@ -15,7 +15,9 @@ import '../../domain/entities/task_node.dart';
 import '../../domain/task_failures.dart';
 import '../../domain/usecases/add_subtask_use_case.dart';
 import '../../domain/usecases/build_task_tree_use_case.dart';
+import '../../domain/usecases/complete_task_use_case.dart';
 import '../../domain/usecases/create_task_use_case.dart';
+import '../../domain/usecases/delete_task_use_case.dart';
 import '../../domain/usecases/get_prioritized_leaves_use_case.dart';
 import '../../domain/usecases/register_manual_time_use_case.dart';
 import '../../domain/usecases/start_timer_use_case.dart';
@@ -41,6 +43,8 @@ class TaskListBloc extends Bloc<TaskListEvent, TaskListState> {
     this._startTimer,
     this._stopTimer,
     this._registerManualTime,
+    this._completeTask,
+    this._deleteTask,
   ) : super(const TaskListLoading()) {
     on<TaskListStarted>(_onStarted);
     on<TaskListUpdated>(_onUpdated);
@@ -50,6 +54,8 @@ class TaskListBloc extends Bloc<TaskListEvent, TaskListState> {
     on<TimerStartRequested>(_onTimerStart);
     on<TimerStopRequested>(_onTimerStop);
     on<ManualTimeRequested>(_onManualTime);
+    on<CompleteToggled>(_onCompleteToggled);
+    on<DeleteRequested>(_onDeleteRequested);
   }
 
   final WatchTasksUseCase _watchTasks;
@@ -62,6 +68,8 @@ class TaskListBloc extends Bloc<TaskListEvent, TaskListState> {
   final StartTimerUseCase _startTimer;
   final StopTimerUseCase _stopTimer;
   final RegisterManualTimeUseCase _registerManualTime;
+  final CompleteTaskUseCase _completeTask;
+  final DeleteTaskUseCase _deleteTask;
 
   StreamSubscription<Either<Failure, List<TaskEntity>>>? _tasksSub;
   StreamSubscription<Either<Failure, ActiveTimerEntity?>>? _timerSub;
@@ -187,6 +195,24 @@ class TaskListBloc extends Bloc<TaskListEvent, TaskListState> {
         minutes: event.minutes,
       ),
     );
+    _handleWrite(result, emit);
+  }
+
+  Future<void> _onCompleteToggled(
+    CompleteToggled event,
+    Emitter<TaskListState> emit,
+  ) async {
+    final result = await _completeTask(
+      CompleteTaskParams(taskId: event.taskId, done: event.done),
+    );
+    _handleWrite(result, emit);
+  }
+
+  Future<void> _onDeleteRequested(
+    DeleteRequested event,
+    Emitter<TaskListState> emit,
+  ) async {
+    final result = await _deleteTask(DeleteTaskParams(taskId: event.taskId));
     _handleWrite(result, emit);
   }
 

@@ -10,7 +10,9 @@ import 'package:meu_tempo/features/task/domain/entities/active_timer_entity.dart
 import 'package:meu_tempo/features/task/domain/task_failures.dart';
 import 'package:meu_tempo/features/task/domain/usecases/add_subtask_use_case.dart';
 import 'package:meu_tempo/features/task/domain/usecases/build_task_tree_use_case.dart';
+import 'package:meu_tempo/features/task/domain/usecases/complete_task_use_case.dart';
 import 'package:meu_tempo/features/task/domain/usecases/create_task_use_case.dart';
+import 'package:meu_tempo/features/task/domain/usecases/delete_task_use_case.dart';
 import 'package:meu_tempo/features/task/domain/usecases/get_prioritized_leaves_use_case.dart';
 import 'package:meu_tempo/features/task/domain/usecases/register_manual_time_use_case.dart';
 import 'package:meu_tempo/features/task/domain/usecases/start_timer_use_case.dart';
@@ -36,6 +38,10 @@ class _MockStopTimer extends Mock implements StopTimerUseCase {}
 
 class _MockManualTime extends Mock implements RegisterManualTimeUseCase {}
 
+class _MockComplete extends Mock implements CompleteTaskUseCase {}
+
+class _MockDelete extends Mock implements DeleteTaskUseCase {}
+
 class _FakeNoParams extends Fake implements NoParams {}
 
 class _FakeCreateParams extends Fake implements CreateTaskParams {}
@@ -48,6 +54,10 @@ class _FakeStopParams extends Fake implements StopTimerParams {}
 
 class _FakeManualParams extends Fake implements RegisterManualTimeParams {}
 
+class _FakeCompleteParams extends Fake implements CompleteTaskParams {}
+
+class _FakeDeleteParams extends Fake implements DeleteTaskParams {}
+
 void main() {
   late _MockWatchTasks watchTasks;
   late _MockCreateTask createTask;
@@ -57,6 +67,8 @@ void main() {
   late _MockStartTimer startTimer;
   late _MockStopTimer stopTimer;
   late _MockManualTime manualTime;
+  late _MockComplete completeTask;
+  late _MockDelete deleteTask;
   const buildTree = BuildTaskTreeUseCase();
 
   const inbox = TaskListEntity(id: 'inbox', name: 'Entrada', isDefault: true);
@@ -74,6 +86,8 @@ void main() {
     registerFallbackValue(_FakeStartParams());
     registerFallbackValue(_FakeStopParams());
     registerFallbackValue(_FakeManualParams());
+    registerFallbackValue(_FakeCompleteParams());
+    registerFallbackValue(_FakeDeleteParams());
   });
 
   setUp(() {
@@ -85,6 +99,8 @@ void main() {
     startTimer = _MockStartTimer();
     stopTimer = _MockStopTimer();
     manualTime = _MockManualTime();
+    completeTask = _MockComplete();
+    deleteTask = _MockDelete();
     when(() => ensureInbox(any())).thenAnswer((_) async => const Right(inbox));
     when(() => watchActiveTimer(any())).thenAnswer(
       (_) => const Stream<Either<Failure, ActiveTimerEntity?>>.empty(),
@@ -104,6 +120,8 @@ void main() {
         startTimer,
         stopTimer,
         manualTime,
+        completeTask,
+        deleteTask,
       );
 
   blocTest<TaskListBloc, TaskListState>(
@@ -240,5 +258,46 @@ void main() {
       const TaskListEmpty(),
       isA<TaskListError>(),
     ],
+  );
+
+  blocTest<TaskListBloc, TaskListState>(
+    'CompleteToggled delega ao CompleteTaskUseCase',
+    build: () {
+      when(() => watchTasks(any()))
+          .thenAnswer((_) => Stream.value(const Right(<TaskEntity>[])));
+      when(() => completeTask(any())).thenAnswer((_) async => const Right(unit));
+      return build();
+    },
+    act: (bloc) async {
+      bloc.add(const TaskListStarted());
+      await Future<void>.delayed(Duration.zero);
+      bloc.add(const CompleteToggled(taskId: 't1', done: true));
+    },
+    verify: (_) {
+      final p = verify(() => completeTask(captureAny())).captured.single
+          as CompleteTaskParams;
+      expect(p.taskId, 't1');
+      expect(p.done, isTrue);
+    },
+  );
+
+  blocTest<TaskListBloc, TaskListState>(
+    'DeleteRequested delega ao DeleteTaskUseCase',
+    build: () {
+      when(() => watchTasks(any()))
+          .thenAnswer((_) => Stream.value(const Right(<TaskEntity>[])));
+      when(() => deleteTask(any())).thenAnswer((_) async => const Right(unit));
+      return build();
+    },
+    act: (bloc) async {
+      bloc.add(const TaskListStarted());
+      await Future<void>.delayed(Duration.zero);
+      bloc.add(const DeleteRequested('t1'));
+    },
+    verify: (_) {
+      final p = verify(() => deleteTask(captureAny())).captured.single
+          as DeleteTaskParams;
+      expect(p.taskId, 't1');
+    },
   );
 }

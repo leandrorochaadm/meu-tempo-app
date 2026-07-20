@@ -68,4 +68,48 @@ class TaskRepositoryImpl implements TaskRepository {
       return Left(e.toFailure());
     }
   }
+
+  @override
+  Future<Either<Failure, List<TaskEntity>>> getTasks() async {
+    try {
+      final models = await _dataSource.getTasks();
+      return Right(models.map((m) => m.toEntity()).toList());
+    } on AppException catch (e, s) {
+      AppLogger.logError('getTasks falhou', error: e, stackTrace: s);
+      return Left(e.toFailure());
+    }
+  }
+
+  @override
+  Future<Either<Failure, Unit>> setDone(String taskId, bool value) async {
+    try {
+      await _dataSource.setDone(taskId, value);
+      return const Right(unit);
+    } on AppException catch (e, s) {
+      AppLogger.logError('setDone falhou', error: e, stackTrace: s);
+      return Left(e.toFailure());
+    }
+  }
+
+  @override
+  Future<Either<Failure, Unit>> update(TaskEntity task) async {
+    try {
+      await _dataSource.update(TaskModel.fromEntity(task));
+      return const Right(unit);
+    } on AppException catch (e, s) {
+      AppLogger.logError('update task falhou', error: e, stackTrace: s);
+      return Left(e.toFailure());
+    }
+  }
+
+  @override
+  Future<Either<Failure, Unit>> delete(String taskId) async {
+    try {
+      await _dataSource.delete(taskId);
+      return const Right(unit);
+    } on AppException catch (e, s) {
+      AppLogger.logError('delete task falhou', error: e, stackTrace: s);
+      return Left(e.toFailure());
+    }
+  }
 }

@@ -69,6 +69,25 @@ class ManualTimeRequested extends TaskListEvent {
   List<Object?> get props => [taskId, isLeaf, minutes];
 }
 
+/// Marca/desmarca uma folha como concluída (propaga para a mãe/avó).
+class CompleteToggled extends TaskListEvent {
+  const CompleteToggled({required this.taskId, required this.done});
+  final String taskId;
+  final bool done;
+
+  @override
+  List<Object?> get props => [taskId, done];
+}
+
+/// Exclui uma tarefa em cascata (com as filhas/netas).
+class DeleteRequested extends TaskListEvent {
+  const DeleteRequested(this.taskId);
+  final String taskId;
+
+  @override
+  List<Object?> get props => [taskId];
+}
+
 /// Adiciona uma subtarefa (filha/neta) a um nó existente.
 class SubtaskRequested extends TaskListEvent {
   const SubtaskRequested({

@@ -54,8 +54,12 @@ import 'package:meu_tempo/features/task/domain/usecases/add_subtask_use_case.dar
     as _i650;
 import 'package:meu_tempo/features/task/domain/usecases/build_task_tree_use_case.dart'
     as _i27;
+import 'package:meu_tempo/features/task/domain/usecases/complete_task_use_case.dart'
+    as _i623;
 import 'package:meu_tempo/features/task/domain/usecases/create_task_use_case.dart'
     as _i658;
+import 'package:meu_tempo/features/task/domain/usecases/delete_task_use_case.dart'
+    as _i162;
 import 'package:meu_tempo/features/task/domain/usecases/get_prioritized_leaves_use_case.dart'
     as _i1067;
 import 'package:meu_tempo/features/task/domain/usecases/register_manual_time_use_case.dart'
@@ -156,18 +160,17 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i650.AddSubtaskUseCase>(
       () => _i650.AddSubtaskUseCase(gh<_i521.TaskRepository>()),
     );
+    gh.lazySingleton<_i623.CompleteTaskUseCase>(
+      () => _i623.CompleteTaskUseCase(gh<_i521.TaskRepository>()),
+    );
     gh.lazySingleton<_i658.CreateTaskUseCase>(
       () => _i658.CreateTaskUseCase(gh<_i521.TaskRepository>()),
     );
+    gh.lazySingleton<_i162.DeleteTaskUseCase>(
+      () => _i162.DeleteTaskUseCase(gh<_i521.TaskRepository>()),
+    );
     gh.lazySingleton<_i1035.WatchTasksUseCase>(
       () => _i1035.WatchTasksUseCase(gh<_i521.TaskRepository>()),
-    );
-    gh.factory<_i708.AuthBloc>(
-      () => _i708.AuthBloc(
-        gh<_i98.SignInWithGoogleUseCase>(),
-        gh<_i846.SignOutUseCase>(),
-        gh<_i1046.WatchAuthStateUseCase>(),
-      ),
     );
     gh.factory<_i35.TaskListBloc>(
       () => _i35.TaskListBloc(
@@ -181,6 +184,15 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i210.StartTimerUseCase>(),
         gh<_i726.StopTimerUseCase>(),
         gh<_i1025.RegisterManualTimeUseCase>(),
+        gh<_i623.CompleteTaskUseCase>(),
+        gh<_i162.DeleteTaskUseCase>(),
+      ),
+    );
+    gh.factory<_i708.AuthBloc>(
+      () => _i708.AuthBloc(
+        gh<_i98.SignInWithGoogleUseCase>(),
+        gh<_i846.SignOutUseCase>(),
+        gh<_i1046.WatchAuthStateUseCase>(),
       ),
     );
     return this;

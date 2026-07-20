@@ -71,6 +71,39 @@ class _TaskListPageState extends State<TaskListPage> {
         );
   }
 
+  void _toggleDone(TaskNode node, bool done) {
+    context
+        .read<TaskListBloc>()
+        .add(CompleteToggled(taskId: node.task.id, done: done));
+  }
+
+  Future<void> _confirmDelete(TaskNode node) async {
+    final bloc = context.read<TaskListBloc>();
+    final hasChildren = node.task.hasChildren;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Excluir tarefa?'),
+        content: Text(hasChildren
+            ? 'Isso apaga "${node.task.title}" e todas as filhas/netas.'
+            : 'Isso apaga "${node.task.title}".'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Excluir'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed ?? false) {
+      bloc.add(DeleteRequested(node.task.id));
+    }
+  }
+
   void _toggleLeafTimer(PrioritizedLeaf leaf, bool start) {
     context.read<TaskListBloc>().add(
           start
@@ -163,6 +196,8 @@ class _TaskListPageState extends State<TaskListPage> {
                               onAddSubtask: _startSubtask,
                               onToggleTimer: _toggleTimer,
                               onAddTime: _addTime,
+                              onToggleDone: _toggleDone,
+                              onDelete: _confirmDelete,
                             ),
                     TaskListError() => const AppEmptyState(
                         icon: Icons.checklist_rounded,
@@ -194,6 +229,8 @@ class _TaskTree extends StatelessWidget {
     required this.onAddSubtask,
     required this.onToggleTimer,
     required this.onAddTime,
+    required this.onToggleDone,
+    required this.onDelete,
   });
 
   final List<TaskNode> nodes;
@@ -201,6 +238,8 @@ class _TaskTree extends StatelessWidget {
   final void Function(TaskNode parent) onAddSubtask;
   final void Function(TaskNode node, bool start) onToggleTimer;
   final void Function(TaskNode node, int minutes) onAddTime;
+  final void Function(TaskNode node, bool done) onToggleDone;
+  final void Function(TaskNode node) onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -214,6 +253,8 @@ class _TaskTree extends StatelessWidget {
         onAddSubtask: onAddSubtask,
         onToggleTimer: onToggleTimer,
         onAddTime: onAddTime,
+        onToggleDone: onToggleDone,
+        onDelete: onDelete,
       ),
     );
   }

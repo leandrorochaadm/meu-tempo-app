@@ -12,6 +12,10 @@ abstract class TaskRemoteDataSource {
   Future<TaskModel> create(TaskModel task);
   Future<void> setHasChildren(String taskId, bool value);
   Future<void> addSpentMinutes(String taskId, int delta);
+  Future<List<TaskModel>> getTasks();
+  Future<void> setDone(String taskId, bool value);
+  Future<void> update(TaskModel task);
+  Future<void> delete(String taskId);
 }
 
 @LazySingleton(as: TaskRemoteDataSource)
@@ -72,6 +76,43 @@ class TaskRemoteDataSourceImpl implements TaskRemoteDataSource {
       await _collection.doc(taskId).update({
         TaskFields.spentMinutes: FieldValue.increment(delta),
       });
+    } on FirebaseException catch (e) {
+      throw mapFirestoreException(e);
+    }
+  }
+
+  @override
+  Future<List<TaskModel>> getTasks() async {
+    try {
+      final snap = await _collection.get();
+      return snap.docs.map((d) => TaskModel.fromDoc(d.id, d.data())).toList();
+    } on FirebaseException catch (e) {
+      throw mapFirestoreException(e);
+    }
+  }
+
+  @override
+  Future<void> setDone(String taskId, bool value) async {
+    try {
+      await _collection.doc(taskId).update({TaskFields.isDone: value});
+    } on FirebaseException catch (e) {
+      throw mapFirestoreException(e);
+    }
+  }
+
+  @override
+  Future<void> update(TaskModel task) async {
+    try {
+      await _collection.doc(task.id).set(task.toJson());
+    } on FirebaseException catch (e) {
+      throw mapFirestoreException(e);
+    }
+  }
+
+  @override
+  Future<void> delete(String taskId) async {
+    try {
+      await _collection.doc(taskId).delete();
     } on FirebaseException catch (e) {
       throw mapFirestoreException(e);
     }

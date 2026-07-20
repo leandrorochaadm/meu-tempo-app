@@ -14,6 +14,8 @@ class TaskNodeTile extends StatelessWidget {
     required this.onAddSubtask,
     required this.onToggleTimer,
     required this.onAddTime,
+    required this.onToggleDone,
+    required this.onDelete,
   });
 
   final TaskNode node;
@@ -21,6 +23,8 @@ class TaskNodeTile extends StatelessWidget {
   final void Function(TaskNode parent) onAddSubtask;
   final void Function(TaskNode node, bool start) onToggleTimer;
   final void Function(TaskNode node, int minutes) onAddTime;
+  final void Function(TaskNode node, bool done) onToggleDone;
+  final void Function(TaskNode node) onDelete;
 
   static const int _quickMinutes = 30;
 
@@ -51,17 +55,20 @@ class TaskNodeTile extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(
-                node.isLeaf
-                    ? (task.isDone
+              if (node.isLeaf)
+                InkWell(
+                  onTap: () => onToggleDone(node, !task.isDone),
+                  customBorder: const CircleBorder(),
+                  child: Icon(
+                    task.isDone
                         ? Icons.check_circle_rounded
-                        : Icons.circle_outlined)
-                    : Icons.folder_rounded,
-                color: node.isLeaf
-                    ? (task.isDone ? colors.success : colors.textMuted)
-                    : accent,
-                size: 22,
-              ),
+                        : Icons.circle_outlined,
+                    color: task.isDone ? colors.success : colors.textMuted,
+                    size: 22,
+                  ),
+                )
+              else
+                Icon(Icons.folder_rounded, color: accent, size: 22),
               SizedBox(width: context.space.md),
               Expanded(
                 child: Text(
@@ -78,6 +85,15 @@ class TaskNodeTile extends StatelessWidget {
                   tooltip: 'Adicionar subtarefa',
                   onPressed: () => onAddSubtask(node),
                 ),
+              PopupMenuButton<String>(
+                icon: Icon(Icons.more_vert_rounded, color: colors.textMuted),
+                onSelected: (v) {
+                  if (v == 'delete') onDelete(node);
+                },
+                itemBuilder: (context) => const [
+                  PopupMenuItem(value: 'delete', child: Text('Excluir')),
+                ],
+              ),
             ],
           ),
           SizedBox(height: context.space.xs),
