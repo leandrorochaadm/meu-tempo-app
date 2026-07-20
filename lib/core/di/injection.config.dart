@@ -34,10 +34,18 @@ import 'package:meu_tempo/features/list/data/repositories/task_list_repository_i
     as _i924;
 import 'package:meu_tempo/features/list/domain/repositories/task_list_repository.dart'
     as _i219;
+import 'package:meu_tempo/features/list/domain/usecases/create_list_use_case.dart'
+    as _i488;
+import 'package:meu_tempo/features/list/domain/usecases/delete_list_use_case.dart'
+    as _i666;
 import 'package:meu_tempo/features/list/domain/usecases/ensure_inbox_exists_use_case.dart'
     as _i655;
+import 'package:meu_tempo/features/list/domain/usecases/rename_list_use_case.dart'
+    as _i202;
 import 'package:meu_tempo/features/list/domain/usecases/watch_lists_use_case.dart'
     as _i689;
+import 'package:meu_tempo/features/list/presentation/bloc/list_manager_bloc.dart'
+    as _i427;
 import 'package:meu_tempo/features/task/data/datasources/task_remote_data_source.dart'
     as _i592;
 import 'package:meu_tempo/features/task/data/datasources/timer_remote_data_source.dart'
@@ -131,11 +139,23 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i521.TaskRepository>(
       () => _i1011.TaskRepositoryImpl(gh<_i592.TaskRemoteDataSource>()),
     );
+    gh.lazySingleton<_i488.CreateListUseCase>(
+      () => _i488.CreateListUseCase(gh<_i219.TaskListRepository>()),
+    );
     gh.lazySingleton<_i655.EnsureInboxExistsUseCase>(
       () => _i655.EnsureInboxExistsUseCase(gh<_i219.TaskListRepository>()),
     );
+    gh.lazySingleton<_i202.RenameListUseCase>(
+      () => _i202.RenameListUseCase(gh<_i219.TaskListRepository>()),
+    );
     gh.lazySingleton<_i689.WatchListsUseCase>(
       () => _i689.WatchListsUseCase(gh<_i219.TaskListRepository>()),
+    );
+    gh.lazySingleton<_i666.DeleteListUseCase>(
+      () => _i666.DeleteListUseCase(
+        gh<_i219.TaskListRepository>(),
+        gh<_i521.TaskRepository>(),
+      ),
     );
     gh.lazySingleton<_i210.StartTimerUseCase>(
       () => _i210.StartTimerUseCase(
@@ -157,6 +177,14 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i1046.WatchAuthStateUseCase>(
       () => _i1046.WatchAuthStateUseCase(gh<_i224.AuthRepository>()),
+    );
+    gh.factory<_i427.ListManagerBloc>(
+      () => _i427.ListManagerBloc(
+        gh<_i689.WatchListsUseCase>(),
+        gh<_i488.CreateListUseCase>(),
+        gh<_i202.RenameListUseCase>(),
+        gh<_i666.DeleteListUseCase>(),
+      ),
     );
     gh.lazySingleton<_i1025.RegisterManualTimeUseCase>(
       () => _i1025.RegisterManualTimeUseCase(gh<_i521.TaskRepository>()),

@@ -5,11 +5,14 @@ import 'package:injectable/injectable.dart';
 import '../../../../core/constants/firestore_paths.dart';
 import '../../../../core/error/exceptions.dart';
 import '../models/task_list_model.dart';
+import '../task_list_fields.dart';
 
 abstract class TaskListRemoteDataSource {
   Stream<List<TaskListModel>> watchLists();
   Future<List<TaskListModel>> getLists();
   Future<TaskListModel> create(TaskListModel list);
+  Future<void> rename(String listId, String name);
+  Future<void> delete(String listId);
 }
 
 @LazySingleton(as: TaskListRemoteDataSource)
@@ -31,7 +34,7 @@ class TaskListRemoteDataSourceImpl implements TaskListRemoteDataSource {
   @override
   Stream<List<TaskListModel>> watchLists() {
     try {
-      return _collection.orderBy('name').snapshots().map(
+      return _collection.orderBy(TaskListFields.name).snapshots().map(
             (snap) => snap.docs
                 .map((d) => TaskListModel.fromDoc(d.id, d.data()))
                 .toList(),
@@ -59,6 +62,24 @@ class TaskListRemoteDataSourceImpl implements TaskListRemoteDataSource {
       final ref = await _collection.add(list.toJson());
       final doc = await ref.get();
       return TaskListModel.fromDoc(doc.id, doc.data()!);
+    } on FirebaseException catch (e) {
+      throw mapFirestoreException(e);
+    }
+  }
+
+  @override
+  Future<void> rename(String listId, String name) async {
+    try {
+      await _collection.doc(listId).update({TaskListFields.name: name});
+    } on FirebaseException catch (e) {
+      throw mapFirestoreException(e);
+    }
+  }
+
+  @override
+  Future<void> delete(String listId) async {
+    try {
+      await _collection.doc(listId).delete();
     } on FirebaseException catch (e) {
       throw mapFirestoreException(e);
     }

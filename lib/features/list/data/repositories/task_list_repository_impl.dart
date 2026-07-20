@@ -51,4 +51,26 @@ class TaskListRepositoryImpl implements TaskListRepository {
       return Left(e.toFailure());
     }
   }
+
+  @override
+  Future<Either<Failure, Unit>> rename(String listId, String name) async {
+    try {
+      await _dataSource.rename(listId, name);
+      return const Right(unit);
+    } on AppException catch (e, s) {
+      AppLogger.logError('rename list falhou', error: e, stackTrace: s);
+      return Left(e.toFailure());
+    }
+  }
+
+  @override
+  Future<Either<Failure, Unit>> delete(String listId) async {
+    try {
+      await _dataSource.delete(listId);
+      return const Right(unit);
+    } on AppException catch (e, s) {
+      AppLogger.logError('delete list falhou', error: e, stackTrace: s);
+      return Left(e.toFailure());
+    }
+  }
 }

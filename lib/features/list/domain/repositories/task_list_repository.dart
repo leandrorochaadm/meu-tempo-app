@@ -13,4 +13,10 @@ abstract class TaskListRepository {
 
   /// Cria uma lista e devolve com o `id` gerado.
   Future<Either<Failure, TaskListEntity>> create(TaskListEntity list);
+
+  /// Renomeia uma lista.
+  Future<Either<Failure, Unit>> rename(String listId, String name);
+
+  /// Remove uma lista (o chamador cuida das tarefas dela).
+  Future<Either<Failure, Unit>> delete(String listId);
 }

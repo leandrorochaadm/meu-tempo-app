@@ -4,7 +4,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/theme_context_extensions.dart';
 import '../../../../core/ui/app_empty_state.dart';
 import '../../../../core/ui/app_list_skeleton.dart';
+import '../../../../core/di/injection.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
+import '../../../list/presentation/bloc/list_manager_bloc.dart';
+import '../../../list/presentation/pages/lists_page.dart';
 import '../../domain/entities/prioritized_leaf.dart';
 import '../../domain/entities/task_node.dart';
 import '../bloc/task_list_bloc.dart';
@@ -195,6 +198,18 @@ class _TaskListPageState extends State<TaskListPage> {
       appBar: AppBar(
         title: const Text('Meu Tempo'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.folder_rounded),
+            tooltip: 'Listas',
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => BlocProvider(
+                  create: (_) => getIt<ListManagerBloc>(),
+                  child: const ListsPage(),
+                ),
+              ),
+            ),
+          ),
           IconButton(
             icon: Icon(_priorityView
                 ? Icons.account_tree_rounded
