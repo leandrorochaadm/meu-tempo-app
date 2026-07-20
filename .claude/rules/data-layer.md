@@ -27,7 +27,7 @@ class TaskRemoteDataSourceImpl implements TaskRemoteDataSource {
   Future<List<TaskModel>> getTasks(String uid) async {
     try {
       final snap = await _tasks(uid).get();
-      return snap.docs.map((d) => TaskModel.fromMap(d.id, d.data())).toList();
+      return snap.docs.map((d) => TaskModel.fromDoc(d.id, d.data())).toList();
     } on FirebaseException catch (e) {
       throw mapFirebaseException(e);   // → AppException (ServerException, PermissionException, ...)
     }
@@ -39,19 +39,33 @@ class TaskRemoteDataSourceImpl implements TaskRemoteDataSource {
 
 - **MUST NOT** extends Entity — são classes **separadas**.
 - **MUST** ter `toEntity()` e `fromEntity()` (quando precisar gravar).
-- **MUST** ter `fromMap(String id, Map<String, dynamic> data)` e `Map<String, dynamic> toMap()`
-  para o Firestore. **Sem `json_serializable`** — a conversão é manual e explícita
-  (o mapa do Firestore já é `Map<String, dynamic>`).
+- **MUST** usar `json_serializable`: anotar com `@JsonSerializable(includeIfNull: false)`,
+  `part '{model}.g.dart'`, e expor `fromJson`/`toJson` gerados (`_$...FromJson`/`_$...ToJson`).
+- **MUST** ter o factory `fromDoc(String id, Map<String, dynamic> data)` que injeta o
+  `doc.id` no mapa antes do `fromJson` (o id vem do doc, não do corpo do documento).
+- **MUST** anotar o campo `id` com `@JsonKey(includeToJson: false)` — lido do doc, nunca gravado.
 - **MUST NOT** ter `copyWith()`.
-- Datas: gravar como `Timestamp` no Firestore e converter para `DateTime` no `fromMap`.
-- Não gravar o `id` dentro do documento — o id é o id do doc (`doc.id`).
+- Datas: usar o `TimestampConverter` central (`lib/core/utils/timestamp_converter.dart`)
+  via `@TimestampConverter()` no campo `DateTime?` — converte `Timestamp` ↔ `DateTime`.
+  Como o mapa vem cru do Firestore (com objetos `Timestamp`), o converter recebe/gera
+  `Timestamp` e o `toJson` pode ser gravado direto no Firestore.
 
 ```dart
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:json_annotation/json_annotation.dart';
+import '../../../../core/utils/timestamp_converter.dart';
+import '../../domain/entities/task_entity.dart';
+
+part 'task_model.g.dart';
+
+@JsonSerializable(includeIfNull: false)
 class TaskModel {
+  @JsonKey(includeToJson: false)   // id vem do doc.id, não é gravado no corpo
   final String id;
   final String title;
   final int importance;
   final int estimatedMinutes;
+  @TimestampConverter()
   final DateTime? dueDate;
   final String? parentId;
 
@@ -64,22 +78,12 @@ class TaskModel {
     this.parentId,
   });
 
-  factory TaskModel.fromMap(String id, Map<String, dynamic> data) => TaskModel(
-        id: id,
-        title: data['title'] as String,
-        importance: data['importance'] as int,
-        estimatedMinutes: data['estimatedMinutes'] as int,
-        dueDate: (data['dueDate'] as Timestamp?)?.toDate(),
-        parentId: data['parentId'] as String?,
-      );
+  // Firestore doc -> Model (injeta o doc.id no mapa que já traz objetos Timestamp)
+  factory TaskModel.fromDoc(String id, Map<String, dynamic> data) =>
+      TaskModel.fromJson({...data, 'id': id});
 
-  Map<String, dynamic> toMap() => {
-        'title': title,
-        'importance': importance,
-        'estimatedMinutes': estimatedMinutes,
-        if (dueDate != null) 'dueDate': Timestamp.fromDate(dueDate!),
-        if (parentId != null) 'parentId': parentId,
-      };
+  factory TaskModel.fromJson(Map<String, dynamic> json) => _$TaskModelFromJson(json);
+  Map<String, dynamic> toJson() => _$TaskModelToJson(this);   // grava direto no Firestore
 
   TaskEntity toEntity() => TaskEntity(
         id: id, title: title, importance: importance,
@@ -90,6 +94,20 @@ class TaskModel {
         id: e.id, title: e.title, importance: e.importance,
         estimatedMinutes: e.estimatedMinutes, dueDate: e.dueDate,
       );
+}
+```
+
+**Converter central** (`lib/core/utils/timestamp_converter.dart`):
+```dart
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:json_annotation/json_annotation.dart';
+
+class TimestampConverter implements JsonConverter<DateTime?, Timestamp?> {
+  const TimestampConverter();
+  @override
+  DateTime? fromJson(Timestamp? ts) => ts?.toDate();
+  @override
+  Timestamp? toJson(DateTime? date) => date == null ? null : Timestamp.fromDate(date);
 }
 ```
 

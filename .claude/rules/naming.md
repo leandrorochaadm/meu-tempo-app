@@ -28,6 +28,7 @@ inglês (`TaskEntity`, `ListEntity`, `AppointmentEntity`).
 | DataSource (abstrato) | `{entity}_remote_data_source.dart` | `task_remote_data_source.dart` |
 | DataSource (impl) | `{entity}_remote_data_source_impl.dart` | `task_remote_data_source_impl.dart` |
 | Enum | `{entity}_{topic}_enum.dart` | `task_status_enum.dart` |
+| Barrel (por feature) | `{feature}.dart` | `task.dart` |
 | Bloc | `{feature}_bloc.dart` | `task_list_bloc.dart` |
 | Event | `{feature}_event.dart` | `task_list_event.dart` |
 | State | `{feature}_state.dart` | `task_list_state.dart` |
@@ -91,3 +92,22 @@ class TaskEntity { ... }
 class StartTimerUseCase { ... }
 class TaskStatusEnum { ... }
 ```
+
+## Barrel export por feature
+
+Cada feature expõe um arquivo `{feature}.dart` na sua raiz que **reexporta** o que é
+público (entities, enums, usecases, bloc/state/event, pages). Consumidores importam o
+barrel, não arquivos internos — imports curtos e menos churn ao criar/renomear arquivos.
+
+```dart
+// lib/features/task/task.dart
+export 'domain/entities/task_entity.dart';
+export 'domain/entities/importance_enum.dart';
+export 'domain/usecases/create_task_use_case.dart';
+export 'presentation/bloc/task_list_bloc.dart';
+// ... só o que outras camadas/features consomem
+```
+
+- **Não** reexportar detalhe interno (DataSource, Model, RepositoryImpl) — são privados
+  da feature.
+- Respeitar a regra de dependência: o barrel não pode fazer `presentation` importar `data`.

@@ -49,7 +49,24 @@ Nunca invente requisito. Se algo não está nos documentos, **pergunte** (ver sk
 As convenções completas vivem em `.claude/rules/` (carregar sob demanda). Índice em
 `.claude/rules/README.md`. Principais: `architecture.md`, `domain-layer.md`,
 `data-layer.md`, `presentation-layer.md`, `bloc.md`, `firebase.md`, `navigation.md`,
-`layout.md`, `testing.md` + `templates/` por camada.
+`layout.md`, `enums.md`, `testing.md` + `templates/` por camada.
+
+**Enums sobre strings (obrigatório):** todo conjunto fixo de valores é `enum`; caminhos,
+chaves de campo, rotas e defaults viram `enum`/constante nomeada. **Nada de string
+hard-coded** para valores de conjunto conhecido. Detalhes em `.claude/rules/enums.md`.
+
+**Identidade visual (obrigatório):** tema **escuro único**, superfícies soft/arredondadas
+(raio ~20, sombra sutil), **paleta rica e categórica** (cor por lista/estado/importância),
+tipografia com hierarquia forte e micro-interações. Deve parecer **premium, não template
+nem "gerado por IA"**. Detalhes em `.claude/rules/design.md`.
+
+**UI centralizada no `core` + acesso via `context` (obrigatório):** todos os tokens
+(cor, espaço, raio, tipografia, duração) vivem em `lib/core/theme/` e os componentes
+compartilhados em `lib/core/ui/`; formatadores em `lib/core/utils/formatters/`. As telas
+**consomem via `context`/`Theme`** — **PROIBIDA formatação hard-coded** na
+`presentation` (nada de `Color(0x…)`, `TextStyle(...)`, `EdgeInsets`/`SizedBox` numérico,
+`BorderRadius.circular(n)`, data formatada inline). **Fonte em asset — proibido
+`google_fonts`.**
 
 ## Arquitetura — Clean Architecture, feature-first
 
@@ -65,7 +82,7 @@ lib/
         repositories/        # contratos (interfaces abstratas)
         usecases/
       data/                  # implementação
-        models/              # DTOs <-> Firestore (fromMap/toMap manual)
+        models/              # DTOs <-> Firestore (json_serializable + TimestampConverter)
         datasources/         # acesso ao Firebase
         repositories/        # implementa o contrato do domain
       presentation/
@@ -82,7 +99,9 @@ ou DataSource direto.
 
 - **Entity** é imutável e pura: sem `copyWith`, sem importar pacote externo (nada de
   Firebase na entity). Conversão de/para Firestore (`Map`) vive no **Model** (camada
-  data), com `fromMap`/`toMap` manual — sem `json_serializable`.
+  data), via `json_serializable` (`@JsonSerializable`, `fromJson`/`toJson` gerados) com
+  um `TimestampConverter` central para as datas do Firestore; o `id` vem do `doc.id`,
+  não do corpo do documento.
 - **Regras intrínsecas da entity** viram getters (ex.: `bool get isFolha`,
   `int get prioridade`) — não espalhe cálculo pela UI.
 - **Failure** não recebe `message` no construtor. Cada Failure é um tipo próprio

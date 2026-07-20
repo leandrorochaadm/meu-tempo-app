@@ -59,7 +59,8 @@ service cloud.firestore {
 
 - Injetar `FirebaseFirestore` e `FirebaseAuth` (nunca `.instance` direto no DataSource) —
   registrar como dependência única no boot do app. Facilita teste com `fake_cloud_firestore`.
-- Datas: `Timestamp` no Firestore ↔ `DateTime` no Model (converter no `fromMap`/`toMap`).
+- Datas: `Timestamp` no Firestore ↔ `DateTime` no Model via `@TimestampConverter()`
+  (`lib/core/utils/timestamp_converter.dart`) do `json_serializable`.
 - **Tempo agregado da mãe/avó é derivado** (soma das folhas) — não persistir em
   duplicidade no Firestore (evita divergência). Calcular ao montar a Entity/relatório.
 

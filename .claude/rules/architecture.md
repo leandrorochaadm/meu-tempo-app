@@ -105,8 +105,9 @@ Firebase
 
 1. **Domain** — Entity (`Entity`, sem `copyWith`, coleções unmodifiable), Failures
    (dados, não mensagens), contrato Repository, Params, UseCase (`call()`).
-2. **Data** — Model (`toEntity()`/`fromEntity()`, `fromMap()`/`toMap()`, nunca extends
-   Entity), DataSource (Firestore), RepositoryImpl (try/catch → `Either`).
+2. **Data** — Model (`toEntity()`/`fromEntity()`, `json_serializable`
+   `fromJson`/`toJson` + `fromDoc`, nunca extends Entity), DataSource (Firestore),
+   RepositoryImpl (try/catch → `Either`).
 3. **Presentation** — Event, State (sealed + Equatable), Bloc (`_mapFailure` no `catch`),
    Page (`BlocBuilder` + `switch`), widgets.
 4. **Validação** — rodar `flutter analyze` (zero issues) e a checklist de anti-patterns.
@@ -122,4 +123,4 @@ Firebase
 | Pausar cronômetro ativo ao iniciar outro | UseCase |
 | Converter Failure em mensagem | Bloc (`_mapFailure`) |
 | Formatar hora/duração | UI (formatter) |
-| Serializar para Firestore | Model (`toMap`/`fromMap`) |
+| Serializar para Firestore | Model (`json_serializable`: `toJson`/`fromJson`/`fromDoc`) |

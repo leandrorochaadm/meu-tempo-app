@@ -27,7 +27,7 @@ class TaskRemoteDataSourceImpl implements TaskRemoteDataSource {
   Future<List<TaskModel>> getTasks(String uid) async {
     try {
       final snap = await _tasks(uid).get();
-      return snap.docs.map((d) => TaskModel.fromMap(d.id, d.data())).toList();
+      return snap.docs.map((d) => TaskModel.fromDoc(d.id, d.data())).toList();
     } on FirebaseException catch (e) {
       throw mapFirebaseException(e); // -> AppException (core/error/exceptions.dart)
     }
@@ -36,7 +36,7 @@ class TaskRemoteDataSourceImpl implements TaskRemoteDataSource {
   @override
   Future<String> createTask(String uid, TaskModel task) async {
     try {
-      final ref = await _tasks(uid).add(task.toMap());
+      final ref = await _tasks(uid).add(task.toJson());
       return ref.id;
     } on FirebaseException catch (e) {
       throw mapFirebaseException(e);

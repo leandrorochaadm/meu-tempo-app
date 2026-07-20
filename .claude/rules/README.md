@@ -9,6 +9,7 @@ Carregar sob demanda via `@.claude/rules/<arquivo>.md`.
 |---|---|
 | `architecture.md` | Clean Architecture, regra de dependência, fluxo de dados |
 | `naming.md` | Nomenclatura de arquivos, classes e sufixos |
+| `enums.md` | Preferir `enum`/constantes; proibir strings hard-coded |
 | `domain-layer.md` | Entities, UseCases, Repositories (contratos), Failures |
 | `data-layer.md` | Models, DataSources, RepositoryImpl (Firestore) |
 | `presentation-layer.md` | BLoC (event→state), Pages, widgets, switch exaustivo |
@@ -16,6 +17,7 @@ Carregar sob demanda via `@.claude/rules/<arquivo>.md`.
 | `firebase.md` | Firebase Auth + Cloud Firestore: coleções, isolamento por usuário |
 | `navigation.md` | `go_router` + `BlocListener` para navegação reativa |
 | `layout.md` | UI mobile-first, chips em vez de dropdown, sem fricção |
+| `design.md` | Identidade visual: tema escuro, paleta rica, tipografia, movimento |
 | `logging.md` | Logging sem `print` |
 | `testing.md` | Testes com `bloc_test` + `mocktail` |
 | `templates/` | Modelos de código por camada |

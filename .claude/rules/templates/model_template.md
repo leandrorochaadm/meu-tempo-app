@@ -3,31 +3,32 @@ paths:
   - "lib/features/*/data/models/**"
 ---
 
-# Model Template (Firestore — conversão manual, sem json_serializable)
+# Model Template (Firestore — json_serializable + TimestampConverter)
 
 ```dart
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:json_annotation/json_annotation.dart';
+import '../../../../core/utils/timestamp_converter.dart';
 import '../../domain/entities/task_entity.dart';
 
+part 'task_model.g.dart';
+
+@JsonSerializable(includeIfNull: false)
 class TaskModel {
+  @JsonKey(includeToJson: false)   // id vem do doc.id, não é gravado no corpo
   final String id;
   final String title;
+  @TimestampConverter()
   final DateTime? dueDate;
 
   TaskModel({required this.id, required this.title, this.dueDate});
 
-  // Firestore -> Model (id vem do doc, não do corpo)
-  factory TaskModel.fromMap(String id, Map<String, dynamic> data) => TaskModel(
-        id: id,
-        title: data['title'] as String,
-        dueDate: (data['dueDate'] as Timestamp?)?.toDate(),
-      );
+  // Firestore doc -> Model (injeta o doc.id; o mapa já traz objetos Timestamp)
+  factory TaskModel.fromDoc(String id, Map<String, dynamic> data) =>
+      TaskModel.fromJson({...data, 'id': id});
 
-  // Model -> Firestore (não gravar o id no corpo; omitir nulos)
-  Map<String, dynamic> toMap() => {
-        'title': title,
-        if (dueDate != null) 'dueDate': Timestamp.fromDate(dueDate!),
-      };
+  factory TaskModel.fromJson(Map<String, dynamic> json) => _$TaskModelFromJson(json);
+  Map<String, dynamic> toJson() => _$TaskModelToJson(this);   // grava direto no Firestore
 
   // Model <-> Entity (ponte entre camadas)
   TaskEntity toEntity() => TaskEntity(id: id, title: title, dueDate: dueDate);
@@ -40,6 +41,10 @@ class TaskModel {
 ## Rules
 - NUNCA `extends {Feature}Entity` — classes separadas.
 - SEM `copyWith()`.
-- `fromMap(id, data)` + `toMap()` (Timestamp ↔ DateTime; omitir campos nulos com `if`).
+- `@JsonSerializable(includeIfNull: false)` + `part '{model}.g.dart'`; `fromJson`/`toJson` gerados.
+- `fromDoc(id, data)` injeta o `doc.id` no mapa antes do `fromJson`.
+- Campo `id` com `@JsonKey(includeToJson: false)` — lido do doc, nunca gravado no corpo.
+- Datas: `@TimestampConverter()` no campo `DateTime?` (`lib/core/utils/timestamp_converter.dart`).
 - `toEntity()` sempre; `fromEntity()` quando precisar gravar.
-- O `id` do documento fica fora do corpo do doc.
+- Rodar `dart run build_runner build --delete-conflicting-outputs` após criar/alterar o Model.
+```
