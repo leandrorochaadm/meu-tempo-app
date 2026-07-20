@@ -10,6 +10,10 @@ import '../../../appointment/presentation/bloc/agenda_bloc.dart';
 import '../../../appointment/presentation/pages/agenda_page.dart';
 import '../../../list/presentation/bloc/list_manager_bloc.dart';
 import '../../../list/presentation/pages/lists_page.dart';
+import '../../../migration/presentation/bloc/migration_bloc.dart';
+import '../../../migration/presentation/pages/migration_page.dart';
+import '../../../report/presentation/bloc/report_bloc.dart';
+import '../../../report/presentation/pages/report_page.dart';
 import '../../domain/entities/prioritized_leaf.dart';
 import '../../domain/entities/task_node.dart';
 import '../bloc/task_list_bloc.dart';
@@ -110,6 +114,29 @@ class _TaskListPageState extends State<TaskListPage> {
     }
   }
 
+  void _onMenu(String value) {
+    switch (value) {
+      case 'agenda':
+        _push(getIt<AgendaBloc>(), const AgendaPage());
+      case 'lists':
+        _push(getIt<ListManagerBloc>(), const ListsPage());
+      case 'report':
+        _push(getIt<ReportBloc>(), const ReportPage());
+      case 'migration':
+        _push(getIt<MigrationBloc>(), const MigrationPage());
+      case 'logout':
+        context.read<AuthBloc>().add(const AuthSignOutRequested());
+    }
+  }
+
+  void _push<B extends StateStreamableSource<Object?>>(B bloc, Widget page) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => BlocProvider<B>(create: (_) => bloc, child: page),
+      ),
+    );
+  }
+
   Future<void> _editTask(TaskNode node) async {
     final bloc = context.read<TaskListBloc>();
     final result = await Navigator.of(context).push<EditTaskResult>(
@@ -201,41 +228,22 @@ class _TaskListPageState extends State<TaskListPage> {
         title: const Text('Meu Tempo'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.event_rounded),
-            tooltip: 'Agenda',
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => BlocProvider(
-                  create: (_) => getIt<AgendaBloc>(),
-                  child: const AgendaPage(),
-                ),
-              ),
-            ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.folder_rounded),
-            tooltip: 'Listas',
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => BlocProvider(
-                  create: (_) => getIt<ListManagerBloc>(),
-                  child: const ListsPage(),
-                ),
-              ),
-            ),
-          ),
-          IconButton(
             icon: Icon(_priorityView
                 ? Icons.account_tree_rounded
                 : Icons.sort_rounded),
             tooltip: _priorityView ? 'Ver hierarquia' : 'Ver por prioridade',
             onPressed: () => setState(() => _priorityView = !_priorityView),
           ),
-          IconButton(
-            icon: const Icon(Icons.logout_rounded),
-            tooltip: 'Sair',
-            onPressed: () =>
-                context.read<AuthBloc>().add(const AuthSignOutRequested()),
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert_rounded),
+            onSelected: _onMenu,
+            itemBuilder: (context) => const [
+              PopupMenuItem(value: 'agenda', child: Text('Agenda')),
+              PopupMenuItem(value: 'lists', child: Text('Listas')),
+              PopupMenuItem(value: 'report', child: Text('Relatório')),
+              PopupMenuItem(value: 'migration', child: Text('Pendências')),
+              PopupMenuItem(value: 'logout', child: Text('Sair')),
+            ],
           ),
         ],
       ),

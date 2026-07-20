@@ -72,6 +72,16 @@ import 'package:meu_tempo/features/list/domain/usecases/watch_lists_use_case.dar
     as _i689;
 import 'package:meu_tempo/features/list/presentation/bloc/list_manager_bloc.dart'
     as _i427;
+import 'package:meu_tempo/features/migration/domain/usecases/get_pending_migrations_use_case.dart'
+    as _i842;
+import 'package:meu_tempo/features/migration/domain/usecases/migrate_task_use_case.dart'
+    as _i798;
+import 'package:meu_tempo/features/migration/presentation/bloc/migration_bloc.dart'
+    as _i492;
+import 'package:meu_tempo/features/report/domain/usecases/get_list_report_use_case.dart'
+    as _i67;
+import 'package:meu_tempo/features/report/presentation/bloc/report_bloc.dart'
+    as _i318;
 import 'package:meu_tempo/features/task/data/datasources/task_remote_data_source.dart'
     as _i592;
 import 'package:meu_tempo/features/task/data/datasources/timer_remote_data_source.dart'
@@ -125,6 +135,12 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i974.FirebaseFirestore>(() => firebaseModule.firestore);
     gh.lazySingleton<_i483.CheckFitsInDayUseCase>(
       () => const _i483.CheckFitsInDayUseCase(),
+    );
+    gh.lazySingleton<_i842.GetPendingMigrationsUseCase>(
+      () => const _i842.GetPendingMigrationsUseCase(),
+    );
+    gh.lazySingleton<_i67.GetListReportUseCase>(
+      () => const _i67.GetListReportUseCase(),
     );
     gh.lazySingleton<_i27.BuildTaskTreeUseCase>(
       () => const _i27.BuildTaskTreeUseCase(),
@@ -255,6 +271,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i1025.RegisterManualTimeUseCase>(
       () => _i1025.RegisterManualTimeUseCase(gh<_i521.TaskRepository>()),
     );
+    gh.lazySingleton<_i798.MigrateTaskUseCase>(
+      () => _i798.MigrateTaskUseCase(gh<_i521.TaskRepository>()),
+    );
     gh.lazySingleton<_i650.AddSubtaskUseCase>(
       () => _i650.AddSubtaskUseCase(gh<_i521.TaskRepository>()),
     );
@@ -283,6 +302,13 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i1046.WatchAuthStateUseCase>(),
       ),
     );
+    gh.factory<_i318.ReportBloc>(
+      () => _i318.ReportBloc(
+        gh<_i1035.WatchTasksUseCase>(),
+        gh<_i689.WatchListsUseCase>(),
+        gh<_i67.GetListReportUseCase>(),
+      ),
+    );
     gh.factory<_i990.AgendaBloc>(
       () => _i990.AgendaBloc(
         gh<_i777.WatchAppointmentsForDayUseCase>(),
@@ -292,6 +318,14 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i559.WatchConfigUseCase>(),
         gh<_i1035.WatchTasksUseCase>(),
         gh<_i655.EnsureInboxExistsUseCase>(),
+      ),
+    );
+    gh.factory<_i492.MigrationBloc>(
+      () => _i492.MigrationBloc(
+        gh<_i1035.WatchTasksUseCase>(),
+        gh<_i842.GetPendingMigrationsUseCase>(),
+        gh<_i798.MigrateTaskUseCase>(),
+        gh<_i162.DeleteTaskUseCase>(),
       ),
     );
     gh.factory<_i35.TaskListBloc>(
