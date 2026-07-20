@@ -6,6 +6,8 @@ import '../../../../core/ui/app_empty_state.dart';
 import '../../../../core/ui/app_list_skeleton.dart';
 import '../../../../core/di/injection.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
+import '../../../appointment/presentation/bloc/agenda_bloc.dart';
+import '../../../appointment/presentation/pages/agenda_page.dart';
 import '../../../list/presentation/bloc/list_manager_bloc.dart';
 import '../../../list/presentation/pages/lists_page.dart';
 import '../../domain/entities/prioritized_leaf.dart';
@@ -198,6 +200,18 @@ class _TaskListPageState extends State<TaskListPage> {
       appBar: AppBar(
         title: const Text('Meu Tempo'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.event_rounded),
+            tooltip: 'Agenda',
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => BlocProvider(
+                  create: (_) => getIt<AgendaBloc>(),
+                  child: const AgendaPage(),
+                ),
+              ),
+            ),
+          ),
           IconButton(
             icon: const Icon(Icons.folder_rounded),
             tooltip: 'Listas',

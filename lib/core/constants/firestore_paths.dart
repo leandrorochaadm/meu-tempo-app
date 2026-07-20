@@ -15,6 +15,9 @@ class FirestorePaths {
   /// Nome do doc do cronômetro ativo (dentro de `config`).
   static const String activeTimerDoc = 'activeTimer';
 
+  /// Nome do doc de configurações do dia (dentro de `config`).
+  static const String settingsDoc = 'settings';
+
   static String user(String uid) => '$usersSegment/$uid';
   static String lists(String uid) => '${user(uid)}/$listsSegment';
   static String tasks(String uid) => '${user(uid)}/$tasksSegment';

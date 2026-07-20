@@ -14,6 +14,22 @@ import 'package:firebase_auth/firebase_auth.dart' as _i59;
 import 'package:get_it/get_it.dart' as _i174;
 import 'package:injectable/injectable.dart' as _i526;
 import 'package:meu_tempo/core/di/injection.dart' as _i767;
+import 'package:meu_tempo/features/appointment/data/datasources/appointment_remote_data_source.dart'
+    as _i621;
+import 'package:meu_tempo/features/appointment/data/repositories/appointment_repository_impl.dart'
+    as _i266;
+import 'package:meu_tempo/features/appointment/domain/repositories/appointment_repository.dart'
+    as _i259;
+import 'package:meu_tempo/features/appointment/domain/usecases/check_fits_in_day_use_case.dart'
+    as _i483;
+import 'package:meu_tempo/features/appointment/domain/usecases/create_appointment_use_case.dart'
+    as _i176;
+import 'package:meu_tempo/features/appointment/domain/usecases/delete_appointment_use_case.dart'
+    as _i502;
+import 'package:meu_tempo/features/appointment/domain/usecases/watch_appointments_for_day_use_case.dart'
+    as _i777;
+import 'package:meu_tempo/features/appointment/presentation/bloc/agenda_bloc.dart'
+    as _i990;
 import 'package:meu_tempo/features/auth/data/datasources/auth_remote_data_source.dart'
     as _i788;
 import 'package:meu_tempo/features/auth/data/repositories/auth_repository_impl.dart'
@@ -28,6 +44,16 @@ import 'package:meu_tempo/features/auth/domain/usecases/watch_auth_state_use_cas
     as _i1046;
 import 'package:meu_tempo/features/auth/presentation/bloc/auth_bloc.dart'
     as _i708;
+import 'package:meu_tempo/features/config/data/datasources/config_remote_data_source.dart'
+    as _i584;
+import 'package:meu_tempo/features/config/data/repositories/config_repository_impl.dart'
+    as _i62;
+import 'package:meu_tempo/features/config/domain/repositories/config_repository.dart'
+    as _i330;
+import 'package:meu_tempo/features/config/domain/usecases/set_available_minutes_use_case.dart'
+    as _i949;
+import 'package:meu_tempo/features/config/domain/usecases/watch_config_use_case.dart'
+    as _i559;
 import 'package:meu_tempo/features/list/data/datasources/task_list_remote_data_source.dart'
     as _i813;
 import 'package:meu_tempo/features/list/data/repositories/task_list_repository_impl.dart'
@@ -97,6 +123,9 @@ extension GetItInjectableX on _i174.GetIt {
     final firebaseModule = _$FirebaseModule();
     gh.lazySingleton<_i59.FirebaseAuth>(() => firebaseModule.firebaseAuth);
     gh.lazySingleton<_i974.FirebaseFirestore>(() => firebaseModule.firestore);
+    gh.lazySingleton<_i483.CheckFitsInDayUseCase>(
+      () => const _i483.CheckFitsInDayUseCase(),
+    );
     gh.lazySingleton<_i27.BuildTaskTreeUseCase>(
       () => const _i27.BuildTaskTreeUseCase(),
     );
@@ -112,10 +141,21 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i788.AuthRemoteDataSource>(
       () => _i788.AuthRemoteDataSourceImpl(gh<_i59.FirebaseAuth>()),
     );
+    gh.lazySingleton<_i621.AppointmentRemoteDataSource>(
+      () => _i621.AppointmentRemoteDataSourceImpl(
+        gh<_i974.FirebaseFirestore>(),
+        gh<_i59.FirebaseAuth>(),
+      ),
+    );
     gh.lazySingleton<_i592.TaskRemoteDataSource>(
       () => _i592.TaskRemoteDataSourceImpl(
         gh<_i974.FirebaseFirestore>(),
         gh<_i59.FirebaseAuth>(),
+      ),
+    );
+    gh.lazySingleton<_i259.AppointmentRepository>(
+      () => _i266.AppointmentRepositoryImpl(
+        gh<_i621.AppointmentRemoteDataSource>(),
       ),
     );
     gh.lazySingleton<_i588.TimerRemoteDataSource>(
@@ -127,14 +167,34 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i381.TimerRepository>(
       () => _i825.TimerRepositoryImpl(gh<_i588.TimerRemoteDataSource>()),
     );
+    gh.lazySingleton<_i584.ConfigRemoteDataSource>(
+      () => _i584.ConfigRemoteDataSourceImpl(
+        gh<_i974.FirebaseFirestore>(),
+        gh<_i59.FirebaseAuth>(),
+      ),
+    );
     gh.lazySingleton<_i219.TaskListRepository>(
       () => _i924.TaskListRepositoryImpl(gh<_i813.TaskListRemoteDataSource>()),
     );
     gh.lazySingleton<_i397.WatchActiveTimerUseCase>(
       () => _i397.WatchActiveTimerUseCase(gh<_i381.TimerRepository>()),
     );
+    gh.lazySingleton<_i176.CreateAppointmentUseCase>(
+      () => _i176.CreateAppointmentUseCase(gh<_i259.AppointmentRepository>()),
+    );
+    gh.lazySingleton<_i502.DeleteAppointmentUseCase>(
+      () => _i502.DeleteAppointmentUseCase(gh<_i259.AppointmentRepository>()),
+    );
+    gh.lazySingleton<_i777.WatchAppointmentsForDayUseCase>(
+      () => _i777.WatchAppointmentsForDayUseCase(
+        gh<_i259.AppointmentRepository>(),
+      ),
+    );
     gh.lazySingleton<_i224.AuthRepository>(
       () => _i534.AuthRepositoryImpl(gh<_i788.AuthRemoteDataSource>()),
+    );
+    gh.lazySingleton<_i330.ConfigRepository>(
+      () => _i62.ConfigRepositoryImpl(gh<_i584.ConfigRemoteDataSource>()),
     );
     gh.lazySingleton<_i521.TaskRepository>(
       () => _i1011.TaskRepositoryImpl(gh<_i592.TaskRemoteDataSource>()),
@@ -186,6 +246,12 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i666.DeleteListUseCase>(),
       ),
     );
+    gh.lazySingleton<_i949.SetAvailableMinutesUseCase>(
+      () => _i949.SetAvailableMinutesUseCase(gh<_i330.ConfigRepository>()),
+    );
+    gh.lazySingleton<_i559.WatchConfigUseCase>(
+      () => _i559.WatchConfigUseCase(gh<_i330.ConfigRepository>()),
+    );
     gh.lazySingleton<_i1025.RegisterManualTimeUseCase>(
       () => _i1025.RegisterManualTimeUseCase(gh<_i521.TaskRepository>()),
     );
@@ -215,6 +281,17 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i98.SignInWithGoogleUseCase>(),
         gh<_i846.SignOutUseCase>(),
         gh<_i1046.WatchAuthStateUseCase>(),
+      ),
+    );
+    gh.factory<_i990.AgendaBloc>(
+      () => _i990.AgendaBloc(
+        gh<_i777.WatchAppointmentsForDayUseCase>(),
+        gh<_i176.CreateAppointmentUseCase>(),
+        gh<_i502.DeleteAppointmentUseCase>(),
+        gh<_i483.CheckFitsInDayUseCase>(),
+        gh<_i559.WatchConfigUseCase>(),
+        gh<_i1035.WatchTasksUseCase>(),
+        gh<_i655.EnsureInboxExistsUseCase>(),
       ),
     );
     gh.factory<_i35.TaskListBloc>(
