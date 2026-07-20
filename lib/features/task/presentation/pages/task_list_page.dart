@@ -307,6 +307,9 @@ class _TaskListPageState extends State<TaskListPage> {
                               leaves: prioritized,
                               activeTaskId: activeTaskId,
                               onToggleTimer: _toggleLeafTimer,
+                              onEdit: _editTask,
+                              onToggleDone: _toggleDone,
+                              onDelete: _confirmDelete,
                             )
                           : _TaskTree(
                               nodes: _flatten(roots),
@@ -391,11 +394,17 @@ class _PriorityList extends StatelessWidget {
     required this.leaves,
     required this.activeTaskId,
     required this.onToggleTimer,
+    required this.onEdit,
+    required this.onToggleDone,
+    required this.onDelete,
   });
 
   final List<PrioritizedLeaf> leaves;
   final String? activeTaskId;
   final void Function(PrioritizedLeaf leaf, bool start) onToggleTimer;
+  final void Function(TaskNode node) onEdit;
+  final void Function(TaskNode node, bool done) onToggleDone;
+  final void Function(TaskNode node) onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -407,11 +416,16 @@ class _PriorityList extends StatelessWidget {
       itemBuilder: (context, i) {
         final leaf = leaves[i];
         final isActive = leaf.task.id == activeTaskId;
+        // Folha embrulhada em TaskNode para reusar os handlers da página.
+        final node = TaskNode(task: leaf.task, level: 0);
         return PrioritizedLeafTile(
           leaf: leaf,
           isActive: isActive,
           today: today,
           onToggleTimer: () => onToggleTimer(leaf, !isActive),
+          onEdit: () => onEdit(node),
+          onToggleDone: () => onToggleDone(node, !leaf.task.isDone),
+          onDelete: () => onDelete(node),
         );
       },
     );

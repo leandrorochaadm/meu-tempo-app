@@ -5,20 +5,26 @@ import '../../../../core/utils/formatters/date_formatter.dart';
 import '../../../../core/utils/formatters/duration_formatter.dart';
 import '../../domain/entities/prioritized_leaf.dart';
 
-/// Item da listagem por prioridade: título, subtítulo (mãe › avó), pontuação
-/// e cronômetro em 1 toque.
+/// Item da listagem por prioridade: título, subtítulo (mãe › avó), pontuação,
+/// cronômetro em 1 toque e menu de ações (editar/concluir/excluir).
 class PrioritizedLeafTile extends StatelessWidget {
   const PrioritizedLeafTile({
     super.key,
     required this.leaf,
     required this.isActive,
     required this.onToggleTimer,
+    required this.onEdit,
+    required this.onToggleDone,
+    required this.onDelete,
     required this.today,
   });
 
   final PrioritizedLeaf leaf;
   final bool isActive;
   final VoidCallback onToggleTimer;
+  final VoidCallback onEdit;
+  final VoidCallback onToggleDone;
+  final VoidCallback onDelete;
   final DateTime today;
 
   @override
@@ -77,6 +83,23 @@ class PrioritizedLeafTile extends StatelessWidget {
               isActive ? Icons.stop_rounded : Icons.play_arrow_rounded,
               color: isActive ? colors.timerActive : colors.primary,
             ),
+          ),
+          PopupMenuButton<String>(
+            icon: Icon(Icons.more_vert_rounded, color: colors.textMuted),
+            onSelected: (value) => switch (value) {
+              'edit' => onEdit(),
+              'done' => onToggleDone(),
+              'delete' => onDelete(),
+              _ => null,
+            },
+            itemBuilder: (_) => [
+              PopupMenuItem(
+                value: 'done',
+                child: Text(task.isDone ? 'Reabrir' : 'Concluir'),
+              ),
+              const PopupMenuItem(value: 'edit', child: Text('Editar')),
+              const PopupMenuItem(value: 'delete', child: Text('Excluir')),
+            ],
           ),
         ],
       ),
