@@ -9,6 +9,7 @@ import '../../../../core/error/failures.dart';
 import '../../../../core/usecase/usecase.dart';
 import '../../../task/domain/entities/task_entity.dart';
 import '../../../task/domain/usecases/delete_task_use_case.dart';
+import '../../../task/domain/usecases/edit_task_use_case.dart';
 import '../../../task/domain/usecases/watch_tasks_use_case.dart';
 import '../../domain/usecases/get_pending_migrations_use_case.dart';
 import '../../domain/usecases/migrate_task_use_case.dart';
@@ -25,10 +26,12 @@ class MigrationBloc extends Bloc<MigrationEvent, MigrationState> {
     this._getPending,
     this._migrateTask,
     this._deleteTask,
+    this._editTask,
   ) : super(const MigrationLoading()) {
     on<MigrationStarted>(_onStarted);
     on<MigrationTasksUpdated>(_onUpdated);
     on<TaskMigrated>(_onMigrated);
+    on<TaskUnmigrated>(_onUnmigrated);
     on<TaskDiscarded>(_onDiscarded);
   }
 
@@ -36,6 +39,7 @@ class MigrationBloc extends Bloc<MigrationEvent, MigrationState> {
   final GetPendingMigrationsUseCase _getPending;
   final MigrateTaskUseCase _migrateTask;
   final DeleteTaskUseCase _deleteTask;
+  final EditTaskUseCase _editTask;
 
   StreamSubscription<Either<Failure, List<TaskEntity>>>? _sub;
   late DateTime _today;
@@ -63,6 +67,21 @@ class MigrationBloc extends Bloc<MigrationEvent, MigrationState> {
     Emitter<MigrationState> emit,
   ) async {
     await _migrateTask(MigrateTaskParams(task: e.task, today: _today));
+  }
+
+  /// Desfaz a migração: devolve o prazo original (a tarefa volta às pendências).
+  Future<void> _onUnmigrated(
+    TaskUnmigrated e,
+    Emitter<MigrationState> emit,
+  ) async {
+    final t = e.task;
+    await _editTask(EditTaskParams(
+      taskId: t.id,
+      title: t.title,
+      estimatedMinutes: t.estimatedMinutes,
+      dueDate: t.dueDate,
+      importance: t.importance,
+    ));
   }
 
   Future<void> _onDiscarded(

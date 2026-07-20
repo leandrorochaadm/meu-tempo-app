@@ -345,6 +345,7 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i842.GetPendingMigrationsUseCase>(),
         gh<_i798.MigrateTaskUseCase>(),
         gh<_i162.DeleteTaskUseCase>(),
+        gh<_i43.EditTaskUseCase>(),
       ),
     );
     return this;

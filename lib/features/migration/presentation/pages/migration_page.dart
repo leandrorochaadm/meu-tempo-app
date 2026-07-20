@@ -23,6 +23,19 @@ class _MigrationPageState extends State<MigrationPage> {
     context.read<MigrationBloc>().add(const MigrationStarted());
   }
 
+  void _migrate(BuildContext context, TaskEntity task) {
+    final bloc = context.read<MigrationBloc>()..add(TaskMigrated(task));
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(
+        content: Text('"${task.title}" migrada para hoje'),
+        action: SnackBarAction(
+          label: 'Desfazer',
+          onPressed: () => bloc.add(TaskUnmigrated(task)),
+        ),
+      ));
+  }
+
   @override
   Widget build(BuildContext context) {
     final today = DateTime.now();
@@ -53,9 +66,7 @@ class _MigrationPageState extends State<MigrationPage> {
                       itemBuilder: (context, i) => _PendingTile(
                         task: pending[i],
                         today: today,
-                        onMigrate: () => context
-                            .read<MigrationBloc>()
-                            .add(TaskMigrated(pending[i])),
+                        onMigrate: () => _migrate(context, pending[i]),
                         onDiscard: () => context
                             .read<MigrationBloc>()
                             .add(TaskDiscarded(pending[i].id)),

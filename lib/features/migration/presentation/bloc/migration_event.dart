@@ -27,6 +27,14 @@ class TaskMigrated extends MigrationEvent {
   List<Object?> get props => [task];
 }
 
+class TaskUnmigrated extends MigrationEvent {
+  const TaskUnmigrated(this.task);
+  final TaskEntity task;
+
+  @override
+  List<Object?> get props => [task];
+}
+
 class TaskDiscarded extends MigrationEvent {
   const TaskDiscarded(this.taskId);
   final String taskId;
