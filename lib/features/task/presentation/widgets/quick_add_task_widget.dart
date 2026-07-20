@@ -1,15 +1,20 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/theme_context_extensions.dart';
+import '../../../list/domain/entities/task_list_entity.dart';
 
 /// Barra de criação rápida **ancorada no topo** (nunca bottom-sheet — o teclado
 /// jamais cobre o campo). Autofocus + ação "done" cria a tarefa e **reabre o
-/// campo focado** para lançar várias em sequência (H12).
+/// campo focado** para lançar várias em sequência (H12). Quando há 2+ listas,
+/// mostra chips para escolher onde criar (H5/H11).
 class QuickAddTaskWidget extends StatefulWidget {
   const QuickAddTaskWidget({
     super.key,
     required this.onSubmit,
     this.hint = 'Nova tarefa…',
+    this.lists = const [],
+    this.selectedListId,
+    this.onListSelected,
   });
 
   /// Chamado com o título quando o usuário confirma (ação "done").
@@ -17,6 +22,11 @@ class QuickAddTaskWidget extends StatefulWidget {
 
   /// Texto do placeholder (muda ao adicionar subtarefa).
   final String hint;
+
+  /// Listas disponíveis (o seletor só aparece com 2+).
+  final List<TaskListEntity> lists;
+  final String? selectedListId;
+  final void Function(String listId)? onListSelected;
 
   @override
   State<QuickAddTaskWidget> createState() => _QuickAddTaskWidgetState();
@@ -45,10 +55,15 @@ class _QuickAddTaskWidgetState extends State<QuickAddTaskWidget> {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final showListChips =
+        widget.lists.length > 1 && widget.onListSelected != null;
     return Container(
       padding: EdgeInsets.all(context.space.md),
       color: colors.surfaceHigh,
-      child: Row(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
         children: [
           Expanded(
             child: TextField(
@@ -80,6 +95,25 @@ class _QuickAddTaskWidgetState extends State<QuickAddTaskWidget> {
             icon: Icon(Icons.arrow_upward_rounded, color: colors.primary),
             tooltip: 'Adicionar',
           ),
+            ],
+          ),
+          if (showListChips) ...[
+            SizedBox(height: context.space.sm),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Wrap(
+                spacing: context.space.sm,
+                children: [
+                  for (final l in widget.lists)
+                    ChoiceChip(
+                      label: Text(l.name),
+                      selected: widget.selectedListId == l.id,
+                      onSelected: (_) => widget.onListSelected!(l.id),
+                    ),
+                ],
+              ),
+            ),
+          ],
         ],
       ),
     );

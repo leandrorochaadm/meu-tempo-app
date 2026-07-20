@@ -7,7 +7,9 @@ import 'package:injectable/injectable.dart';
 
 import '../../../../core/error/failures.dart';
 import '../../../../core/usecase/usecase.dart';
+import '../../../list/domain/entities/task_list_entity.dart';
 import '../../../list/domain/usecases/ensure_inbox_exists_use_case.dart';
+import '../../../list/domain/usecases/watch_lists_use_case.dart';
 import '../../domain/entities/active_timer_entity.dart';
 import '../../domain/entities/importance_enum.dart';
 import '../../domain/entities/prioritized_leaf.dart';
@@ -50,9 +52,11 @@ class TaskListBloc extends Bloc<TaskListEvent, TaskListState> {
     this._deleteTask,
     this._editTask,
     this._moveTask,
+    this._watchLists,
   ) : super(const TaskListLoading()) {
     on<TaskListStarted>(_onStarted);
     on<TaskListUpdated>(_onUpdated);
+    on<TaskListListsUpdated>(_onListsUpdated);
     on<ActiveTimerUpdated>(_onTimerUpdated);
     on<TaskCreated>(_onCreated);
     on<SubtaskRequested>(_onSubtaskRequested);
@@ -79,12 +83,15 @@ class TaskListBloc extends Bloc<TaskListEvent, TaskListState> {
   final DeleteTaskUseCase _deleteTask;
   final EditTaskUseCase _editTask;
   final MoveTaskUseCase _moveTask;
+  final WatchListsUseCase _watchLists;
 
   StreamSubscription<Either<Failure, List<TaskEntity>>>? _tasksSub;
   StreamSubscription<Either<Failure, ActiveTimerEntity?>>? _timerSub;
+  StreamSubscription<Either<Failure, List<TaskListEntity>>>? _listsSub;
 
   String? _inboxListId;
   List<TaskEntity> _latestTasks = const [];
+  List<TaskListEntity> _lists = const [];
   String? _activeTaskId;
 
   Future<void> _onStarted(
@@ -110,6 +117,18 @@ class TaskListBloc extends Bloc<TaskListEvent, TaskListState> {
         result.getRight().toNullable()?.targetId,
       )),
     );
+
+    await _listsSub?.cancel();
+    _listsSub = _watchLists(const NoParams())
+        .listen((result) => add(TaskListListsUpdated(result)));
+  }
+
+  void _onListsUpdated(TaskListListsUpdated e, Emitter<TaskListState> emit) {
+    final lists = e.result.getRight().toNullable();
+    if (lists != null) {
+      _lists = lists;
+      _emitLoaded(emit);
+    }
   }
 
   void _onUpdated(TaskListUpdated event, Emitter<TaskListState> emit) {
@@ -136,6 +155,7 @@ class TaskListBloc extends Bloc<TaskListEvent, TaskListState> {
       _buildTree(_latestTasks),
       prioritized: _getPrioritized(_latestTasks, DateTime.now()),
       activeTaskId: _activeTaskId,
+      lists: _lists,
     ));
   }
 
@@ -143,7 +163,7 @@ class TaskListBloc extends Bloc<TaskListEvent, TaskListState> {
     TaskCreated event,
     Emitter<TaskListState> emit,
   ) async {
-    final listId = _inboxListId;
+    final listId = event.listId ?? _inboxListId;
     if (listId == null) return;
     final result = await _createTask(
       CreateTaskParams(
@@ -273,6 +293,7 @@ class TaskListBloc extends Bloc<TaskListEvent, TaskListState> {
   Future<void> close() {
     _tasksSub?.cancel();
     _timerSub?.cancel();
+    _listsSub?.cancel();
     return super.close();
   }
 }

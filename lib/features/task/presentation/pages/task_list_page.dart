@@ -8,6 +8,7 @@ import '../../../../core/di/injection.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../appointment/presentation/bloc/agenda_bloc.dart';
 import '../../../appointment/presentation/pages/agenda_page.dart';
+import '../../../list/domain/entities/task_list_entity.dart';
 import '../../../list/presentation/bloc/list_manager_bloc.dart';
 import '../../../list/presentation/pages/lists_page.dart';
 import '../../../migration/presentation/bloc/migration_bloc.dart';
@@ -34,6 +35,7 @@ class _TaskListPageState extends State<TaskListPage> {
   bool _quickAddVisible = false;
   bool _priorityView = false;
   TaskNode? _subtaskParent;
+  String? _selectedListId;
 
   @override
   void initState() {
@@ -59,7 +61,7 @@ class _TaskListPageState extends State<TaskListPage> {
         title: title,
       ));
     } else {
-      bloc.add(TaskCreated(title));
+      bloc.add(TaskCreated(title, listId: _selectedListId));
     }
   }
 
@@ -82,9 +84,21 @@ class _TaskListPageState extends State<TaskListPage> {
   }
 
   void _toggleDone(TaskNode node, bool done) {
-    context
-        .read<TaskListBloc>()
-        .add(CompleteToggled(taskId: node.task.id, done: done));
+    final bloc = context.read<TaskListBloc>()
+      ..add(CompleteToggled(taskId: node.task.id, done: done));
+    if (done) {
+      // Desfazer (H13): reabre a folha.
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(
+          content: Text('"${node.task.title}" concluída'),
+          action: SnackBarAction(
+            label: 'Desfazer',
+            onPressed: () =>
+                bloc.add(CompleteToggled(taskId: node.task.id, done: false)),
+          ),
+        ));
+    }
   }
 
   Future<void> _confirmDelete(TaskNode node) async {
@@ -223,6 +237,14 @@ class _TaskListPageState extends State<TaskListPage> {
   @override
   Widget build(BuildContext context) {
     final parent = _subtaskParent;
+    // Listas do usuário (só para o seletor da criação rápida de tarefa raiz).
+    final lists = context.select<TaskListBloc, List<TaskListEntity>>((b) {
+      final s = b.state;
+      return s is TaskListLoaded ? s.lists : const [];
+    });
+    _selectedListId ??= lists.where((l) => l.isDefault).isNotEmpty
+        ? lists.firstWhere((l) => l.isDefault).id
+        : (lists.isNotEmpty ? lists.first.id : null);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Meu Tempo'),
@@ -257,6 +279,10 @@ class _TaskListPageState extends State<TaskListPage> {
                     ? 'Nova tarefa…'
                     : 'Subtarefa de "${parent.task.title}"…',
                 onSubmit: _submit,
+                // Seletor de lista só na criação de tarefa raiz.
+                lists: parent == null ? lists : const [],
+                selectedListId: _selectedListId,
+                onListSelected: (id) => setState(() => _selectedListId = id),
               ),
             Expanded(
               child: BlocConsumer<TaskListBloc, TaskListState>(

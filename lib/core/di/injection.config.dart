@@ -295,6 +295,25 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i1035.WatchTasksUseCase>(
       () => _i1035.WatchTasksUseCase(gh<_i521.TaskRepository>()),
     );
+    gh.factory<_i35.TaskListBloc>(
+      () => _i35.TaskListBloc(
+        gh<_i1035.WatchTasksUseCase>(),
+        gh<_i658.CreateTaskUseCase>(),
+        gh<_i655.EnsureInboxExistsUseCase>(),
+        gh<_i650.AddSubtaskUseCase>(),
+        gh<_i27.BuildTaskTreeUseCase>(),
+        gh<_i1067.GetPrioritizedLeavesUseCase>(),
+        gh<_i397.WatchActiveTimerUseCase>(),
+        gh<_i210.StartTimerUseCase>(),
+        gh<_i726.StopTimerUseCase>(),
+        gh<_i1025.RegisterManualTimeUseCase>(),
+        gh<_i623.CompleteTaskUseCase>(),
+        gh<_i162.DeleteTaskUseCase>(),
+        gh<_i43.EditTaskUseCase>(),
+        gh<_i213.MoveTaskUseCase>(),
+        gh<_i689.WatchListsUseCase>(),
+      ),
+    );
     gh.factory<_i708.AuthBloc>(
       () => _i708.AuthBloc(
         gh<_i98.SignInWithGoogleUseCase>(),
@@ -326,24 +345,6 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i842.GetPendingMigrationsUseCase>(),
         gh<_i798.MigrateTaskUseCase>(),
         gh<_i162.DeleteTaskUseCase>(),
-      ),
-    );
-    gh.factory<_i35.TaskListBloc>(
-      () => _i35.TaskListBloc(
-        gh<_i1035.WatchTasksUseCase>(),
-        gh<_i658.CreateTaskUseCase>(),
-        gh<_i655.EnsureInboxExistsUseCase>(),
-        gh<_i650.AddSubtaskUseCase>(),
-        gh<_i27.BuildTaskTreeUseCase>(),
-        gh<_i1067.GetPrioritizedLeavesUseCase>(),
-        gh<_i397.WatchActiveTimerUseCase>(),
-        gh<_i210.StartTimerUseCase>(),
-        gh<_i726.StopTimerUseCase>(),
-        gh<_i1025.RegisterManualTimeUseCase>(),
-        gh<_i623.CompleteTaskUseCase>(),
-        gh<_i162.DeleteTaskUseCase>(),
-        gh<_i43.EditTaskUseCase>(),
-        gh<_i213.MoveTaskUseCase>(),
       ),
     );
     return this;

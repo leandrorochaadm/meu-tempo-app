@@ -21,13 +21,23 @@ class TaskListUpdated extends TaskListEvent {
   List<Object?> get props => [result];
 }
 
-/// Criação rápida: só o título (tarefa mãe na "Entrada").
-class TaskCreated extends TaskListEvent {
-  const TaskCreated(this.title);
-  final String title;
+/// Emitido internamente quando as listas do usuário mudam.
+class TaskListListsUpdated extends TaskListEvent {
+  const TaskListListsUpdated(this.result);
+  final Either<Failure, List<TaskListEntity>> result;
 
   @override
-  List<Object?> get props => [title];
+  List<Object?> get props => [result];
+}
+
+/// Criação rápida: título + lista escolhida (`null` = "Entrada").
+class TaskCreated extends TaskListEvent {
+  const TaskCreated(this.title, {this.listId});
+  final String title;
+  final String? listId;
+
+  @override
+  List<Object?> get props => [title, listId];
 }
 
 /// Emitido internamente quando o cronômetro ativo muda.

@@ -5,6 +5,7 @@ import 'package:meu_tempo/core/error/failures.dart';
 import 'package:meu_tempo/core/usecase/usecase.dart';
 import 'package:meu_tempo/features/list/domain/entities/task_list_entity.dart';
 import 'package:meu_tempo/features/list/domain/usecases/ensure_inbox_exists_use_case.dart';
+import 'package:meu_tempo/features/list/domain/usecases/watch_lists_use_case.dart';
 import 'package:meu_tempo/features/task/domain/entities/task_entity.dart';
 import 'package:meu_tempo/features/task/domain/entities/active_timer_entity.dart';
 import 'package:meu_tempo/features/task/domain/task_failures.dart';
@@ -48,6 +49,8 @@ class _MockEdit extends Mock implements EditTaskUseCase {}
 
 class _MockMove extends Mock implements MoveTaskUseCase {}
 
+class _MockWatchLists extends Mock implements WatchListsUseCase {}
+
 class _FakeNoParams extends Fake implements NoParams {}
 
 class _FakeCreateParams extends Fake implements CreateTaskParams {}
@@ -81,6 +84,7 @@ void main() {
   late _MockDelete deleteTask;
   late _MockEdit editTask;
   late _MockMove moveTask;
+  late _MockWatchLists watchLists;
   const buildTree = BuildTaskTreeUseCase();
 
   const inbox = TaskListEntity(id: 'inbox', name: 'Entrada', isDefault: true);
@@ -117,7 +121,11 @@ void main() {
     deleteTask = _MockDelete();
     editTask = _MockEdit();
     moveTask = _MockMove();
+    watchLists = _MockWatchLists();
     when(() => ensureInbox(any())).thenAnswer((_) async => const Right(inbox));
+    when(() => watchLists(any())).thenAnswer(
+      (_) => const Stream<Either<Failure, List<TaskListEntity>>>.empty(),
+    );
     when(() => watchActiveTimer(any())).thenAnswer(
       (_) => const Stream<Either<Failure, ActiveTimerEntity?>>.empty(),
     );
@@ -140,6 +148,7 @@ void main() {
         deleteTask,
         editTask,
         moveTask,
+        watchLists,
       );
 
   blocTest<TaskListBloc, TaskListState>(
@@ -339,6 +348,20 @@ void main() {
       expect(p.title, 'Novo');
     },
   );
+
+  test('as listas do usuário são refletidas no estado Loaded', () async {
+    when(() => watchTasks(any())).thenAnswer((_) => Stream.value(Right([task])));
+    when(() => watchLists(any()))
+        .thenAnswer((_) => Stream.value(const Right([inbox])));
+    final bloc = build();
+    bloc.add(const TaskListStarted());
+    await Future<void>.delayed(const Duration(milliseconds: 30));
+
+    final state = bloc.state;
+    expect(state, isA<TaskListLoaded>());
+    expect((state as TaskListLoaded).lists, const [inbox]);
+    await bloc.close();
+  });
 
   blocTest<TaskListBloc, TaskListState>(
     'MoveRequested delega ao MoveTaskUseCase',

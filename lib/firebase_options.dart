@@ -18,11 +18,12 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'TODO_API_KEY',
-    appId: 'TODO_APP_ID',
-    messagingSenderId: 'TODO_SENDER_ID',
-    projectId: 'TODO_PROJECT_ID',
-    authDomain: 'TODO_PROJECT_ID.firebaseapp.com',
-    storageBucket: 'TODO_PROJECT_ID.appspot.com',
+    apiKey: 'AIzaSyDQVZbCxp0M_KXmCGdbScVFBE0-P2jsZok',
+    appId: '1:588975528122:web:dbc3c6d2b8f4a782250a83',
+    messagingSenderId: '588975528122',
+    projectId: 'meu-tempo-dev',
+    authDomain: 'meu-tempo-dev.firebaseapp.com',
+    storageBucket: 'meu-tempo-dev.firebasestorage.app',
   );
+
 }
