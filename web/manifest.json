@@ -1,11 +1,11 @@
 {
-    "name": "meu_tempo",
-    "short_name": "meu_tempo",
+    "name": "Meu Tempo",
+    "short_name": "Meu Tempo",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#101216",
+    "theme_color": "#101216",
+    "description": "Bullet Journal digital com cronômetro por tarefa.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
