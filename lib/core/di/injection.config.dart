@@ -56,6 +56,8 @@ import 'package:meu_tempo/features/config/domain/usecases/set_available_minutes_
     as _i949;
 import 'package:meu_tempo/features/config/domain/usecases/watch_config_use_case.dart'
     as _i559;
+import 'package:meu_tempo/features/config/presentation/bloc/settings_bloc.dart'
+    as _i830;
 import 'package:meu_tempo/features/list/data/datasources/task_list_remote_data_source.dart'
     as _i813;
 import 'package:meu_tempo/features/list/data/repositories/task_list_repository_impl.dart'
@@ -350,6 +352,12 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i98.SignInWithGoogleUseCase>(),
         gh<_i846.SignOutUseCase>(),
         gh<_i1046.WatchAuthStateUseCase>(),
+      ),
+    );
+    gh.factory<_i830.SettingsBloc>(
+      () => _i830.SettingsBloc(
+        gh<_i559.WatchConfigUseCase>(),
+        gh<_i949.SetAvailableMinutesUseCase>(),
       ),
     );
     gh.lazySingleton<_i159.SeedFirstAccessUseCase>(

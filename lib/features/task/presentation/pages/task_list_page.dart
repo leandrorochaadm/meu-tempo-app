@@ -141,6 +141,8 @@ class _TaskListPageState extends State<TaskListPage> {
         context.push(Routes.report);
       case 'migration':
         context.push(Routes.migration);
+      case 'settings':
+        context.push(Routes.settings);
       case 'logout':
         context.read<AuthBloc>().add(const AuthSignOutRequested());
     }
@@ -256,6 +258,7 @@ class _TaskListPageState extends State<TaskListPage> {
               PopupMenuItem(value: 'lists', child: Text('Listas')),
               PopupMenuItem(value: 'report', child: Text('Relatório')),
               PopupMenuItem(value: 'migration', child: Text('Pendências')),
+              PopupMenuItem(value: 'settings', child: Text('Configurações')),
               PopupMenuItem(value: 'logout', child: Text('Sair')),
             ],
           ),

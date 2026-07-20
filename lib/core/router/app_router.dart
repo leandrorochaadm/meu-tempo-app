@@ -5,6 +5,8 @@ import '../../features/appointment/presentation/bloc/agenda_bloc.dart';
 import '../../features/appointment/presentation/pages/agenda_page.dart';
 import '../../features/auth/presentation/bloc/auth_bloc.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
+import '../../features/config/presentation/bloc/settings_bloc.dart';
+import '../../features/config/presentation/pages/settings_page.dart';
 import '../../features/list/presentation/bloc/list_manager_bloc.dart';
 import '../../features/list/presentation/pages/lists_page.dart';
 import '../../features/migration/presentation/bloc/migration_bloc.dart';
@@ -79,6 +81,13 @@ class AppRouter {
         builder: (_, _) => BlocProvider(
           create: (_) => getIt<MigrationBloc>(),
           child: const MigrationPage(),
+        ),
+      ),
+      GoRoute(
+        path: Routes.settings,
+        builder: (_, _) => BlocProvider(
+          create: (_) => getIt<SettingsBloc>(),
+          child: const SettingsPage(),
         ),
       ),
       GoRoute(
