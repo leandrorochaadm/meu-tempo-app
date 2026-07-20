@@ -13,7 +13,9 @@ import 'package:meu_tempo/features/task/domain/usecases/build_task_tree_use_case
 import 'package:meu_tempo/features/task/domain/usecases/complete_task_use_case.dart';
 import 'package:meu_tempo/features/task/domain/usecases/create_task_use_case.dart';
 import 'package:meu_tempo/features/task/domain/usecases/delete_task_use_case.dart';
+import 'package:meu_tempo/features/task/domain/usecases/edit_task_use_case.dart';
 import 'package:meu_tempo/features/task/domain/usecases/get_prioritized_leaves_use_case.dart';
+import 'package:meu_tempo/features/task/domain/usecases/move_task_use_case.dart';
 import 'package:meu_tempo/features/task/domain/usecases/register_manual_time_use_case.dart';
 import 'package:meu_tempo/features/task/domain/usecases/start_timer_use_case.dart';
 import 'package:meu_tempo/features/task/domain/usecases/stop_timer_use_case.dart';
@@ -42,6 +44,10 @@ class _MockComplete extends Mock implements CompleteTaskUseCase {}
 
 class _MockDelete extends Mock implements DeleteTaskUseCase {}
 
+class _MockEdit extends Mock implements EditTaskUseCase {}
+
+class _MockMove extends Mock implements MoveTaskUseCase {}
+
 class _FakeNoParams extends Fake implements NoParams {}
 
 class _FakeCreateParams extends Fake implements CreateTaskParams {}
@@ -58,6 +64,10 @@ class _FakeCompleteParams extends Fake implements CompleteTaskParams {}
 
 class _FakeDeleteParams extends Fake implements DeleteTaskParams {}
 
+class _FakeEditParams extends Fake implements EditTaskParams {}
+
+class _FakeMoveParams extends Fake implements MoveTaskParams {}
+
 void main() {
   late _MockWatchTasks watchTasks;
   late _MockCreateTask createTask;
@@ -69,6 +79,8 @@ void main() {
   late _MockManualTime manualTime;
   late _MockComplete completeTask;
   late _MockDelete deleteTask;
+  late _MockEdit editTask;
+  late _MockMove moveTask;
   const buildTree = BuildTaskTreeUseCase();
 
   const inbox = TaskListEntity(id: 'inbox', name: 'Entrada', isDefault: true);
@@ -88,6 +100,8 @@ void main() {
     registerFallbackValue(_FakeManualParams());
     registerFallbackValue(_FakeCompleteParams());
     registerFallbackValue(_FakeDeleteParams());
+    registerFallbackValue(_FakeEditParams());
+    registerFallbackValue(_FakeMoveParams());
   });
 
   setUp(() {
@@ -101,6 +115,8 @@ void main() {
     manualTime = _MockManualTime();
     completeTask = _MockComplete();
     deleteTask = _MockDelete();
+    editTask = _MockEdit();
+    moveTask = _MockMove();
     when(() => ensureInbox(any())).thenAnswer((_) async => const Right(inbox));
     when(() => watchActiveTimer(any())).thenAnswer(
       (_) => const Stream<Either<Failure, ActiveTimerEntity?>>.empty(),
@@ -122,6 +138,8 @@ void main() {
         manualTime,
         completeTask,
         deleteTask,
+        editTask,
+        moveTask,
       );
 
   blocTest<TaskListBloc, TaskListState>(
@@ -298,6 +316,48 @@ void main() {
       final p = verify(() => deleteTask(captureAny())).captured.single
           as DeleteTaskParams;
       expect(p.taskId, 't1');
+    },
+  );
+
+  blocTest<TaskListBloc, TaskListState>(
+    'EditRequested delega ao EditTaskUseCase',
+    build: () {
+      when(() => watchTasks(any()))
+          .thenAnswer((_) => Stream.value(const Right(<TaskEntity>[])));
+      when(() => editTask(any())).thenAnswer((_) async => const Right(unit));
+      return build();
+    },
+    act: (bloc) async {
+      bloc.add(const TaskListStarted());
+      await Future<void>.delayed(Duration.zero);
+      bloc.add(const EditRequested(taskId: 't1', title: 'Novo'));
+    },
+    verify: (_) {
+      final p = verify(() => editTask(captureAny())).captured.single
+          as EditTaskParams;
+      expect(p.taskId, 't1');
+      expect(p.title, 'Novo');
+    },
+  );
+
+  blocTest<TaskListBloc, TaskListState>(
+    'MoveRequested delega ao MoveTaskUseCase',
+    build: () {
+      when(() => watchTasks(any()))
+          .thenAnswer((_) => Stream.value(const Right(<TaskEntity>[])));
+      when(() => moveTask(any())).thenAnswer((_) async => const Right(unit));
+      return build();
+    },
+    act: (bloc) async {
+      bloc.add(const TaskListStarted());
+      await Future<void>.delayed(Duration.zero);
+      bloc.add(const MoveRequested(taskId: 't1', newParentId: 'p1'));
+    },
+    verify: (_) {
+      final p = verify(() => moveTask(captureAny())).captured.single
+          as MoveTaskParams;
+      expect(p.taskId, 't1');
+      expect(p.newParentId, 'p1');
     },
   );
 }

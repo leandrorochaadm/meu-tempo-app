@@ -11,6 +11,7 @@ import '../bloc/task_list_bloc.dart';
 import '../widgets/prioritized_leaf_tile.dart';
 import '../widgets/quick_add_task_widget.dart';
 import '../widgets/task_node_tile.dart';
+import 'edit_task_page.dart';
 
 /// Listagem hierárquica de tarefas + criação rápida (barra no topo).
 class TaskListPage extends StatefulWidget {
@@ -102,6 +103,65 @@ class _TaskListPageState extends State<TaskListPage> {
     if (confirmed ?? false) {
       bloc.add(DeleteRequested(node.task.id));
     }
+  }
+
+  Future<void> _editTask(TaskNode node) async {
+    final bloc = context.read<TaskListBloc>();
+    final result = await Navigator.of(context).push<EditTaskResult>(
+      MaterialPageRoute(
+        builder: (_) => EditTaskPage(task: node.task, today: DateTime.now()),
+      ),
+    );
+    if (result != null) {
+      bloc.add(EditRequested(
+        taskId: node.task.id,
+        title: result.title,
+        estimatedMinutes: result.estimatedMinutes,
+        dueDate: result.dueDate,
+        importance: result.importance,
+      ));
+    }
+  }
+
+  Future<void> _moveTask(TaskNode node) async {
+    final bloc = context.read<TaskListBloc>();
+    final state = bloc.state;
+    if (state is! TaskListLoaded) return;
+
+    // Candidatos: todos os nós, menos o próprio e seus descendentes.
+    final excluded = <String>{};
+    void collect(TaskNode n) {
+      excluded.add(n.task.id);
+      n.children.forEach(collect);
+    }
+
+    collect(node);
+    final candidates = _flatten(state.roots)
+        .where((n) => !excluded.contains(n.task.id) && !n.isMaxLevel)
+        .toList();
+
+    final chosen = await showDialog<String?>(
+      context: context,
+      builder: (ctx) => SimpleDialog(
+        title: const Text('Mover para'),
+        children: [
+          SimpleDialogOption(
+            onPressed: () => Navigator.of(ctx).pop('__root__'),
+            child: const Text('Tornar tarefa mãe (raiz)'),
+          ),
+          for (final c in candidates)
+            SimpleDialogOption(
+              onPressed: () => Navigator.of(ctx).pop(c.task.id),
+              child: Text(c.task.title),
+            ),
+        ],
+      ),
+    );
+    if (chosen == null) return;
+    bloc.add(MoveRequested(
+      taskId: node.task.id,
+      newParentId: chosen == '__root__' ? null : chosen,
+    ));
   }
 
   void _toggleLeafTimer(PrioritizedLeaf leaf, bool start) {
@@ -198,6 +258,8 @@ class _TaskListPageState extends State<TaskListPage> {
                               onAddTime: _addTime,
                               onToggleDone: _toggleDone,
                               onDelete: _confirmDelete,
+                              onEdit: _editTask,
+                              onMove: _moveTask,
                             ),
                     TaskListError() => const AppEmptyState(
                         icon: Icons.checklist_rounded,
@@ -231,6 +293,8 @@ class _TaskTree extends StatelessWidget {
     required this.onAddTime,
     required this.onToggleDone,
     required this.onDelete,
+    required this.onEdit,
+    required this.onMove,
   });
 
   final List<TaskNode> nodes;
@@ -240,6 +304,8 @@ class _TaskTree extends StatelessWidget {
   final void Function(TaskNode node, int minutes) onAddTime;
   final void Function(TaskNode node, bool done) onToggleDone;
   final void Function(TaskNode node) onDelete;
+  final void Function(TaskNode node) onEdit;
+  final void Function(TaskNode node) onMove;
 
   @override
   Widget build(BuildContext context) {
@@ -255,6 +321,8 @@ class _TaskTree extends StatelessWidget {
         onAddTime: onAddTime,
         onToggleDone: onToggleDone,
         onDelete: onDelete,
+        onEdit: onEdit,
+        onMove: onMove,
       ),
     );
   }

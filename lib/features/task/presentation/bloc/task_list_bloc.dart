@@ -9,6 +9,7 @@ import '../../../../core/error/failures.dart';
 import '../../../../core/usecase/usecase.dart';
 import '../../../list/domain/usecases/ensure_inbox_exists_use_case.dart';
 import '../../domain/entities/active_timer_entity.dart';
+import '../../domain/entities/importance_enum.dart';
 import '../../domain/entities/prioritized_leaf.dart';
 import '../../domain/entities/task_entity.dart';
 import '../../domain/entities/task_node.dart';
@@ -18,7 +19,9 @@ import '../../domain/usecases/build_task_tree_use_case.dart';
 import '../../domain/usecases/complete_task_use_case.dart';
 import '../../domain/usecases/create_task_use_case.dart';
 import '../../domain/usecases/delete_task_use_case.dart';
+import '../../domain/usecases/edit_task_use_case.dart';
 import '../../domain/usecases/get_prioritized_leaves_use_case.dart';
+import '../../domain/usecases/move_task_use_case.dart';
 import '../../domain/usecases/register_manual_time_use_case.dart';
 import '../../domain/usecases/start_timer_use_case.dart';
 import '../../domain/usecases/stop_timer_use_case.dart';
@@ -45,6 +48,8 @@ class TaskListBloc extends Bloc<TaskListEvent, TaskListState> {
     this._registerManualTime,
     this._completeTask,
     this._deleteTask,
+    this._editTask,
+    this._moveTask,
   ) : super(const TaskListLoading()) {
     on<TaskListStarted>(_onStarted);
     on<TaskListUpdated>(_onUpdated);
@@ -56,6 +61,8 @@ class TaskListBloc extends Bloc<TaskListEvent, TaskListState> {
     on<ManualTimeRequested>(_onManualTime);
     on<CompleteToggled>(_onCompleteToggled);
     on<DeleteRequested>(_onDeleteRequested);
+    on<EditRequested>(_onEditRequested);
+    on<MoveRequested>(_onMoveRequested);
   }
 
   final WatchTasksUseCase _watchTasks;
@@ -70,6 +77,8 @@ class TaskListBloc extends Bloc<TaskListEvent, TaskListState> {
   final RegisterManualTimeUseCase _registerManualTime;
   final CompleteTaskUseCase _completeTask;
   final DeleteTaskUseCase _deleteTask;
+  final EditTaskUseCase _editTask;
+  final MoveTaskUseCase _moveTask;
 
   StreamSubscription<Either<Failure, List<TaskEntity>>>? _tasksSub;
   StreamSubscription<Either<Failure, ActiveTimerEntity?>>? _timerSub;
@@ -216,6 +225,32 @@ class TaskListBloc extends Bloc<TaskListEvent, TaskListState> {
     _handleWrite(result, emit);
   }
 
+  Future<void> _onEditRequested(
+    EditRequested event,
+    Emitter<TaskListState> emit,
+  ) async {
+    final result = await _editTask(
+      EditTaskParams(
+        taskId: event.taskId,
+        title: event.title,
+        estimatedMinutes: event.estimatedMinutes,
+        dueDate: event.dueDate,
+        importance: event.importance,
+      ),
+    );
+    _handleWrite(result, emit);
+  }
+
+  Future<void> _onMoveRequested(
+    MoveRequested event,
+    Emitter<TaskListState> emit,
+  ) async {
+    final result = await _moveTask(
+      MoveTaskParams(taskId: event.taskId, newParentId: event.newParentId),
+    );
+    _handleWrite(result, emit);
+  }
+
   /// Erros de escrita viram estado de erro (a UI mostra snackbar); sucesso
   /// reflete pelos streams.
   void _handleWrite<T>(Either<Failure, T> result, Emitter<TaskListState> e) {
@@ -228,6 +263,8 @@ class TaskListBloc extends Bloc<TaskListEvent, TaskListState> {
         TimerOnNonLeafFailure() =>
           'Cronômetro só em tarefas sem filhas (folhas).',
         InvalidDurationFailure() => 'Informe uma duração válida.',
+        InvalidMoveFailure() => 'Não dá para mover a tarefa para lá.',
+        TaskNotFoundFailure() => 'Tarefa não encontrada.',
         NetworkFailure() => 'Sem conexão. Verifique a internet.',
         _ => 'Algo deu errado. Tente novamente.',
       };

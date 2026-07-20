@@ -16,6 +16,8 @@ class TaskNodeTile extends StatelessWidget {
     required this.onAddTime,
     required this.onToggleDone,
     required this.onDelete,
+    required this.onEdit,
+    required this.onMove,
   });
 
   final TaskNode node;
@@ -25,6 +27,8 @@ class TaskNodeTile extends StatelessWidget {
   final void Function(TaskNode node, int minutes) onAddTime;
   final void Function(TaskNode node, bool done) onToggleDone;
   final void Function(TaskNode node) onDelete;
+  final void Function(TaskNode node) onEdit;
+  final void Function(TaskNode node) onMove;
 
   static const int _quickMinutes = 30;
 
@@ -88,9 +92,18 @@ class TaskNodeTile extends StatelessWidget {
               PopupMenuButton<String>(
                 icon: Icon(Icons.more_vert_rounded, color: colors.textMuted),
                 onSelected: (v) {
-                  if (v == 'delete') onDelete(node);
+                  switch (v) {
+                    case 'edit':
+                      onEdit(node);
+                    case 'move':
+                      onMove(node);
+                    case 'delete':
+                      onDelete(node);
+                  }
                 },
                 itemBuilder: (context) => const [
+                  PopupMenuItem(value: 'edit', child: Text('Editar')),
+                  PopupMenuItem(value: 'move', child: Text('Mover')),
                   PopupMenuItem(value: 'delete', child: Text('Excluir')),
                 ],
               ),

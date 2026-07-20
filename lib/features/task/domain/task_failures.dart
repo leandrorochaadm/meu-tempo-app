@@ -25,3 +25,8 @@ class TimerOnNonLeafFailure extends Failure {
 class InvalidDurationFailure extends Failure {
   const InvalidDurationFailure();
 }
+
+/// Movimento inválido na hierarquia (para si mesmo ou para um descendente).
+class InvalidMoveFailure extends Failure {
+  const InvalidMoveFailure();
+}

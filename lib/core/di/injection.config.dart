@@ -60,8 +60,12 @@ import 'package:meu_tempo/features/task/domain/usecases/create_task_use_case.dar
     as _i658;
 import 'package:meu_tempo/features/task/domain/usecases/delete_task_use_case.dart'
     as _i162;
+import 'package:meu_tempo/features/task/domain/usecases/edit_task_use_case.dart'
+    as _i43;
 import 'package:meu_tempo/features/task/domain/usecases/get_prioritized_leaves_use_case.dart'
     as _i1067;
+import 'package:meu_tempo/features/task/domain/usecases/move_task_use_case.dart'
+    as _i213;
 import 'package:meu_tempo/features/task/domain/usecases/register_manual_time_use_case.dart'
     as _i1025;
 import 'package:meu_tempo/features/task/domain/usecases/start_timer_use_case.dart'
@@ -169,8 +173,21 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i162.DeleteTaskUseCase>(
       () => _i162.DeleteTaskUseCase(gh<_i521.TaskRepository>()),
     );
+    gh.lazySingleton<_i43.EditTaskUseCase>(
+      () => _i43.EditTaskUseCase(gh<_i521.TaskRepository>()),
+    );
+    gh.lazySingleton<_i213.MoveTaskUseCase>(
+      () => _i213.MoveTaskUseCase(gh<_i521.TaskRepository>()),
+    );
     gh.lazySingleton<_i1035.WatchTasksUseCase>(
       () => _i1035.WatchTasksUseCase(gh<_i521.TaskRepository>()),
+    );
+    gh.factory<_i708.AuthBloc>(
+      () => _i708.AuthBloc(
+        gh<_i98.SignInWithGoogleUseCase>(),
+        gh<_i846.SignOutUseCase>(),
+        gh<_i1046.WatchAuthStateUseCase>(),
+      ),
     );
     gh.factory<_i35.TaskListBloc>(
       () => _i35.TaskListBloc(
@@ -186,13 +203,8 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i1025.RegisterManualTimeUseCase>(),
         gh<_i623.CompleteTaskUseCase>(),
         gh<_i162.DeleteTaskUseCase>(),
-      ),
-    );
-    gh.factory<_i708.AuthBloc>(
-      () => _i708.AuthBloc(
-        gh<_i98.SignInWithGoogleUseCase>(),
-        gh<_i846.SignOutUseCase>(),
-        gh<_i1046.WatchAuthStateUseCase>(),
+        gh<_i43.EditTaskUseCase>(),
+        gh<_i213.MoveTaskUseCase>(),
       ),
     );
     return this;

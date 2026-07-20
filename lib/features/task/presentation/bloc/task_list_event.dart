@@ -88,6 +88,37 @@ class DeleteRequested extends TaskListEvent {
   List<Object?> get props => [taskId];
 }
 
+/// Edita os campos de uma tarefa.
+class EditRequested extends TaskListEvent {
+  const EditRequested({
+    required this.taskId,
+    required this.title,
+    this.estimatedMinutes,
+    this.dueDate,
+    this.importance,
+  });
+
+  final String taskId;
+  final String title;
+  final int? estimatedMinutes;
+  final DateTime? dueDate;
+  final ImportanceEnum? importance;
+
+  @override
+  List<Object?> get props =>
+      [taskId, title, estimatedMinutes, dueDate, importance];
+}
+
+/// Move uma tarefa na hierarquia (novo pai ou raiz).
+class MoveRequested extends TaskListEvent {
+  const MoveRequested({required this.taskId, this.newParentId});
+  final String taskId;
+  final String? newParentId;
+
+  @override
+  List<Object?> get props => [taskId, newParentId];
+}
+
 /// Adiciona uma subtarefa (filha/neta) a um nó existente.
 class SubtaskRequested extends TaskListEvent {
   const SubtaskRequested({
