@@ -11,6 +11,7 @@ abstract class TaskRemoteDataSource {
   Stream<List<TaskModel>> watchTasks();
   Future<TaskModel> create(TaskModel task);
   Future<void> setHasChildren(String taskId, bool value);
+  Future<void> addSpentMinutes(String taskId, int delta);
 }
 
 @LazySingleton(as: TaskRemoteDataSource)
@@ -60,6 +61,17 @@ class TaskRemoteDataSourceImpl implements TaskRemoteDataSource {
   Future<void> setHasChildren(String taskId, bool value) async {
     try {
       await _collection.doc(taskId).update({TaskFields.hasChildren: value});
+    } on FirebaseException catch (e) {
+      throw mapFirestoreException(e);
+    }
+  }
+
+  @override
+  Future<void> addSpentMinutes(String taskId, int delta) async {
+    try {
+      await _collection.doc(taskId).update({
+        TaskFields.spentMinutes: FieldValue.increment(delta),
+      });
     } on FirebaseException catch (e) {
       throw mapFirestoreException(e);
     }

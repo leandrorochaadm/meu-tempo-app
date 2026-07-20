@@ -14,4 +14,7 @@ abstract class TaskRepository {
   /// Atualiza o flag `hasChildren` de uma tarefa (mantido pela camada data
   /// ao criar/remover filhas — base do getter `isLeaf`).
   Future<Either<Failure, Unit>> setHasChildren(String taskId, bool value);
+
+  /// Acrescenta (delta) minutos de tempo real a uma folha.
+  Future<Either<Failure, Unit>> addSpentMinutes(String taskId, int delta);
 }

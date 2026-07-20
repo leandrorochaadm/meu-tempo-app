@@ -54,4 +54,18 @@ class TaskRepositoryImpl implements TaskRepository {
       return Left(e.toFailure());
     }
   }
+
+  @override
+  Future<Either<Failure, Unit>> addSpentMinutes(
+    String taskId,
+    int delta,
+  ) async {
+    try {
+      await _dataSource.addSpentMinutes(taskId, delta);
+      return const Right(unit);
+    } on AppException catch (e, s) {
+      AppLogger.logError('addSpentMinutes falhou', error: e, stackTrace: s);
+      return Left(e.toFailure());
+    }
+  }
 }

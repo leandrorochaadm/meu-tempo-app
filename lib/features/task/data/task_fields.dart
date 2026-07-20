@@ -7,4 +7,5 @@ class TaskFields {
   static const String isDone = 'isDone';
   static const String parentId = 'parentId';
   static const String listId = 'listId';
+  static const String spentMinutes = 'spentMinutes';
 }

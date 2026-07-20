@@ -14,3 +14,14 @@ class TaskNotFoundFailure extends Failure {
 class MaxLevelExceededFailure extends Failure {
   const MaxLevelExceededFailure();
 }
+
+/// Cronômetro/registro só é permitido em folha (ou compromisso), não em
+/// tarefa com filhas.
+class TimerOnNonLeafFailure extends Failure {
+  const TimerOnNonLeafFailure();
+}
+
+/// Duração informada inválida (≤ 0).
+class InvalidDurationFailure extends Failure {
+  const InvalidDurationFailure();
+}

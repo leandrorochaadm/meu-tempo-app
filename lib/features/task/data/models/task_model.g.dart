@@ -19,6 +19,7 @@ TaskModel _$TaskModelFromJson(Map<String, dynamic> json) => TaskModel(
   importance: $enumDecodeNullable(_$ImportanceEnumEnumMap, json['importance']),
   isDone: json['isDone'] as bool? ?? false,
   hasChildren: json['hasChildren'] as bool? ?? false,
+  spentMinutes: (json['spentMinutes'] as num?)?.toInt() ?? 0,
 );
 
 Map<String, dynamic> _$TaskModelToJson(TaskModel instance) => <String, dynamic>{
@@ -31,6 +32,7 @@ Map<String, dynamic> _$TaskModelToJson(TaskModel instance) => <String, dynamic>{
   'importance': ?_$ImportanceEnumEnumMap[instance.importance],
   'isDone': instance.isDone,
   'hasChildren': instance.hasChildren,
+  'spentMinutes': instance.spentMinutes,
 };
 
 const _$ImportanceEnumEnumMap = {

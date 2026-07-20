@@ -110,9 +110,28 @@ class _TaskListPageState extends State<TaskListPage> {
                         title: 'Sua lista está vazia',
                         message: 'Toque em + para criar sua primeira tarefa.',
                       ),
-                    TaskListLoaded(:final roots) => _TaskTree(
+                    TaskListLoaded(:final roots, :final activeTaskId) =>
+                      _TaskTree(
                         nodes: _flatten(roots),
+                        activeTaskId: activeTaskId,
                         onAddSubtask: _startSubtask,
+                        onToggleTimer: (node, start) =>
+                            context.read<TaskListBloc>().add(
+                                  start
+                                      ? TimerStartRequested(
+                                          taskId: node.task.id,
+                                          isLeaf: node.isLeaf,
+                                        )
+                                      : const TimerStopRequested(),
+                                ),
+                        onAddTime: (node, minutes) =>
+                            context.read<TaskListBloc>().add(
+                                  ManualTimeRequested(
+                                    taskId: node.task.id,
+                                    isLeaf: node.isLeaf,
+                                    minutes: minutes,
+                                  ),
+                                ),
                       ),
                     TaskListError() => const AppEmptyState(
                         icon: Icons.checklist_rounded,
@@ -138,10 +157,19 @@ class _TaskListPageState extends State<TaskListPage> {
 }
 
 class _TaskTree extends StatelessWidget {
-  const _TaskTree({required this.nodes, required this.onAddSubtask});
+  const _TaskTree({
+    required this.nodes,
+    required this.activeTaskId,
+    required this.onAddSubtask,
+    required this.onToggleTimer,
+    required this.onAddTime,
+  });
 
   final List<TaskNode> nodes;
+  final String? activeTaskId;
   final void Function(TaskNode parent) onAddSubtask;
+  final void Function(TaskNode node, bool start) onToggleTimer;
+  final void Function(TaskNode node, int minutes) onAddTime;
 
   @override
   Widget build(BuildContext context) {
@@ -149,8 +177,13 @@ class _TaskTree extends StatelessWidget {
       padding: EdgeInsets.all(context.space.lg),
       itemCount: nodes.length,
       separatorBuilder: (_, _) => SizedBox(height: context.space.sm),
-      itemBuilder: (context, i) =>
-          TaskNodeTile(node: nodes[i], onAddSubtask: onAddSubtask),
+      itemBuilder: (context, i) => TaskNodeTile(
+        node: nodes[i],
+        isActive: nodes[i].task.id == activeTaskId,
+        onAddSubtask: onAddSubtask,
+        onToggleTimer: onToggleTimer,
+        onAddTime: onAddTime,
+      ),
     );
   }
 }

@@ -6,9 +6,15 @@ import 'package:meu_tempo/core/usecase/usecase.dart';
 import 'package:meu_tempo/features/list/domain/entities/task_list_entity.dart';
 import 'package:meu_tempo/features/list/domain/usecases/ensure_inbox_exists_use_case.dart';
 import 'package:meu_tempo/features/task/domain/entities/task_entity.dart';
+import 'package:meu_tempo/features/task/domain/entities/active_timer_entity.dart';
+import 'package:meu_tempo/features/task/domain/task_failures.dart';
 import 'package:meu_tempo/features/task/domain/usecases/add_subtask_use_case.dart';
 import 'package:meu_tempo/features/task/domain/usecases/build_task_tree_use_case.dart';
 import 'package:meu_tempo/features/task/domain/usecases/create_task_use_case.dart';
+import 'package:meu_tempo/features/task/domain/usecases/register_manual_time_use_case.dart';
+import 'package:meu_tempo/features/task/domain/usecases/start_timer_use_case.dart';
+import 'package:meu_tempo/features/task/domain/usecases/stop_timer_use_case.dart';
+import 'package:meu_tempo/features/task/domain/usecases/watch_active_timer_use_case.dart';
 import 'package:meu_tempo/features/task/domain/usecases/watch_tasks_use_case.dart';
 import 'package:meu_tempo/features/task/presentation/bloc/task_list_bloc.dart';
 import 'package:mocktail/mocktail.dart';
@@ -21,17 +27,35 @@ class _MockEnsureInbox extends Mock implements EnsureInboxExistsUseCase {}
 
 class _MockAddSubtask extends Mock implements AddSubtaskUseCase {}
 
+class _MockWatchActiveTimer extends Mock implements WatchActiveTimerUseCase {}
+
+class _MockStartTimer extends Mock implements StartTimerUseCase {}
+
+class _MockStopTimer extends Mock implements StopTimerUseCase {}
+
+class _MockManualTime extends Mock implements RegisterManualTimeUseCase {}
+
 class _FakeNoParams extends Fake implements NoParams {}
 
 class _FakeCreateParams extends Fake implements CreateTaskParams {}
 
 class _FakeSubtaskParams extends Fake implements AddSubtaskParams {}
 
+class _FakeStartParams extends Fake implements StartTimerParams {}
+
+class _FakeStopParams extends Fake implements StopTimerParams {}
+
+class _FakeManualParams extends Fake implements RegisterManualTimeParams {}
+
 void main() {
   late _MockWatchTasks watchTasks;
   late _MockCreateTask createTask;
   late _MockEnsureInbox ensureInbox;
   late _MockAddSubtask addSubtask;
+  late _MockWatchActiveTimer watchActiveTimer;
+  late _MockStartTimer startTimer;
+  late _MockStopTimer stopTimer;
+  late _MockManualTime manualTime;
   const buildTree = BuildTaskTreeUseCase();
 
   const inbox = TaskListEntity(id: 'inbox', name: 'Entrada', isDefault: true);
@@ -46,6 +70,9 @@ void main() {
     registerFallbackValue(_FakeNoParams());
     registerFallbackValue(_FakeCreateParams());
     registerFallbackValue(_FakeSubtaskParams());
+    registerFallbackValue(_FakeStartParams());
+    registerFallbackValue(_FakeStopParams());
+    registerFallbackValue(_FakeManualParams());
   });
 
   setUp(() {
@@ -53,11 +80,27 @@ void main() {
     createTask = _MockCreateTask();
     ensureInbox = _MockEnsureInbox();
     addSubtask = _MockAddSubtask();
+    watchActiveTimer = _MockWatchActiveTimer();
+    startTimer = _MockStartTimer();
+    stopTimer = _MockStopTimer();
+    manualTime = _MockManualTime();
     when(() => ensureInbox(any())).thenAnswer((_) async => const Right(inbox));
+    when(() => watchActiveTimer(any())).thenAnswer(
+      (_) => const Stream<Either<Failure, ActiveTimerEntity?>>.empty(),
+    );
   });
 
-  TaskListBloc build() =>
-      TaskListBloc(watchTasks, createTask, ensureInbox, addSubtask, buildTree);
+  TaskListBloc build() => TaskListBloc(
+        watchTasks,
+        createTask,
+        ensureInbox,
+        addSubtask,
+        buildTree,
+        watchActiveTimer,
+        startTimer,
+        stopTimer,
+        manualTime,
+      );
 
   blocTest<TaskListBloc, TaskListState>(
     'started com tarefas emite [Loading, Loaded] com a árvore montada',
@@ -147,5 +190,51 @@ void main() {
       expect(captured.parentLevel, 0);
       expect(captured.title, 'Fazer telas');
     },
+  );
+
+  blocTest<TaskListBloc, TaskListState>(
+    'TimerStartRequested delega ao StartTimerUseCase',
+    build: () {
+      when(() => watchTasks(any()))
+          .thenAnswer((_) => Stream.value(const Right(<TaskEntity>[])));
+      when(() => startTimer(any())).thenAnswer((_) async => const Right(unit));
+      return build();
+    },
+    act: (bloc) async {
+      bloc.add(const TaskListStarted());
+      await Future<void>.delayed(Duration.zero);
+      bloc.add(const TimerStartRequested(taskId: 't1', isLeaf: true));
+    },
+    verify: (_) {
+      final p = verify(() => startTimer(captureAny())).captured.single
+          as StartTimerParams;
+      expect(p.targetId, 't1');
+      expect(p.targetIsLeaf, isTrue);
+    },
+  );
+
+  blocTest<TaskListBloc, TaskListState>(
+    'ManualTimeRequested com folha inválida emite erro',
+    build: () {
+      when(() => watchTasks(any()))
+          .thenAnswer((_) => Stream.value(const Right(<TaskEntity>[])));
+      when(() => manualTime(any()))
+          .thenAnswer((_) async => const Left(TimerOnNonLeafFailure()));
+      return build();
+    },
+    act: (bloc) async {
+      bloc.add(const TaskListStarted());
+      await Future<void>.delayed(Duration.zero);
+      bloc.add(const ManualTimeRequested(
+        taskId: 'm1',
+        isLeaf: false,
+        minutes: 30,
+      ));
+    },
+    expect: () => [
+      const TaskListLoading(),
+      const TaskListEmpty(),
+      isA<TaskListError>(),
+    ],
   );
 }

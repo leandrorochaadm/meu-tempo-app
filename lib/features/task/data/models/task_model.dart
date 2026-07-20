@@ -20,6 +20,7 @@ class TaskModel {
     this.importance,
     this.isDone = false,
     this.hasChildren = false,
+    this.spentMinutes = 0,
   });
 
   @JsonKey(includeToJson: false) // id vem do doc.id
@@ -35,6 +36,7 @@ class TaskModel {
   final ImportanceEnum? importance;
   final bool isDone;
   final bool hasChildren;
+  final int spentMinutes;
 
   factory TaskModel.fromDoc(String id, Map<String, dynamic> data) =>
       TaskModel.fromJson({...data, 'id': id});
@@ -55,6 +57,7 @@ class TaskModel {
         importance: importance,
         isDone: isDone,
         hasChildren: hasChildren,
+        spentMinutes: spentMinutes,
       );
 
   factory TaskModel.fromEntity(TaskEntity e) => TaskModel(
@@ -68,5 +71,6 @@ class TaskModel {
         importance: e.importance,
         isDone: e.isDone,
         hasChildren: e.hasChildren,
+        spentMinutes: e.spentMinutes,
       );
 }

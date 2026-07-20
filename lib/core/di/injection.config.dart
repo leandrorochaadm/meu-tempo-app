@@ -40,16 +40,30 @@ import 'package:meu_tempo/features/list/domain/usecases/watch_lists_use_case.dar
     as _i689;
 import 'package:meu_tempo/features/task/data/datasources/task_remote_data_source.dart'
     as _i592;
+import 'package:meu_tempo/features/task/data/datasources/timer_remote_data_source.dart'
+    as _i588;
 import 'package:meu_tempo/features/task/data/repositories/task_repository_impl.dart'
     as _i1011;
+import 'package:meu_tempo/features/task/data/repositories/timer_repository_impl.dart'
+    as _i825;
 import 'package:meu_tempo/features/task/domain/repositories/task_repository.dart'
     as _i521;
+import 'package:meu_tempo/features/task/domain/repositories/timer_repository.dart'
+    as _i381;
 import 'package:meu_tempo/features/task/domain/usecases/add_subtask_use_case.dart'
     as _i650;
 import 'package:meu_tempo/features/task/domain/usecases/build_task_tree_use_case.dart'
     as _i27;
 import 'package:meu_tempo/features/task/domain/usecases/create_task_use_case.dart'
     as _i658;
+import 'package:meu_tempo/features/task/domain/usecases/register_manual_time_use_case.dart'
+    as _i1025;
+import 'package:meu_tempo/features/task/domain/usecases/start_timer_use_case.dart'
+    as _i210;
+import 'package:meu_tempo/features/task/domain/usecases/stop_timer_use_case.dart'
+    as _i726;
+import 'package:meu_tempo/features/task/domain/usecases/watch_active_timer_use_case.dart'
+    as _i397;
 import 'package:meu_tempo/features/task/domain/usecases/watch_tasks_use_case.dart'
     as _i1035;
 import 'package:meu_tempo/features/task/presentation/bloc/task_list_bloc.dart'
@@ -83,8 +97,20 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i59.FirebaseAuth>(),
       ),
     );
+    gh.lazySingleton<_i588.TimerRemoteDataSource>(
+      () => _i588.TimerRemoteDataSourceImpl(
+        gh<_i974.FirebaseFirestore>(),
+        gh<_i59.FirebaseAuth>(),
+      ),
+    );
+    gh.lazySingleton<_i381.TimerRepository>(
+      () => _i825.TimerRepositoryImpl(gh<_i588.TimerRemoteDataSource>()),
+    );
     gh.lazySingleton<_i219.TaskListRepository>(
       () => _i924.TaskListRepositoryImpl(gh<_i813.TaskListRemoteDataSource>()),
+    );
+    gh.lazySingleton<_i397.WatchActiveTimerUseCase>(
+      () => _i397.WatchActiveTimerUseCase(gh<_i381.TimerRepository>()),
     );
     gh.lazySingleton<_i224.AuthRepository>(
       () => _i534.AuthRepositoryImpl(gh<_i788.AuthRemoteDataSource>()),
@@ -98,6 +124,18 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i689.WatchListsUseCase>(
       () => _i689.WatchListsUseCase(gh<_i219.TaskListRepository>()),
     );
+    gh.lazySingleton<_i210.StartTimerUseCase>(
+      () => _i210.StartTimerUseCase(
+        gh<_i381.TimerRepository>(),
+        gh<_i521.TaskRepository>(),
+      ),
+    );
+    gh.lazySingleton<_i726.StopTimerUseCase>(
+      () => _i726.StopTimerUseCase(
+        gh<_i381.TimerRepository>(),
+        gh<_i521.TaskRepository>(),
+      ),
+    );
     gh.lazySingleton<_i98.SignInWithGoogleUseCase>(
       () => _i98.SignInWithGoogleUseCase(gh<_i224.AuthRepository>()),
     );
@@ -106,6 +144,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i1046.WatchAuthStateUseCase>(
       () => _i1046.WatchAuthStateUseCase(gh<_i224.AuthRepository>()),
+    );
+    gh.lazySingleton<_i1025.RegisterManualTimeUseCase>(
+      () => _i1025.RegisterManualTimeUseCase(gh<_i521.TaskRepository>()),
     );
     gh.lazySingleton<_i650.AddSubtaskUseCase>(
       () => _i650.AddSubtaskUseCase(gh<_i521.TaskRepository>()),
@@ -130,6 +171,10 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i655.EnsureInboxExistsUseCase>(),
         gh<_i650.AddSubtaskUseCase>(),
         gh<_i27.BuildTaskTreeUseCase>(),
+        gh<_i397.WatchActiveTimerUseCase>(),
+        gh<_i210.StartTimerUseCase>(),
+        gh<_i726.StopTimerUseCase>(),
+        gh<_i1025.RegisterManualTimeUseCase>(),
       ),
     );
     return this;

@@ -28,6 +28,12 @@ class TaskNode extends Equatable {
     return children.fold(0, (sum, c) => sum + c.totalEstimatedMinutes);
   }
 
+  /// Tempo real (cronômetro + manual): na folha, o próprio; acima, a soma.
+  int get totalSpentMinutes {
+    if (isLeaf) return task.spentMinutes;
+    return children.fold(0, (sum, c) => sum + c.totalSpentMinutes);
+  }
+
   /// Número de folhas sob este nó (a própria, se for folha).
   int get leafCount {
     if (isLeaf) return 1;

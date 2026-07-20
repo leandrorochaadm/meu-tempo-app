@@ -30,6 +30,45 @@ class TaskCreated extends TaskListEvent {
   List<Object?> get props => [title];
 }
 
+/// Emitido internamente quando o cronômetro ativo muda.
+class ActiveTimerUpdated extends TaskListEvent {
+  const ActiveTimerUpdated(this.activeTaskId);
+  final String? activeTaskId;
+
+  @override
+  List<Object?> get props => [activeTaskId];
+}
+
+/// Inicia o cronômetro numa folha (pausa o anterior automaticamente).
+class TimerStartRequested extends TaskListEvent {
+  const TimerStartRequested({required this.taskId, required this.isLeaf});
+  final String taskId;
+  final bool isLeaf;
+
+  @override
+  List<Object?> get props => [taskId, isLeaf];
+}
+
+/// Para o cronômetro ativo.
+class TimerStopRequested extends TaskListEvent {
+  const TimerStopRequested();
+}
+
+/// Registra tempo manual numa folha (ex.: +15 / +30 min).
+class ManualTimeRequested extends TaskListEvent {
+  const ManualTimeRequested({
+    required this.taskId,
+    required this.isLeaf,
+    required this.minutes,
+  });
+  final String taskId;
+  final bool isLeaf;
+  final int minutes;
+
+  @override
+  List<Object?> get props => [taskId, isLeaf, minutes];
+}
+
 /// Adiciona uma subtarefa (filha/neta) a um nó existente.
 class SubtaskRequested extends TaskListEvent {
   const SubtaskRequested({

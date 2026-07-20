@@ -5,18 +5,24 @@ import '../../../../core/utils/formatters/duration_formatter.dart';
 import '../../domain/entities/task_node.dart';
 
 /// Renderiza um nó da árvore (mãe/filha/neta) com indentação por nível.
-/// Folha: mostra o tempo estimado. Mãe/avó: tempo derivado + barra de progresso.
+/// Folha: tempo estimado/real + cronômetro e +30min. Mãe/avó: derivado + progresso.
 class TaskNodeTile extends StatelessWidget {
   const TaskNodeTile({
     super.key,
     required this.node,
+    required this.isActive,
     required this.onAddSubtask,
+    required this.onToggleTimer,
+    required this.onAddTime,
   });
 
   final TaskNode node;
-
-  /// Chamado ao tocar em "+ subtarefa" (só aparece se o nó aceita filhas).
+  final bool isActive;
   final void Function(TaskNode parent) onAddSubtask;
+  final void Function(TaskNode node, bool start) onToggleTimer;
+  final void Function(TaskNode node, int minutes) onAddTime;
+
+  static const int _quickMinutes = 30;
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +39,12 @@ class TaskNodeTile extends StatelessWidget {
       decoration: BoxDecoration(
         color: colors.surface,
         borderRadius: context.radius.lgRadius,
-        border: Border(left: BorderSide(color: accent, width: 3)),
+        border: Border(
+          left: BorderSide(
+            color: isActive ? colors.timerActive : accent,
+            width: 3,
+          ),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -60,11 +71,6 @@ class TaskNodeTile extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-              SizedBox(width: context.space.sm),
-              Text(
-                DurationFormatter.hm(node.totalEstimatedMinutes),
-                style: context.text.labelSmall,
-              ),
               if (!node.isMaxLevel)
                 IconButton(
                   visualDensity: VisualDensity.compact,
@@ -74,7 +80,30 @@ class TaskNodeTile extends StatelessWidget {
                 ),
             ],
           ),
-          if (!node.isLeaf) ...[
+          SizedBox(height: context.space.xs),
+          _MetaRow(node: node, isActive: isActive),
+          if (node.isLeaf) ...[
+            SizedBox(height: context.space.sm),
+            Row(
+              children: [
+                FilledButton.tonalIcon(
+                  onPressed: () => onToggleTimer(node, !isActive),
+                  icon: Icon(
+                    isActive
+                        ? Icons.stop_rounded
+                        : Icons.play_arrow_rounded,
+                    size: 18,
+                  ),
+                  label: Text(isActive ? 'Parar' : 'Iniciar'),
+                ),
+                SizedBox(width: context.space.sm),
+                OutlinedButton(
+                  onPressed: () => onAddTime(node, _quickMinutes),
+                  child: const Text('+30 min'),
+                ),
+              ],
+            ),
+          ] else ...[
             SizedBox(height: context.space.sm),
             ClipRRect(
               borderRadius: context.radius.pillRadius,
@@ -93,6 +122,33 @@ class TaskNodeTile extends StatelessWidget {
           ],
         ],
       ),
+    );
+  }
+}
+
+class _MetaRow extends StatelessWidget {
+  const _MetaRow({required this.node, required this.isActive});
+
+  final TaskNode node;
+  final bool isActive;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return Row(
+      children: [
+        if (isActive) ...[
+          Icon(Icons.timelapse_rounded, size: 14, color: colors.timerActive),
+          SizedBox(width: context.space.xs),
+          Text('rodando', style: context.text.labelSmall),
+          SizedBox(width: context.space.md),
+        ],
+        Text(
+          'gasto ${DurationFormatter.hm(node.totalSpentMinutes)}'
+          ' · est. ${DurationFormatter.hm(node.totalEstimatedMinutes)}',
+          style: context.text.labelSmall,
+        ),
+      ],
     );
   }
 }

@@ -19,6 +19,7 @@ class TaskEntity extends Equatable {
     this.importance,
     this.isDone = false,
     this.hasChildren = false,
+    this.spentMinutes = 0,
   });
 
   final String id;
@@ -37,6 +38,9 @@ class TaskEntity extends Equatable {
   final bool isDone;
   final bool hasChildren;
 
+  /// Tempo real acumulado na folha (cronômetro + manual), em minutos.
+  final int spentMinutes;
+
   /// Regra intrínseca: folha = tarefa sem filhas.
   bool get isLeaf => !hasChildren;
 
@@ -52,5 +56,6 @@ class TaskEntity extends Equatable {
         importance,
         isDone,
         hasChildren,
+        spentMinutes,
       ];
 }
