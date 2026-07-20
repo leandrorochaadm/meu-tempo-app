@@ -6,6 +6,7 @@ import '../../../../core/ui/app_empty_state.dart';
 import '../../../../core/ui/app_list_skeleton.dart';
 import '../../../../core/utils/formatters/duration_formatter.dart';
 import '../../domain/entities/list_report_row.dart';
+import '../../domain/entities/report_period_enum.dart';
 import '../bloc/report_bloc.dart';
 
 /// Relatório de tempo por lista: estimado × real.
@@ -17,10 +18,18 @@ class ReportPage extends StatefulWidget {
 }
 
 class _ReportPageState extends State<ReportPage> {
+  ReportPeriodEnum _period = ReportPeriodEnum.day;
+
   @override
   void initState() {
     super.initState();
     context.read<ReportBloc>().add(const ReportStarted());
+  }
+
+  void _selectPeriod(ReportPeriodEnum period) {
+    if (period == _period) return;
+    setState(() => _period = period);
+    context.read<ReportBloc>().add(ReportPeriodChanged(period));
   }
 
   @override
@@ -29,32 +38,75 @@ class _ReportPageState extends State<ReportPage> {
       appBar: AppBar(title: const Text('Relatório por lista')),
       body: SafeArea(
         top: false,
-        child: BlocBuilder<ReportBloc, ReportState>(
-          builder: (context, state) {
-            return switch (state) {
-              ReportLoading() => const AppListSkeleton(),
-              ReportError() => const AppEmptyState(
-                  icon: Icons.bar_chart_rounded,
-                  title: 'Não foi possível carregar',
-                  message: 'Tente novamente em instantes.',
-                ),
-              ReportLoaded(:final rows) => rows.isEmpty
-                  ? const AppEmptyState(
-                      icon: Icons.bar_chart_rounded,
-                      title: 'Sem dados ainda',
-                      message: 'Registre tempo nas tarefas para ver o relatório.',
-                    )
-                  : ListView.separated(
-                      padding: EdgeInsets.all(context.space.lg),
-                      itemCount: rows.length,
-                      separatorBuilder: (_, _) =>
-                          SizedBox(height: context.space.md),
-                      itemBuilder: (context, i) =>
-                          _ReportRowTile(row: rows[i], index: i),
-                    ),
-            };
-          },
+        child: Column(
+          children: [
+            _PeriodSelector(selected: _period, onSelected: _selectPeriod),
+            Expanded(
+              child: BlocBuilder<ReportBloc, ReportState>(
+                builder: (context, state) {
+                  return switch (state) {
+                    ReportLoading() => const AppListSkeleton(),
+                    ReportError() => const AppEmptyState(
+                        icon: Icons.bar_chart_rounded,
+                        title: 'Não foi possível carregar',
+                        message: 'Tente novamente em instantes.',
+                      ),
+                    ReportLoaded(:final rows) => rows.isEmpty
+                        ? const AppEmptyState(
+                            icon: Icons.bar_chart_rounded,
+                            title: 'Sem dados no período',
+                            message:
+                                'Registre tempo nas tarefas para ver o relatório.',
+                          )
+                        : ListView.separated(
+                            padding: EdgeInsets.all(context.space.lg),
+                            itemCount: rows.length,
+                            separatorBuilder: (_, _) =>
+                                SizedBox(height: context.space.md),
+                            itemBuilder: (context, i) =>
+                                _ReportRowTile(row: rows[i], index: i),
+                          ),
+                  };
+                },
+              ),
+            ),
+          ],
         ),
+      ),
+    );
+  }
+}
+
+/// Seletor de período em chips (padrão `layout.md` — nunca dropdown).
+class _PeriodSelector extends StatelessWidget {
+  const _PeriodSelector({required this.selected, required this.onSelected});
+
+  final ReportPeriodEnum selected;
+  final void Function(ReportPeriodEnum) onSelected;
+
+  static const _labels = {
+    ReportPeriodEnum.day: 'Dia',
+    ReportPeriodEnum.week: 'Semana',
+    ReportPeriodEnum.month: 'Mês',
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.symmetric(
+        horizontal: context.space.lg,
+        vertical: context.space.sm,
+      ),
+      child: Wrap(
+        spacing: context.space.sm,
+        children: [
+          for (final p in ReportPeriodEnum.values)
+            ChoiceChip(
+              label: Text(_labels[p]!),
+              selected: p == selected,
+              onSelected: (_) => onSelected(p),
+            ),
+        ],
       ),
     );
   }
