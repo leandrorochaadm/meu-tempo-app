@@ -46,7 +46,7 @@ class TaskNodeTile extends StatelessWidget {
         vertical: context.space.md,
       ),
       decoration: BoxDecoration(
-        color: colors.surface,
+        color: isActive ? colors.timerActiveSurface : colors.surface,
         borderRadius: context.radius.lgRadius,
         border: Border(
           left: BorderSide(

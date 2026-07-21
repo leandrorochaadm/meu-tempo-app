@@ -17,6 +17,7 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.primary,
     required this.onPrimary,
     required this.timerActive,
+    required this.timerActiveSurface,
     required this.success,
     required this.warning,
     required this.danger,
@@ -34,6 +35,9 @@ class AppColors extends ThemeExtension<AppColors> {
   final Color primary;
   final Color onPrimary;
   final Color timerActive;
+
+  /// Fundo do card quando o cronômetro está ativo — teal sutil sobre a surface.
+  final Color timerActiveSurface;
   final Color success;
   final Color warning;
   final Color danger;
@@ -53,6 +57,7 @@ class AppColors extends ThemeExtension<AppColors> {
     primary: Color(0xFF7C8CF8),
     onPrimary: Color(0xFF0F1220),
     timerActive: Color(0xFF4FD1C5),
+    timerActiveSurface: Color(0xFF1F3135),
     success: Color(0xFF4ADE80),
     warning: Color(0xFFFBBF24),
     danger: Color(0xFFF87171),
@@ -84,6 +89,7 @@ class AppColors extends ThemeExtension<AppColors> {
     Color? primary,
     Color? onPrimary,
     Color? timerActive,
+    Color? timerActiveSurface,
     Color? success,
     Color? warning,
     Color? danger,
@@ -101,6 +107,7 @@ class AppColors extends ThemeExtension<AppColors> {
       primary: primary ?? this.primary,
       onPrimary: onPrimary ?? this.onPrimary,
       timerActive: timerActive ?? this.timerActive,
+      timerActiveSurface: timerActiveSurface ?? this.timerActiveSurface,
       success: success ?? this.success,
       warning: warning ?? this.warning,
       danger: danger ?? this.danger,
@@ -123,6 +130,8 @@ class AppColors extends ThemeExtension<AppColors> {
       primary: Color.lerp(primary, other.primary, t)!,
       onPrimary: Color.lerp(onPrimary, other.onPrimary, t)!,
       timerActive: Color.lerp(timerActive, other.timerActive, t)!,
+      timerActiveSurface:
+          Color.lerp(timerActiveSurface, other.timerActiveSurface, t)!,
       success: Color.lerp(success, other.success, t)!,
       warning: Color.lerp(warning, other.warning, t)!,
       danger: Color.lerp(danger, other.danger, t)!,

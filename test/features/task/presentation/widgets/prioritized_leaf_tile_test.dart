@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:meu_tempo/core/theme/app_colors.dart';
 import 'package:meu_tempo/core/theme/app_theme.dart';
 import 'package:meu_tempo/core/ui/task_crud_menu.dart';
 import 'package:meu_tempo/core/ui/task_running_badge.dart';
@@ -164,6 +165,30 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(deleteTapped, isTrue);
+  });
+
+  BoxDecoration cardDecoration(WidgetTester tester) {
+    final container = tester.widget<Container>(
+      find.descendant(
+        of: find.byType(PrioritizedLeafTile),
+        matching: find.byType(Container),
+      ).first,
+    );
+    return container.decoration! as BoxDecoration;
+  }
+
+  testWidgets('tints the whole card when the timer is running', (tester) async {
+    setView(tester);
+    await tester.pumpWidget(harness(leaf: leaf(), isActive: true));
+
+    expect(cardDecoration(tester).color, AppColors.dark.timerActiveSurface);
+  });
+
+  testWidgets('uses the plain surface color when inactive', (tester) async {
+    setView(tester);
+    await tester.pumpWidget(harness(leaf: leaf(), isActive: false));
+
+    expect(cardDecoration(tester).color, AppColors.dark.surface);
   });
 
   testWidgets('shows the check icon when the leaf is done', (tester) async {
