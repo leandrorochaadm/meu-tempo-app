@@ -36,7 +36,8 @@ hierarquia de tarefas e agenda pessoal. PWA para uso no celular.
 ```bash
 flutter pub get                                    # instalar dependências
 dart run build_runner build --delete-conflicting-outputs   # gerar código (injectable)
-flutter run -d chrome                              # rodar como PWA/web
+make run                                           # rodar no Chrome mantendo o login entre execuções
+flutter run -d chrome                              # rodar sem perfil fixo (pede login a cada run)
 flutter test                                       # testes
 flutter analyze                                    # análise estática (manter zero issues)
 flutter build web --release                        # build de produção

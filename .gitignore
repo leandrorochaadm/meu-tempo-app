@@ -43,3 +43,6 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Perfil persistente do Chrome em dev (mantém sessão do Firebase Auth)
+.dev-chrome/

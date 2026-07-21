@@ -138,7 +138,8 @@ ou DataSource direto.
 ## Comandos úteis
 
 ```bash
-flutter run -d chrome            # rodar em modo web/PWA
+make run                         # rodar no Chrome com perfil persistente (mantém login)
+flutter run -d chrome            # rodar sem perfil fixo (pede login a cada run)
 flutter test                     # testes
 flutter analyze                  # análise estática (manter zero issues)
 flutter build web --release      # build de produção do PWA
