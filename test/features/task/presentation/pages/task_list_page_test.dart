@@ -5,6 +5,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:meu_tempo/core/theme/app_theme.dart';
 import 'package:meu_tempo/features/auth/domain/entities/user_entity.dart';
 import 'package:meu_tempo/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:meu_tempo/features/task/domain/entities/prioritized_leaf.dart';
+import 'package:meu_tempo/features/task/domain/entities/task_entity.dart';
 import 'package:meu_tempo/features/task/presentation/bloc/task_list_bloc.dart';
 import 'package:meu_tempo/features/task/presentation/pages/task_list_page.dart';
 import 'package:mocktail/mocktail.dart';
@@ -79,5 +81,62 @@ void main() {
     await tester.pump();
 
     verify(() => taskBloc.add(const TaskCreated('Estudar Flutter'))).called(1);
+  });
+
+  // --- Visão por prioridade (padrão): CRUD/tempo da folha ---
+
+  final leaf = PrioritizedLeaf(
+    task: TaskEntity(
+      id: 't1',
+      title: 'Estudar Flutter',
+      listId: 'l1',
+      createdAt: DateTime(2026, 7, 21),
+      estimatedMinutes: 120,
+      dueDate: DateTime(2026, 7, 21),
+      spentMinutes: 45,
+    ),
+    priority: 42,
+    ancestryLabel: '',
+  );
+
+  TaskListLoaded loadedWithLeaf() =>
+      TaskListLoaded(const [], prioritized: [leaf]);
+
+  testWidgets('concluir na visão por prioridade dispara CompleteToggled',
+      (tester) async {
+    setView(tester);
+    when(() => taskBloc.state).thenReturn(loadedWithLeaf());
+
+    await tester.pumpWidget(harness());
+    await tester.tap(find.byIcon(Icons.circle_outlined));
+    await tester.pump();
+
+    verify(() => taskBloc.add(const CompleteToggled(taskId: 't1', done: true)))
+        .called(1);
+  });
+
+  testWidgets('concluir mostra snackbar com ação de desfazer', (tester) async {
+    setView(tester);
+    when(() => taskBloc.state).thenReturn(loadedWithLeaf());
+
+    await tester.pumpWidget(harness());
+    await tester.tap(find.byIcon(Icons.circle_outlined));
+    await tester.pump();
+
+    expect(find.text('Desfazer'), findsOneWidget);
+  });
+
+  testWidgets('iniciar cronômetro na prioridade dispara TimerStartRequested',
+      (tester) async {
+    setView(tester);
+    when(() => taskBloc.state).thenReturn(loadedWithLeaf());
+
+    await tester.pumpWidget(harness());
+    await tester.tap(find.text('Iniciar'));
+    await tester.pump();
+
+    verify(() => taskBloc.add(
+          const TimerStartRequested(taskId: 't1', isLeaf: true),
+        )).called(1);
   });
 }

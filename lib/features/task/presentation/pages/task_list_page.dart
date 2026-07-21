@@ -199,24 +199,28 @@ class _TaskListPageState extends State<TaskListPage> {
     final state = bloc.state;
     if (state is! TaskListLoaded) return;
 
-    final candidates = _flatten(state.roots)
-        .where((n) => !excluded.contains(n.task.id) && !n.isMaxLevel)
-        .toList();
+    final candidates = _moveCandidates(state.roots, excluded);
 
     final chosen = await showDialog<String?>(
       context: context,
       builder: (ctx) => SimpleDialog(
         title: const Text('Mover para'),
         children: [
-          SimpleDialogOption(
-            onPressed: () => Navigator.of(ctx).pop('__root__'),
-            child: const Text('Tornar tarefa mãe (raiz)'),
+          ListTile(
+            leading: const Icon(Icons.home_rounded),
+            title: const Text('Tornar tarefa mãe (raiz)'),
+            onTap: () => Navigator.of(ctx).pop('__root__'),
           ),
           for (final c in candidates)
-            SimpleDialogOption(
-              onPressed: () => Navigator.of(ctx).pop(c.task.id),
-              child: Text(c.task.title),
+            ListTile(
+              title: Text(c.node.task.title),
+              subtitle: Text(c.path),
+              onTap: () => Navigator.of(ctx).pop(c.node.task.id),
             ),
+          ListTile(
+            title: const Text('Cancelar'),
+            onTap: () => Navigator.of(ctx).pop(),
+          ),
         ],
       ),
     );
@@ -250,6 +254,37 @@ class _TaskListPageState extends State<TaskListPage> {
     }
     return out;
   }
+
+  /// Candidatos de destino para "Mover", cada um com o breadcrumb dos ancestrais
+  /// e o nível (mãe/filha) — desambigua títulos parecidos na hierarquia.
+  List<({TaskNode node, String path})> _moveCandidates(
+    List<TaskNode> roots,
+    Set<String> excluded,
+  ) {
+    final out = <({TaskNode node, String path})>[];
+    void visit(TaskNode n, List<String> ancestors) {
+      if (!excluded.contains(n.task.id) && !n.isMaxLevel) {
+        final breadcrumb = ancestors.isEmpty
+            ? _levelLabel(n.level)
+            : '${ancestors.join(' › ')} · ${_levelLabel(n.level)}';
+        out.add((node: n, path: breadcrumb));
+      }
+      for (final c in n.children) {
+        visit(c, [...ancestors, n.task.title]);
+      }
+    }
+
+    for (final r in roots) {
+      visit(r, const []);
+    }
+    return out;
+  }
+
+  String _levelLabel(int level) => switch (level) {
+        0 => 'tarefa mãe',
+        1 => 'tarefa filha',
+        _ => 'tarefa neta',
+      };
 
   @override
   Widget build(BuildContext context) {
