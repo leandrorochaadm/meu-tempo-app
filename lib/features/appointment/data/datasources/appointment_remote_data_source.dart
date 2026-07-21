@@ -9,6 +9,7 @@ import '../models/appointment_model.dart';
 
 abstract class AppointmentRemoteDataSource {
   Stream<List<AppointmentModel>> watchForDay(DateTime day);
+  Stream<List<AppointmentModel>> watchAll();
   Future<AppointmentModel> create(AppointmentModel a);
   Future<void> delete(String id);
   Future<void> addSpentMinutes(String id, int minutes);
@@ -40,6 +41,20 @@ class AppointmentRemoteDataSourceImpl implements AppointmentRemoteDataSource {
           .where(AppointmentFields.date, isLessThan: end)
           .orderBy(AppointmentFields.date)
           .orderBy(AppointmentFields.startMinute)
+          .snapshots()
+          .map((snap) => snap.docs
+              .map((d) => AppointmentModel.fromDoc(d.id, d.data()))
+              .toList());
+    } on FirebaseException catch (e) {
+      throw mapFirestoreException(e);
+    }
+  }
+
+  @override
+  Stream<List<AppointmentModel>> watchAll() {
+    try {
+      return _collection
+          .orderBy(AppointmentFields.date)
           .snapshots()
           .map((snap) => snap.docs
               .map((d) => AppointmentModel.fromDoc(d.id, d.data()))

@@ -44,4 +44,44 @@ class TimeEntryRepositoryImpl implements TimeEntryRepository {
       yield const Left(ServerFailure());
     }
   }
+
+  @override
+  Stream<Either<Failure, List<TimeEntryEntity>>> watchByTarget(
+    String targetId,
+  ) async* {
+    try {
+      yield* _dataSource.watchByTarget(targetId).map<
+          Either<Failure, List<TimeEntryEntity>>>(
+        (models) => Right(models.map((m) => m.toEntity()).toList()),
+      );
+    } on AppException catch (e, s) {
+      AppLogger.logError('watchByTarget falhou', error: e, stackTrace: s);
+      yield Left(e.toFailure());
+    } catch (e, s) {
+      AppLogger.logError('watchByTarget falhou', error: e, stackTrace: s);
+      yield const Left(ServerFailure());
+    }
+  }
+
+  @override
+  Future<Either<Failure, Unit>> update(TimeEntryEntity entry) async {
+    try {
+      await _dataSource.update(TimeEntryModel.fromEntity(entry));
+      return const Right(unit);
+    } on AppException catch (e, s) {
+      AppLogger.logError('update timeEntry falhou', error: e, stackTrace: s);
+      return Left(e.toFailure());
+    }
+  }
+
+  @override
+  Future<Either<Failure, Unit>> delete(String id) async {
+    try {
+      await _dataSource.delete(id);
+      return const Right(unit);
+    } on AppException catch (e, s) {
+      AppLogger.logError('delete timeEntry falhou', error: e, stackTrace: s);
+      return Left(e.toFailure());
+    }
+  }
 }

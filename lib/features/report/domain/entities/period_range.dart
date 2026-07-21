@@ -10,26 +10,35 @@ class PeriodRange extends Equatable {
   final DateTime start;
   final DateTime end;
 
-  /// Constrói o intervalo do [period] contendo o instante [now].
+  /// Constrói o intervalo do [period] contendo o instante [now] (período atual).
   ///
   /// - `day`: da meia-noite de hoje à meia-noite de amanhã.
   /// - `week`: de segunda-feira (00h) à segunda seguinte (semana ISO).
   /// - `month`: do dia 1 (00h) ao dia 1 do mês seguinte.
-  factory PeriodRange.of(ReportPeriodEnum period, DateTime now) {
-    final today = DateTime(now.year, now.month, now.day);
+  factory PeriodRange.of(ReportPeriodEnum period, DateTime now) =>
+      PeriodRange.at(period, now, 0);
+
+  /// Constrói o intervalo do [period] deslocado por [offset] passos a partir do
+  /// que contém [now] (`0` = atual, `-1` = anterior, `1` = seguinte). Sem limite
+  /// negativo. `DateTime` normaliza mês/dia fora do intervalo, então offsets
+  /// grandes (e viradas de ano) funcionam sem tratamento especial.
+  factory PeriodRange.at(ReportPeriodEnum period, DateTime now, int offset) {
     switch (period) {
       case ReportPeriodEnum.day:
-        return PeriodRange(start: today, end: today.add(const Duration(days: 1)));
+        final start = DateTime(now.year, now.month, now.day + offset);
+        return PeriodRange(start: start, end: start.add(const Duration(days: 1)));
       case ReportPeriodEnum.week:
         // weekday: 1 = segunda ... 7 = domingo.
+        final today = DateTime(now.year, now.month, now.day);
         final monday = today.subtract(Duration(days: today.weekday - 1));
+        final start = monday.add(Duration(days: 7 * offset));
         return PeriodRange(
-          start: monday,
-          end: monday.add(const Duration(days: 7)),
+          start: start,
+          end: start.add(const Duration(days: 7)),
         );
       case ReportPeriodEnum.month:
-        final start = DateTime(now.year, now.month);
-        final end = DateTime(now.year, now.month + 1);
+        final start = DateTime(now.year, now.month + offset);
+        final end = DateTime(now.year, now.month + offset + 1);
         return PeriodRange(start: start, end: end);
     }
   }

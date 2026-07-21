@@ -4,6 +4,7 @@ import '../entities/importance_enum.dart';
 import '../entities/prioritized_leaf.dart';
 import '../entities/task_entity.dart';
 import '../entities/urgency_band_enum.dart';
+import '../services/ancestry_label_builder.dart';
 
 /// Monta a lista **plana das folhas não concluídas** ordenada por prioridade:
 /// `tempoEstimado × (5 − importância) × urgênciaDoPrazo`. Depende de `today`
@@ -21,7 +22,7 @@ class GetPrioritizedLeavesUseCase {
         .map((task) => PrioritizedLeaf(
               task: task,
               priority: _priority(task, t0),
-              ancestryLabel: _ancestry(task, byId),
+              ancestryLabel: AncestryLabelBuilder.of(task, byId),
             ))
         .toList();
 
@@ -51,17 +52,5 @@ class GetPrioritizedLeavesUseCase {
     if (dueDate == null) return UrgencyBandEnum.beyondFourteen;
     final due = DateTime(dueDate.year, dueDate.month, dueDate.day);
     return UrgencyBandEnum.fromDaysUntilDue(due.difference(today).inDays);
-  }
-
-  String _ancestry(TaskEntity leaf, Map<String, TaskEntity> byId) {
-    final chain = <String>[];
-    var parentId = leaf.parentId;
-    while (parentId != null) {
-      final parent = byId[parentId];
-      if (parent == null) break;
-      chain.insert(0, parent.title);
-      parentId = parent.parentId;
-    }
-    return chain.join(' › ');
   }
 }

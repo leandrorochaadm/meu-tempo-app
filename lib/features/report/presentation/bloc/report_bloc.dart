@@ -37,6 +37,7 @@ class ReportBloc extends Bloc<ReportEvent, ReportState> {
     on<ReportListsUpdated>(_onListsUpdated);
     on<ReportEntriesUpdated>(_onEntriesUpdated);
     on<ReportPeriodChanged>(_onPeriodChanged);
+    on<ReportPeriodStepped>(_onPeriodStepped);
   }
 
   final WatchTasksUseCase _watchTasks;
@@ -52,6 +53,8 @@ class ReportBloc extends Bloc<ReportEvent, ReportState> {
   List<TaskListEntity> _lists = const [];
   List<TimeEntryEntity> _entries = const [];
   ReportPeriodEnum _period = ReportPeriodEnum.day;
+  int _offset = 0;
+  PeriodRange _range = PeriodRange.of(ReportPeriodEnum.day, DateTime.now());
 
   Future<void> _onStarted(ReportStarted e, Emitter<ReportState> emit) async {
     emit(const ReportLoading());
@@ -69,15 +72,28 @@ class ReportBloc extends Bloc<ReportEvent, ReportState> {
     Emitter<ReportState> emit,
   ) async {
     _period = e.period;
+    _offset = 0; // trocar de período volta ao atual
+    _subscribeEntries();
+    _emitLoaded(emit);
+  }
+
+  Future<void> _onPeriodStepped(
+    ReportPeriodStepped e,
+    Emitter<ReportState> emit,
+  ) async {
+    // Sem limite para trás; trava no período atual para frente (offset <= 0).
+    final next = _offset + e.direction;
+    if (next > 0) return;
+    _offset = next;
     _subscribeEntries();
     _emitLoaded(emit);
   }
 
   void _subscribeEntries() {
-    final range = PeriodRange.of(_period, DateTime.now());
+    _range = PeriodRange.at(_period, DateTime.now(), _offset);
     _entriesSub?.cancel();
     _entriesSub = _watchTimeEntries(
-      WatchTimeEntriesParams(start: range.start, end: range.end),
+      WatchTimeEntriesParams(start: _range.start, end: _range.end),
     ).listen((r) => add(ReportEntriesUpdated(r)));
   }
 
@@ -106,6 +122,9 @@ class ReportBloc extends Bloc<ReportEvent, ReportState> {
     emit(ReportLoaded(
       _getReport(_entries, _tasks, _lists),
       period: _period,
+      range: _range,
+      offset: _offset,
+      canGoForward: _offset < 0,
     ));
   }
 

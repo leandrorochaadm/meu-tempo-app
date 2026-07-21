@@ -49,7 +49,7 @@ void main() {
       (_) => const Stream<Either<Failure, List<TaskEntity>>>.empty(),
     );
     when(() => watchEntries(any())).thenAnswer(
-      (_) => const Stream<Either<Failure, List<TimeEntryEntity>>>.empty(),
+      (_) => Stream.value(Right(<TimeEntryEntity>[])),
     );
   });
 
@@ -105,6 +105,60 @@ void main() {
     verify: (_) {
       // Assina entries ao iniciar e novamente ao trocar de período.
       verify(() => watchEntries(any())).called(2);
+    },
+  );
+
+  blocTest<ReportBloc, ReportState>(
+    'ReportPeriodStepped(-1) volta um período e habilita avançar',
+    build: build,
+    act: (bloc) async {
+      bloc.add(const ReportStarted());
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+      bloc.add(const ReportPeriodStepped(-1));
+    },
+    wait: const Duration(milliseconds: 20),
+    verify: (bloc) {
+      final s = bloc.state as ReportLoaded;
+      expect(s.offset, -1);
+      expect(s.canGoForward, isTrue);
+      // Reassina entries com o novo intervalo.
+      verify(() => watchEntries(any())).called(2);
+    },
+  );
+
+  blocTest<ReportBloc, ReportState>(
+    'ReportPeriodStepped(+1) no período atual é ignorado (trava à frente)',
+    build: build,
+    act: (bloc) async {
+      bloc.add(const ReportStarted());
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+      bloc.add(const ReportPeriodStepped(1));
+    },
+    wait: const Duration(milliseconds: 20),
+    verify: (bloc) {
+      final s = bloc.state as ReportLoaded;
+      expect(s.offset, 0);
+      expect(s.canGoForward, isFalse);
+      // Não reassina: a segunda chamada foi ignorada.
+      verify(() => watchEntries(any())).called(1);
+    },
+  );
+
+  blocTest<ReportBloc, ReportState>(
+    'ReportPeriodChanged zera o offset após navegar',
+    build: build,
+    act: (bloc) async {
+      bloc.add(const ReportStarted());
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+      bloc.add(const ReportPeriodStepped(-1));
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+      bloc.add(const ReportPeriodChanged(ReportPeriodEnum.month));
+    },
+    wait: const Duration(milliseconds: 30),
+    verify: (bloc) {
+      final s = bloc.state as ReportLoaded;
+      expect(s.period, ReportPeriodEnum.month);
+      expect(s.offset, 0);
     },
   );
 }

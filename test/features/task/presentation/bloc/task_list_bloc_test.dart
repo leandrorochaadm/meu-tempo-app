@@ -428,4 +428,77 @@ void main() {
       expect(p.newParentId, 'p1');
     },
   );
+
+  blocTest<TaskListBloc, TaskListState>(
+    'EditRequested repassa o listId escolhido ao EditTaskUseCase',
+    build: () {
+      when(() => watchTasks(any()))
+          .thenAnswer((_) => Stream.value(const Right(<TaskEntity>[])));
+      when(() => editTask(any())).thenAnswer((_) async => const Right(unit));
+      return build();
+    },
+    act: (bloc) async {
+      bloc.add(const TaskListStarted());
+      await Future<void>.delayed(Duration.zero);
+      bloc.add(const EditRequested(taskId: 't1', title: 'Novo', listId: 'work'));
+    },
+    verify: (_) {
+      final p = verify(() => editTask(captureAny())).captured.single
+          as EditTaskParams;
+      expect(p.listId, 'work');
+    },
+  );
+
+  blocTest<TaskListBloc, TaskListState>(
+    'EditRequested com parentChanged e doneChanged dispara move e complete',
+    build: () {
+      when(() => watchTasks(any()))
+          .thenAnswer((_) => Stream.value(const Right(<TaskEntity>[])));
+      when(() => editTask(any())).thenAnswer((_) async => const Right(unit));
+      when(() => moveTask(any())).thenAnswer((_) async => const Right(unit));
+      when(() => completeTask(any()))
+          .thenAnswer((_) async => const Right(unit));
+      return build();
+    },
+    act: (bloc) async {
+      bloc.add(const TaskListStarted());
+      await Future<void>.delayed(Duration.zero);
+      bloc.add(const EditRequested(
+        taskId: 't1',
+        title: 'Novo',
+        newParentId: 'p1',
+        parentChanged: true,
+        isDone: true,
+        doneChanged: true,
+      ));
+    },
+    verify: (_) {
+      final mp = verify(() => moveTask(captureAny())).captured.single
+          as MoveTaskParams;
+      expect(mp.newParentId, 'p1');
+      final cp = verify(() => completeTask(captureAny())).captured.single
+          as CompleteTaskParams;
+      expect(cp.done, isTrue);
+    },
+  );
+
+  blocTest<TaskListBloc, TaskListState>(
+    'EditRequested sem flags não dispara move nem complete',
+    build: () {
+      when(() => watchTasks(any()))
+          .thenAnswer((_) => Stream.value(const Right(<TaskEntity>[])));
+      when(() => editTask(any())).thenAnswer((_) async => const Right(unit));
+      return build();
+    },
+    act: (bloc) async {
+      bloc.add(const TaskListStarted());
+      await Future<void>.delayed(Duration.zero);
+      bloc.add(const EditRequested(taskId: 't1', title: 'Novo'));
+      await Future<void>.delayed(Duration.zero);
+    },
+    verify: (_) {
+      verifyNever(() => moveTask(any()));
+      verifyNever(() => completeTask(any()));
+    },
+  );
 }

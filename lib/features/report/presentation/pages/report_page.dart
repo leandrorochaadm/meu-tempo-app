@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../core/router/routes.dart';
 import '../../../../core/theme/theme_context_extensions.dart';
 import '../../../../core/ui/app_empty_state.dart';
 import '../../../../core/ui/app_list_skeleton.dart';
 import '../../../../core/utils/formatters/duration_formatter.dart';
 import '../../domain/entities/list_report_row.dart';
+import '../../domain/entities/period_range.dart';
 import '../../domain/entities/report_period_enum.dart';
 import '../bloc/report_bloc.dart';
+import '../period_label.dart';
 
 /// Relatório de tempo por lista: estimado × real.
 class ReportPage extends StatefulWidget {
@@ -32,6 +36,23 @@ class _ReportPageState extends State<ReportPage> {
     context.read<ReportBloc>().add(ReportPeriodChanged(period));
   }
 
+  void _openDetail(
+    BuildContext context,
+    ListReportRow row,
+    ReportPeriodEnum period,
+    int offset,
+  ) {
+    final uri = Uri(
+      path: Routes.reportDetail,
+      queryParameters: {
+        'list': row.listId,
+        'period': period.name,
+        'offset': '$offset',
+      },
+    ).toString();
+    context.push(uri, extra: row.listName);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -51,21 +72,47 @@ class _ReportPageState extends State<ReportPage> {
                         title: 'Não foi possível carregar',
                         message: 'Tente novamente em instantes.',
                       ),
-                    ReportLoaded(:final rows) => rows.isEmpty
-                        ? const AppEmptyState(
-                            icon: Icons.bar_chart_rounded,
-                            title: 'Sem dados no período',
-                            message:
-                                'Registre tempo nas tarefas para ver o relatório.',
-                          )
-                        : ListView.separated(
-                            padding: EdgeInsets.all(context.space.lg),
-                            itemCount: rows.length,
-                            separatorBuilder: (_, _) =>
-                                SizedBox(height: context.space.md),
-                            itemBuilder: (context, i) =>
-                                _ReportRowTile(row: rows[i], index: i),
+                    ReportLoaded(
+                      :final rows,
+                      :final period,
+                      :final range,
+                      :final offset,
+                      :final canGoForward,
+                    ) =>
+                      Column(
+                        children: [
+                          _PeriodNavigator(
+                            period: period,
+                            range: range,
+                            canGoForward: canGoForward,
                           ),
+                          Expanded(
+                            child: rows.isEmpty
+                                ? const AppEmptyState(
+                                    icon: Icons.bar_chart_rounded,
+                                    title: 'Sem dados no período',
+                                    message:
+                                        'Registre tempo nas tarefas para ver o relatório.',
+                                  )
+                                : ListView.separated(
+                                    padding: EdgeInsets.all(context.space.lg),
+                                    itemCount: rows.length,
+                                    separatorBuilder: (_, _) =>
+                                        SizedBox(height: context.space.md),
+                                    itemBuilder: (context, i) => _ReportRowTile(
+                                      row: rows[i],
+                                      index: i,
+                                      onTap: () => _openDetail(
+                                        context,
+                                        rows[i],
+                                        period,
+                                        offset,
+                                      ),
+                                    ),
+                                  ),
+                          ),
+                        ],
+                      ),
                   };
                 },
               ),
@@ -112,11 +159,64 @@ class _PeriodSelector extends StatelessWidget {
   }
 }
 
+class _PeriodNavigator extends StatelessWidget {
+  const _PeriodNavigator({
+    required this.period,
+    required this.range,
+    required this.canGoForward,
+  });
+
+  final ReportPeriodEnum period;
+  final PeriodRange range;
+  final bool canGoForward;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.symmetric(
+        horizontal: context.space.lg,
+        vertical: context.space.sm,
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          IconButton(
+            icon: const Icon(Icons.chevron_left_rounded),
+            tooltip: 'Anterior',
+            onPressed: () =>
+                context.read<ReportBloc>().add(const ReportPeriodStepped(-1)),
+          ),
+          Expanded(
+            child: Text(
+              reportPeriodLabel(period, range, DateTime.now()),
+              textAlign: TextAlign.center,
+              style: context.text.titleMedium,
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.chevron_right_rounded),
+            tooltip: 'Seguinte',
+            onPressed: canGoForward
+                ? () =>
+                    context.read<ReportBloc>().add(const ReportPeriodStepped(1))
+                : null,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _ReportRowTile extends StatelessWidget {
-  const _ReportRowTile({required this.row, required this.index});
+  const _ReportRowTile({
+    required this.row,
+    required this.index,
+    required this.onTap,
+  });
 
   final ListReportRow row;
   final int index;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -126,39 +226,45 @@ class _ReportRowTile extends StatelessWidget {
         ? 0.0
         : (row.spentMinutes / row.estimatedMinutes).clamp(0.0, 1.0);
 
-    return Container(
-      padding: EdgeInsets.all(context.space.lg),
-      decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: context.radius.lgRadius,
-        border: Border(left: BorderSide(color: accent, width: 3)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(row.listName, style: context.text.titleMedium),
-              ),
-              Text(
-                'real ${DurationFormatter.hm(row.spentMinutes)}'
-                ' / est. ${DurationFormatter.hm(row.estimatedMinutes)}',
-                style: context.text.labelSmall,
-              ),
-            ],
-          ),
-          SizedBox(height: context.space.sm),
-          ClipRRect(
-            borderRadius: context.radius.pillRadius,
-            child: LinearProgressIndicator(
-              value: ratio,
-              minHeight: 8,
-              backgroundColor: colors.surfaceHigh,
-              valueColor: AlwaysStoppedAnimation(accent),
+    return InkWell(
+      onTap: onTap,
+      borderRadius: context.radius.lgRadius,
+      child: Container(
+        padding: EdgeInsets.all(context.space.lg),
+        decoration: BoxDecoration(
+          color: colors.surface,
+          borderRadius: context.radius.lgRadius,
+          border: Border(left: BorderSide(color: accent, width: 3)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(row.listName, style: context.text.titleMedium),
+                ),
+                Text(
+                  'real ${DurationFormatter.hm(row.spentMinutes)}'
+                  ' / est. ${DurationFormatter.hm(row.estimatedMinutes)}',
+                  style: context.text.labelSmall,
+                ),
+                SizedBox(width: context.space.xs),
+                Icon(Icons.chevron_right_rounded, color: colors.textMuted),
+              ],
             ),
-          ),
-        ],
+            SizedBox(height: context.space.sm),
+            ClipRRect(
+              borderRadius: context.radius.pillRadius,
+              child: LinearProgressIndicator(
+                value: ratio,
+                minHeight: 8,
+                backgroundColor: colors.surfaceHigh,
+                valueColor: AlwaysStoppedAnimation(accent),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
