@@ -42,3 +42,12 @@ class ReportPeriodChanged extends ReportEvent {
   @override
   List<Object?> get props => [period];
 }
+
+/// Navega o período em [direction] passos (-1 = anterior, +1 = seguinte).
+class ReportPeriodStepped extends ReportEvent {
+  const ReportPeriodStepped(this.direction);
+  final int direction;
+
+  @override
+  List<Object?> get props => [direction];
+}

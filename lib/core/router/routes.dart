@@ -7,6 +7,10 @@ class Routes {
   static const String lists = '/lists';
   static const String agenda = '/agenda';
   static const String report = '/report';
+
+  /// Detalhe do relatório de uma lista. Recebe `list`, `period` e `offset` como
+  /// query params (sobrevive a refresh no navegador); `listName` vem por `extra`.
+  static const String reportDetail = '/report/detail';
   static const String migration = '/migration';
   static const String settings = '/settings';
 

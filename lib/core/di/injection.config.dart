@@ -28,6 +28,8 @@ import 'package:meu_tempo/features/appointment/domain/usecases/delete_appointmen
     as _i502;
 import 'package:meu_tempo/features/appointment/domain/usecases/register_appointment_time_use_case.dart'
     as _i543;
+import 'package:meu_tempo/features/appointment/domain/usecases/watch_all_appointments_use_case.dart'
+    as _i897;
 import 'package:meu_tempo/features/appointment/domain/usecases/watch_appointments_for_day_use_case.dart'
     as _i777;
 import 'package:meu_tempo/features/appointment/presentation/bloc/agenda_bloc.dart'
@@ -84,8 +86,12 @@ import 'package:meu_tempo/features/migration/presentation/bloc/migration_bloc.da
     as _i492;
 import 'package:meu_tempo/features/report/domain/usecases/get_list_report_use_case.dart'
     as _i67;
+import 'package:meu_tempo/features/report/domain/usecases/get_task_report_use_case.dart'
+    as _i838;
 import 'package:meu_tempo/features/report/presentation/bloc/report_bloc.dart'
     as _i318;
+import 'package:meu_tempo/features/report/presentation/bloc/report_detail_bloc.dart'
+    as _i73;
 import 'package:meu_tempo/features/task/data/datasources/task_remote_data_source.dart'
     as _i592;
 import 'package:meu_tempo/features/task/data/datasources/time_entry_remote_data_source.dart'
@@ -158,6 +164,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i67.GetListReportUseCase>(
       () => const _i67.GetListReportUseCase(),
     );
+    gh.lazySingleton<_i838.GetTaskReportUseCase>(
+      () => const _i838.GetTaskReportUseCase(),
+    );
     gh.lazySingleton<_i27.BuildTaskTreeUseCase>(
       () => const _i27.BuildTaskTreeUseCase(),
     );
@@ -222,6 +231,10 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i502.DeleteAppointmentUseCase>(
       () => _i502.DeleteAppointmentUseCase(gh<_i259.AppointmentRepository>()),
+    );
+    gh.lazySingleton<_i897.WatchAllAppointmentsUseCase>(
+      () =>
+          _i897.WatchAllAppointmentsUseCase(gh<_i259.AppointmentRepository>()),
     );
     gh.lazySingleton<_i777.WatchAppointmentsForDayUseCase>(
       () => _i777.WatchAppointmentsForDayUseCase(
@@ -338,6 +351,15 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i1035.WatchTasksUseCase>(
       () => _i1035.WatchTasksUseCase(gh<_i521.TaskRepository>()),
+    );
+    gh.factory<_i73.ReportDetailBloc>(
+      () => _i73.ReportDetailBloc(
+        gh<_i1035.WatchTasksUseCase>(),
+        gh<_i897.WatchAllAppointmentsUseCase>(),
+        gh<_i892.WatchTimeEntriesUseCase>(),
+        gh<_i689.WatchListsUseCase>(),
+        gh<_i838.GetTaskReportUseCase>(),
+      ),
     );
     gh.factory<_i318.ReportBloc>(
       () => _i318.ReportBloc(

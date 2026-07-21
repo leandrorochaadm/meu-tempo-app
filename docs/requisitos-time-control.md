@@ -93,6 +93,33 @@ rituais e demais medições ficam em **Próximas versões**.
    - _Pronto quando:_ uma tarefa importante (1) de 2h que vence hoje pontua `2 × 4 × 6 = 48` e fica acima da mesma tarefa vencendo em 4 dias (`2 × 4 × 4 = 32`); e vejo o subtítulo "Lançar app › Fazer telas" na folha.
 7. **Relatórios das tarefas e da agenda** por dia, semana e mês: tempo por **lista** e **estimado × real**.
    - _Pronto quando:_ no fim do dia vejo "Profissional 3h, Estudo 1h" e a comparação do que estimei com o que gastei.
+   - **7.1 — Navegar entre períodos (melhoria 2026-07-21):** além de ver o período atual,
+     posso **voltar e avançar** entre dias/semanas/meses (setas ‹ ›), sem limite para trás
+     (para enquanto houver dados registrados).
+     - _Pronto quando:_ estou na visão "semana", volto uma seta e vejo o relatório da
+       semana passada; volto de novo e vejo a retrasada.
+   - **7.2 — Detalhe hierárquico por tarefa dentro da lista (melhoria 2026-07-21):** ao
+     **tocar numa lista** no relatório, abre uma tela com a **hierarquia** (avó → filha →
+     neta) das tarefas daquela lista no período, mais os compromissos, cada nó com
+     **gasto × estimado** e o **estouro em número** (ex.: +2h00 / −1h00). O objetivo é
+     **conferência pessoal**: comparar o estimado com o real e ver onde estourou.
+     - _Hierarquia (como a tela principal):_ mostra só os nós de topo (avó/mãe); **tocar
+       expande as filhas/netas inline**, indentadas. O **gasto da mãe/avó é derivado**
+       (tempo próprio, se houver, + soma das folhas); o estimado da mãe/avó é a soma das
+       folhas.
+     - _Regras:_
+       - Só aparecem tarefas (e nós ancestrais) **com tempo registrado no período** —
+         nós sem tempo são ocultados; os totais batem com a visão por lista.
+       - O **gasto é só o tempo daquele período** (filtro "hoje" mostra só hoje; "semana"
+         soma todos os dias da semana).
+       - **Compromisso** aparece como nó de topo pelo tempo gasto, **sem estimativa nem
+         estouro**.
+     - _Ordenação do topo (posso trocar):_ por **tempo gasto** (padrão) ou por **estouro**
+       (quem mais passou da estimativa no topo). A ordenação "mãe/avó" foi **removida** — a
+       própria árvore já organiza por estrutura.
+     - _Pronto quando:_ na lista "Profissional" da semana, toco na mãe "Projeto Alfa"
+       (gasto 2h · est. 1h · +1h), ela expande mostrando "Montar proposta gasto 2h · est.
+       1h · +1h"; troco a ordenação para "estouro" e a mãe com maior estouro sobe ao topo.
 8. **Login** próprio por usuário, com **dados separados** entre os 2 usuários.
    - _Pronto quando:_ entro com minha conta e vejo só os meus dados.
 9. **Backup na nuvem** (recuperar o histórico ao trocar de celular).

@@ -11,7 +11,10 @@ import '../../features/list/presentation/bloc/list_manager_bloc.dart';
 import '../../features/list/presentation/pages/lists_page.dart';
 import '../../features/migration/presentation/bloc/migration_bloc.dart';
 import '../../features/migration/presentation/pages/migration_page.dart';
+import '../../features/report/domain/entities/report_period_enum.dart';
 import '../../features/report/presentation/bloc/report_bloc.dart';
+import '../../features/report/presentation/bloc/report_detail_bloc.dart';
+import '../../features/report/presentation/pages/report_detail_page.dart';
 import '../../features/report/presentation/pages/report_page.dart';
 import '../../features/task/domain/entities/task_entity.dart';
 import '../../features/task/presentation/bloc/task_list_bloc.dart';
@@ -75,6 +78,21 @@ class AppRouter {
           create: (_) => getIt<ReportBloc>(),
           child: const ReportPage(),
         ),
+      ),
+      GoRoute(
+        path: Routes.reportDetail,
+        builder: (_, state) {
+          final q = state.uri.queryParameters;
+          return BlocProvider(
+            create: (_) => getIt<ReportDetailBloc>(),
+            child: ReportDetailPage(
+              listId: q['list'] ?? '',
+              period: ReportPeriodEnum.values.byName(q['period'] ?? 'day'),
+              offset: int.tryParse(q['offset'] ?? '0') ?? 0,
+              listName: state.extra as String?,
+            ),
+          );
+        },
       ),
       GoRoute(
         path: Routes.migration,

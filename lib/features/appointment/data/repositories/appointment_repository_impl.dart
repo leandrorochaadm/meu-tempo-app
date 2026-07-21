@@ -34,6 +34,21 @@ class AppointmentRepositoryImpl implements AppointmentRepository {
   }
 
   @override
+  Stream<Either<Failure, List<AppointmentEntity>>> watchAll() async* {
+    try {
+      yield* _dataSource.watchAll().map<Either<Failure, List<AppointmentEntity>>>(
+            (models) => Right(models.map((m) => m.toEntity()).toList()),
+          );
+    } on AppException catch (e, s) {
+      AppLogger.logError('watchAll falhou', error: e, stackTrace: s);
+      yield Left(e.toFailure());
+    } catch (e, s) {
+      AppLogger.logError('watchAll falhou', error: e, stackTrace: s);
+      yield const Left(ServerFailure());
+    }
+  }
+
+  @override
   Future<Either<Failure, AppointmentEntity>> create(
     AppointmentEntity a,
   ) async {
