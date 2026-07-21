@@ -12,10 +12,13 @@ import '../../../list/domain/entities/task_list_entity.dart';
 import '../../domain/entities/prioritized_leaf.dart';
 import '../../domain/entities/task_entity.dart';
 import '../../domain/entities/task_node.dart';
+import '../../domain/services/ancestry_label_builder.dart';
 import '../bloc/task_list_bloc.dart';
 import '../widgets/prioritized_leaf_tile.dart';
 import '../widgets/quick_add_task_widget.dart';
 import '../widgets/task_node_tile.dart';
+import '../widgets/task_parent_picker.dart';
+import 'edit_task_args.dart';
 import 'edit_task_page.dart';
 
 /// Listagem hierárquica de tarefas + criação rápida (barra no topo).
@@ -158,17 +161,84 @@ class _TaskListPageState extends State<TaskListPage> {
 
   Future<void> _editTaskEntity(TaskEntity task) async {
     final bloc = context.read<TaskListBloc>();
+    final state = bloc.state;
+    if (state is! TaskListLoaded) return;
+
+    // Candidatos a mãe: exclui a própria e seus descendentes (evita ciclo).
+    final excluded = _excludedFor(task.id, state.roots);
+    final candidates = _moveCandidates(state.roots, excluded)
+        .map((c) => ParentCandidate(
+              id: c.node.task.id,
+              title: c.node.task.title,
+              path: c.path,
+            ))
+        .toList();
+
+    // Breadcrumb da mãe atual (regra de ancestralidade vive no domínio).
+    final byId = _allTasksById(state.roots);
+    final currentParentLabel = AncestryLabelBuilder.of(task, byId);
+
+    final args = EditTaskArgs(
+      task: task,
+      lists: state.lists,
+      parentCandidates: candidates,
+      currentParentLabel: currentParentLabel,
+    );
+
     final result =
-        await context.push<EditTaskResult>(Routes.editTask, extra: task);
-    if (result != null) {
-      bloc.add(EditRequested(
-        taskId: task.id,
-        title: result.title,
-        estimatedMinutes: result.estimatedMinutes,
-        dueDate: result.dueDate,
-        importance: result.importance,
-      ));
+        await context.push<EditTaskResult>(Routes.editTask, extra: args);
+    if (result == null) return;
+    bloc.add(EditRequested(
+      taskId: task.id,
+      title: result.title,
+      estimatedMinutes: result.estimatedMinutes,
+      dueDate: result.dueDate,
+      importance: result.importance,
+      listId: result.listId,
+      newParentId: result.newParentId,
+      parentChanged: result.parentChanged,
+      isDone: result.isDone,
+      doneChanged: result.doneChanged,
+    ));
+  }
+
+  /// Conjunto a excluir dos candidatos a mãe: a própria tarefa e todos os seus
+  /// descendentes (uma tarefa não pode virar filha de si mesma/de uma neta).
+  Set<String> _excludedFor(String taskId, List<TaskNode> roots) {
+    final excluded = <String>{};
+    void collect(TaskNode n) {
+      excluded.add(n.task.id);
+      n.children.forEach(collect);
     }
+
+    TaskNode? find(List<TaskNode> nodes) {
+      for (final n in nodes) {
+        if (n.task.id == taskId) return n;
+        final hit = find(n.children);
+        if (hit != null) return hit;
+      }
+      return null;
+    }
+
+    final node = find(roots);
+    if (node != null) {
+      collect(node);
+    } else {
+      excluded.add(taskId);
+    }
+    return excluded;
+  }
+
+  /// Índice `id → TaskEntity` de toda a árvore (para o breadcrumb da mãe atual).
+  Map<String, TaskEntity> _allTasksById(List<TaskNode> roots) {
+    final byId = <String, TaskEntity>{};
+    void visit(TaskNode n) {
+      byId[n.task.id] = n.task;
+      n.children.forEach(visit);
+    }
+
+    roots.forEach(visit);
+    return byId;
   }
 
   Future<void> _moveTask(TaskNode node) {
@@ -193,35 +263,19 @@ class _TaskListPageState extends State<TaskListPage> {
     final state = bloc.state;
     if (state is! TaskListLoaded) return;
 
-    final candidates = _moveCandidates(state.roots, excluded);
+    final candidates = _moveCandidates(state.roots, excluded)
+        .map((c) => ParentCandidate(
+              id: c.node.task.id,
+              title: c.node.task.title,
+              path: c.path,
+            ))
+        .toList();
 
-    final chosen = await showDialog<String?>(
-      context: context,
-      builder: (ctx) => SimpleDialog(
-        title: const Text('Mover para'),
-        children: [
-          ListTile(
-            leading: const Icon(Icons.home_rounded),
-            title: const Text('Tornar tarefa mãe (raiz)'),
-            onTap: () => Navigator.of(ctx).pop('__root__'),
-          ),
-          for (final c in candidates)
-            ListTile(
-              title: Text(c.node.task.title),
-              subtitle: Text(c.path),
-              onTap: () => Navigator.of(ctx).pop(c.node.task.id),
-            ),
-          ListTile(
-            title: const Text('Cancelar'),
-            onTap: () => Navigator.of(ctx).pop(),
-          ),
-        ],
-      ),
-    );
+    final chosen = await showTaskParentPicker(context, candidates);
     if (chosen == null) return;
     bloc.add(MoveRequested(
       taskId: taskId,
-      newParentId: chosen == '__root__' ? null : chosen,
+      newParentId: chosen == kMakeRootSentinel ? null : chosen,
     ));
   }
 

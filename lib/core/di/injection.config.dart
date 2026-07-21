@@ -120,6 +120,8 @@ import 'package:meu_tempo/features/task/domain/usecases/create_task_use_case.dar
     as _i658;
 import 'package:meu_tempo/features/task/domain/usecases/delete_task_use_case.dart'
     as _i162;
+import 'package:meu_tempo/features/task/domain/usecases/delete_time_entry_use_case.dart'
+    as _i855;
 import 'package:meu_tempo/features/task/domain/usecases/edit_task_use_case.dart'
     as _i43;
 import 'package:meu_tempo/features/task/domain/usecases/get_prioritized_leaves_use_case.dart'
@@ -136,14 +138,20 @@ import 'package:meu_tempo/features/task/domain/usecases/start_timer_use_case.dar
     as _i210;
 import 'package:meu_tempo/features/task/domain/usecases/stop_timer_use_case.dart'
     as _i726;
+import 'package:meu_tempo/features/task/domain/usecases/update_time_entry_use_case.dart'
+    as _i115;
 import 'package:meu_tempo/features/task/domain/usecases/watch_active_timer_use_case.dart'
     as _i397;
 import 'package:meu_tempo/features/task/domain/usecases/watch_tasks_use_case.dart'
     as _i1035;
+import 'package:meu_tempo/features/task/domain/usecases/watch_time_entries_by_target_use_case.dart'
+    as _i280;
 import 'package:meu_tempo/features/task/domain/usecases/watch_time_entries_use_case.dart'
     as _i892;
 import 'package:meu_tempo/features/task/presentation/bloc/task_list_bloc.dart'
     as _i35;
+import 'package:meu_tempo/features/task/presentation/bloc/time_entry_bloc.dart'
+    as _i821;
 
 extension GetItInjectableX on _i174.GetIt {
   // initializes the registration of main-scope dependencies inside of GetIt
@@ -253,6 +261,18 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i521.TaskRepository>(
       () => _i1011.TaskRepositoryImpl(gh<_i592.TaskRemoteDataSource>()),
     );
+    gh.lazySingleton<_i855.DeleteTimeEntryUseCase>(
+      () => _i855.DeleteTimeEntryUseCase(
+        gh<_i706.TimeEntryRepository>(),
+        gh<_i521.TaskRepository>(),
+      ),
+    );
+    gh.lazySingleton<_i115.UpdateTimeEntryUseCase>(
+      () => _i115.UpdateTimeEntryUseCase(
+        gh<_i706.TimeEntryRepository>(),
+        gh<_i521.TaskRepository>(),
+      ),
+    );
     gh.lazySingleton<_i488.CreateListUseCase>(
       () => _i488.CreateListUseCase(gh<_i219.TaskListRepository>()),
     );
@@ -322,6 +342,11 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i706.TimeEntryRepository>(),
       ),
     );
+    gh.lazySingleton<_i280.WatchTimeEntriesByTargetUseCase>(
+      () => _i280.WatchTimeEntriesByTargetUseCase(
+        gh<_i706.TimeEntryRepository>(),
+      ),
+    );
     gh.lazySingleton<_i892.WatchTimeEntriesUseCase>(
       () => _i892.WatchTimeEntriesUseCase(gh<_i706.TimeEntryRepository>()),
     );
@@ -374,6 +399,14 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i98.SignInWithGoogleUseCase>(),
         gh<_i846.SignOutUseCase>(),
         gh<_i1046.WatchAuthStateUseCase>(),
+      ),
+    );
+    gh.factory<_i821.TimeEntryBloc>(
+      () => _i821.TimeEntryBloc(
+        gh<_i280.WatchTimeEntriesByTargetUseCase>(),
+        gh<_i1025.RegisterManualTimeUseCase>(),
+        gh<_i115.UpdateTimeEntryUseCase>(),
+        gh<_i855.DeleteTimeEntryUseCase>(),
       ),
     );
     gh.factory<_i830.SettingsBloc>(

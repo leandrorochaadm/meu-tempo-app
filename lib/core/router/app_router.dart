@@ -18,8 +18,11 @@ import '../../features/report/presentation/pages/report_detail_page.dart';
 import '../../features/report/presentation/pages/report_page.dart';
 import '../../features/task/domain/entities/task_entity.dart';
 import '../../features/task/presentation/bloc/task_list_bloc.dart';
+import '../../features/task/presentation/bloc/time_entry_bloc.dart';
+import '../../features/task/presentation/pages/edit_task_args.dart';
 import '../../features/task/presentation/pages/edit_task_page.dart';
 import '../../features/task/presentation/pages/task_list_page.dart';
+import '../../features/task/presentation/pages/time_entry_page.dart';
 import '../di/injection.dart';
 import 'go_router_refresh_stream.dart';
 import 'routes.dart';
@@ -110,10 +113,33 @@ class AppRouter {
       ),
       GoRoute(
         path: Routes.editTask,
-        builder: (_, state) => EditTaskPage(
-          task: state.extra! as TaskEntity,
-          today: DateTime.now(),
-        ),
+        builder: (context, state) {
+          // `extra` não sobrevive a refresh do PWA — volta pra home nesse caso.
+          final args = state.extra;
+          if (args is! EditTaskArgs) {
+            return BlocProvider(
+              create: (_) => getIt<TaskListBloc>(),
+              child: const TaskListPage(),
+            );
+          }
+          return EditTaskPage(args: args, today: DateTime.now());
+        },
+      ),
+      GoRoute(
+        path: Routes.timeEntry,
+        builder: (context, state) {
+          final leaf = state.extra;
+          if (leaf is! TaskEntity) {
+            return BlocProvider(
+              create: (_) => getIt<TaskListBloc>(),
+              child: const TaskListPage(),
+            );
+          }
+          return BlocProvider(
+            create: (_) => getIt<TimeEntryBloc>(),
+            child: TimeEntryPage(leaf: leaf),
+          );
+        },
       ),
     ],
   );

@@ -58,10 +58,12 @@ class EditTaskUseCase implements UseCase<Unit, EditTaskParams> {
     }
     if (task == null) return const Left(TaskNotFoundFailure());
 
+    final newListId = params.listId ?? task.listId;
+
     final edited = TaskEntity(
       id: task.id,
       title: title,
-      listId: params.listId ?? task.listId,
+      listId: newListId,
       createdAt: task.createdAt,
       parentId: task.parentId,
       estimatedMinutes: params.estimatedMinutes ?? task.estimatedMinutes,
@@ -72,6 +74,55 @@ class EditTaskUseCase implements UseCase<Unit, EditTaskParams> {
       spentMinutes: task.spentMinutes,
     );
 
-    return _repository.update(edited);
+    final upd = await _repository.update(edited);
+    final updFailure = upd.getLeft().toNullable();
+    if (updFailure != null) return Left(updFailure);
+
+    // Regra: trocar a lista de uma mãe/avó propaga para todas as filhas/netas.
+    // Só varre quando é mãe (tem filhas) e a lista realmente mudou — evita N
+    // escritas inúteis a cada edição de folha.
+    if (task.hasChildren && task.listId != newListId) {
+      final descendants = _descendantsOf(task.id, tasks);
+      for (final d in descendants) {
+        final moved = TaskEntity(
+          id: d.id,
+          title: d.title,
+          listId: newListId,
+          createdAt: d.createdAt,
+          parentId: d.parentId,
+          estimatedMinutes: d.estimatedMinutes,
+          dueDate: d.dueDate,
+          importance: d.importance,
+          isDone: d.isDone,
+          hasChildren: d.hasChildren,
+          spentMinutes: d.spentMinutes,
+        );
+        final res = await _repository.update(moved);
+        final f = res.getLeft().toNullable();
+        if (f != null) return Left(f);
+      }
+    }
+
+    return const Right(unit);
+  }
+
+  /// Todos os descendentes (filhas e netas) de [rootId], via `parentId`.
+  List<TaskEntity> _descendantsOf(String rootId, List<TaskEntity> tasks) {
+    final childrenOf = <String, List<TaskEntity>>{};
+    for (final t in tasks) {
+      if (t.parentId != null) {
+        childrenOf.putIfAbsent(t.parentId!, () => []).add(t);
+      }
+    }
+    final out = <TaskEntity>[];
+    void visit(String id) {
+      for (final c in childrenOf[id] ?? const <TaskEntity>[]) {
+        out.add(c);
+        visit(c.id);
+      }
+    }
+
+    visit(rootId);
+    return out;
   }
 }

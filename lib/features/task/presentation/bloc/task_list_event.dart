@@ -103,7 +103,9 @@ class TaskDeletionUndone extends TaskListEvent {
   const TaskDeletionUndone();
 }
 
-/// Edita os campos de uma tarefa.
+/// Edita os campos de uma tarefa. Além dos campos próprios, carrega a lista
+/// escolhida e as intenções de re-parent e conclusão (disparadas só quando
+/// mudaram, via os flags `parentChanged`/`doneChanged`).
 class EditRequested extends TaskListEvent {
   const EditRequested({
     required this.taskId,
@@ -111,6 +113,11 @@ class EditRequested extends TaskListEvent {
     this.estimatedMinutes,
     this.dueDate,
     this.importance,
+    this.listId,
+    this.newParentId,
+    this.parentChanged = false,
+    this.isDone = false,
+    this.doneChanged = false,
   });
 
   final String taskId;
@@ -118,10 +125,25 @@ class EditRequested extends TaskListEvent {
   final int? estimatedMinutes;
   final DateTime? dueDate;
   final ImportanceEnum? importance;
+  final String? listId;
+  final String? newParentId;
+  final bool parentChanged;
+  final bool isDone;
+  final bool doneChanged;
 
   @override
-  List<Object?> get props =>
-      [taskId, title, estimatedMinutes, dueDate, importance];
+  List<Object?> get props => [
+        taskId,
+        title,
+        estimatedMinutes,
+        dueDate,
+        importance,
+        listId,
+        newParentId,
+        parentChanged,
+        isDone,
+        doneChanged,
+      ];
 }
 
 /// Move uma tarefa na hierarquia (novo pai ou raiz).

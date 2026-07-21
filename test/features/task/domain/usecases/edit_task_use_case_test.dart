@@ -58,4 +58,67 @@ void main() {
     expect(captured.importance, ImportanceEnum.max);
     expect(captured.listId, 'inbox'); // preservado
   });
+
+  group('propagação de lista para descendentes', () {
+    // Árvore: mãe (m1) → filha (f1) → neta (n1), todas em 'inbox'.
+    void seedTree() {
+      when(() => repo.getTasks()).thenAnswer((_) async => Right([
+            TaskEntity(
+              id: 'm1',
+              title: 'Mãe',
+              listId: 'inbox',
+              createdAt: today,
+              hasChildren: true,
+            ),
+            TaskEntity(
+              id: 'f1',
+              title: 'Filha',
+              listId: 'inbox',
+              createdAt: today,
+              parentId: 'm1',
+              hasChildren: true,
+            ),
+            TaskEntity(
+              id: 'n1',
+              title: 'Neta',
+              listId: 'inbox',
+              createdAt: today,
+              parentId: 'f1',
+              estimatedMinutes: 30,
+              importance: ImportanceEnum.min,
+            ),
+          ]));
+    }
+
+    test('trocar a lista da mãe propaga para filha e neta', () async {
+      seedTree();
+      await EditTaskUseCase(repo)(
+        const EditTaskParams(taskId: 'm1', title: 'Mãe', listId: 'work'),
+      );
+
+      final captured = verify(() => repo.update(captureAny())).captured
+          .cast<TaskEntity>();
+      // mãe + 2 descendentes = 3 escritas, todas na nova lista.
+      expect(captured.length, 3);
+      expect(captured.every((t) => t.listId == 'work'), isTrue);
+      expect(captured.map((t) => t.id), containsAll(['m1', 'f1', 'n1']));
+    });
+
+    test('não propaga quando a lista não muda', () async {
+      seedTree();
+      await EditTaskUseCase(repo)(
+        const EditTaskParams(taskId: 'm1', title: 'Mãe', listId: 'inbox'),
+      );
+      // Só a própria mãe é reescrita (sem varrer descendentes).
+      verify(() => repo.update(any())).called(1);
+    });
+
+    test('folha nunca dispara varredura de descendentes', () async {
+      seedTree();
+      await EditTaskUseCase(repo)(
+        const EditTaskParams(taskId: 'n1', title: 'Neta', listId: 'work'),
+      );
+      verify(() => repo.update(any())).called(1);
+    });
+  });
 }

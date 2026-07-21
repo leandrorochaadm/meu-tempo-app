@@ -14,6 +14,10 @@ class Routes {
   static const String migration = '/migration';
   static const String settings = '/settings';
 
-  /// Edição de tarefa — recebe a `TaskEntity` alvo via `state.extra`.
+  /// Edição de tarefa — recebe `EditTaskArgs` via `state.extra`.
   static const String editTask = '/task/edit';
+
+  /// Registros de tempo de uma folha (CRUD) — recebe a `TaskEntity` folha via
+  /// `state.extra`.
+  static const String timeEntry = '/task/time-entries';
 }

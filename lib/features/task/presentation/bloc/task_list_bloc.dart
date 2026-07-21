@@ -299,9 +299,22 @@ class TaskListBloc extends Bloc<TaskListEvent, TaskListState> {
         estimatedMinutes: event.estimatedMinutes,
         dueDate: event.dueDate,
         importance: event.importance,
+        listId: event.listId,
       ),
     );
-    _handleWrite(result, emit);
+    final failure = result.getLeft().toNullable();
+    if (failure != null) {
+      emit(TaskListError(_mapFailure(failure)));
+      return;
+    }
+    // Orquestra as demais intenções (regra de cada uma mora no seu UseCase).
+    // Fila sequencial do bloc: cada handler relê os dados no início.
+    if (event.parentChanged) {
+      add(MoveRequested(taskId: event.taskId, newParentId: event.newParentId));
+    }
+    if (event.doneChanged) {
+      add(CompleteToggled(taskId: event.taskId, done: event.isDone));
+    }
   }
 
   Future<void> _onMoveRequested(

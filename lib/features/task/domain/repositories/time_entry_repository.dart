@@ -14,4 +14,14 @@ abstract class TimeEntryRepository {
     DateTime start,
     DateTime end,
   );
+
+  /// Fluxo dos registros de uma folha/compromisso (`targetId`), mais recentes
+  /// primeiro.
+  Stream<Either<Failure, List<TimeEntryEntity>>> watchByTarget(String targetId);
+
+  /// Substitui um registro existente (edição de minutos/data).
+  Future<Either<Failure, Unit>> update(TimeEntryEntity entry);
+
+  /// Remove um registro pelo `id`.
+  Future<Either<Failure, Unit>> delete(String id);
 }
