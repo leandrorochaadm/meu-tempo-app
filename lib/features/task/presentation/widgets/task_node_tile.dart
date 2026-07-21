@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/theme_context_extensions.dart';
+import '../../../../core/ui/task_crud_menu.dart';
+import '../../../../core/ui/task_running_badge.dart';
+import '../../../../core/ui/task_timer_actions.dart';
 import '../../../../core/utils/formatters/duration_formatter.dart';
 import '../../domain/entities/task_node.dart';
 
@@ -29,8 +32,6 @@ class TaskNodeTile extends StatelessWidget {
   final void Function(TaskNode node) onDelete;
   final void Function(TaskNode node) onEdit;
   final void Function(TaskNode node) onMove;
-
-  static const int _quickMinutes = 30;
 
   @override
   Widget build(BuildContext context) {
@@ -89,23 +90,10 @@ class TaskNodeTile extends StatelessWidget {
                   tooltip: 'Adicionar subtarefa',
                   onPressed: () => onAddSubtask(node),
                 ),
-              PopupMenuButton<String>(
-                icon: Icon(Icons.more_vert_rounded, color: colors.textMuted),
-                onSelected: (v) {
-                  switch (v) {
-                    case 'edit':
-                      onEdit(node);
-                    case 'move':
-                      onMove(node);
-                    case 'delete':
-                      onDelete(node);
-                  }
-                },
-                itemBuilder: (context) => const [
-                  PopupMenuItem(value: 'edit', child: Text('Editar')),
-                  PopupMenuItem(value: 'move', child: Text('Mover')),
-                  PopupMenuItem(value: 'delete', child: Text('Excluir')),
-                ],
+              TaskCrudMenu(
+                onEdit: () => onEdit(node),
+                onMove: () => onMove(node),
+                onDelete: () => onDelete(node),
               ),
             ],
           ),
@@ -113,24 +101,10 @@ class TaskNodeTile extends StatelessWidget {
           _MetaRow(node: node, isActive: isActive),
           if (node.isLeaf) ...[
             SizedBox(height: context.space.sm),
-            Row(
-              children: [
-                FilledButton.tonalIcon(
-                  onPressed: () => onToggleTimer(node, !isActive),
-                  icon: Icon(
-                    isActive
-                        ? Icons.stop_rounded
-                        : Icons.play_arrow_rounded,
-                    size: 18,
-                  ),
-                  label: Text(isActive ? 'Parar' : 'Iniciar'),
-                ),
-                SizedBox(width: context.space.sm),
-                OutlinedButton(
-                  onPressed: () => onAddTime(node, _quickMinutes),
-                  child: const Text('+30 min'),
-                ),
-              ],
+            TaskTimerActions(
+              isActive: isActive,
+              onToggleTimer: () => onToggleTimer(node, !isActive),
+              onAddTime: () => onAddTime(node, TaskTimerActions.quickMinutes),
             ),
           ] else ...[
             SizedBox(height: context.space.sm),
@@ -163,13 +137,10 @@ class _MetaRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
     return Row(
       children: [
         if (isActive) ...[
-          Icon(Icons.timelapse_rounded, size: 14, color: colors.timerActive),
-          SizedBox(width: context.space.xs),
-          Text('rodando', style: context.text.labelSmall),
+          const TaskRunningBadge(),
           SizedBox(width: context.space.md),
         ],
         Text(

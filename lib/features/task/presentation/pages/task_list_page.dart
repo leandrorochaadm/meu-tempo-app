@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/theme_context_extensions.dart';
 import '../../../../core/ui/app_empty_state.dart';
 import '../../../../core/ui/app_list_skeleton.dart';
+import '../../../../core/ui/task_timer_actions.dart';
 import '../../../../core/di/injection.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../appointment/presentation/bloc/agenda_bloc.dart';
@@ -16,6 +17,7 @@ import '../../../migration/presentation/pages/migration_page.dart';
 import '../../../report/presentation/bloc/report_bloc.dart';
 import '../../../report/presentation/pages/report_page.dart';
 import '../../domain/entities/prioritized_leaf.dart';
+import '../../domain/entities/task_entity.dart';
 import '../../domain/entities/task_node.dart';
 import '../bloc/task_list_bloc.dart';
 import '../widgets/prioritized_leaf_tile.dart';
@@ -33,7 +35,7 @@ class TaskListPage extends StatefulWidget {
 
 class _TaskListPageState extends State<TaskListPage> {
   bool _quickAddVisible = false;
-  bool _priorityView = false;
+  bool _priorityView = true;
   TaskNode? _subtaskParent;
   String? _selectedListId;
 
@@ -83,34 +85,38 @@ class _TaskListPageState extends State<TaskListPage> {
         );
   }
 
-  void _toggleDone(TaskNode node, bool done) {
+  void _toggleDone(TaskNode node, bool done) => _toggleDoneTask(node.task, done);
+
+  void _toggleDoneTask(TaskEntity task, bool done) {
     final bloc = context.read<TaskListBloc>()
-      ..add(CompleteToggled(taskId: node.task.id, done: done));
+      ..add(CompleteToggled(taskId: task.id, done: done));
     if (done) {
       // Desfazer (H13): reabre a folha.
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
         ..showSnackBar(SnackBar(
-          content: Text('"${node.task.title}" concluída'),
+          content: Text('"${task.title}" concluída'),
           action: SnackBarAction(
             label: 'Desfazer',
             onPressed: () =>
-                bloc.add(CompleteToggled(taskId: node.task.id, done: false)),
+                bloc.add(CompleteToggled(taskId: task.id, done: false)),
           ),
         ));
     }
   }
 
-  Future<void> _confirmDelete(TaskNode node) async {
+  Future<void> _confirmDelete(TaskNode node) => _confirmDeleteTask(node.task);
+
+  Future<void> _confirmDeleteTask(TaskEntity task) async {
     final bloc = context.read<TaskListBloc>();
-    final hasChildren = node.task.hasChildren;
+    final hasChildren = task.hasChildren;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Excluir tarefa?'),
         content: Text(hasChildren
-            ? 'Isso apaga "${node.task.title}" e todas as filhas/netas.'
-            : 'Isso apaga "${node.task.title}".'),
+            ? 'Isso apaga "${task.title}" e todas as filhas/netas.'
+            : 'Isso apaga "${task.title}".'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
@@ -124,7 +130,7 @@ class _TaskListPageState extends State<TaskListPage> {
       ),
     );
     if (confirmed ?? false) {
-      bloc.add(DeleteRequested(node.task.id));
+      bloc.add(DeleteRequested(task.id));
     }
   }
 
@@ -151,16 +157,18 @@ class _TaskListPageState extends State<TaskListPage> {
     );
   }
 
-  Future<void> _editTask(TaskNode node) async {
+  Future<void> _editTask(TaskNode node) => _editTaskEntity(node.task);
+
+  Future<void> _editTaskEntity(TaskEntity task) async {
     final bloc = context.read<TaskListBloc>();
     final result = await Navigator.of(context).push<EditTaskResult>(
       MaterialPageRoute(
-        builder: (_) => EditTaskPage(task: node.task, today: DateTime.now()),
+        builder: (_) => EditTaskPage(task: task, today: DateTime.now()),
       ),
     );
     if (result != null) {
       bloc.add(EditRequested(
-        taskId: node.task.id,
+        taskId: task.id,
         title: result.title,
         estimatedMinutes: result.estimatedMinutes,
         dueDate: result.dueDate,
@@ -169,11 +177,7 @@ class _TaskListPageState extends State<TaskListPage> {
     }
   }
 
-  Future<void> _moveTask(TaskNode node) async {
-    final bloc = context.read<TaskListBloc>();
-    final state = bloc.state;
-    if (state is! TaskListLoaded) return;
-
+  Future<void> _moveTask(TaskNode node) {
     // Candidatos: todos os nós, menos o próprio e seus descendentes.
     final excluded = <String>{};
     void collect(TaskNode n) {
@@ -182,6 +186,19 @@ class _TaskListPageState extends State<TaskListPage> {
     }
 
     collect(node);
+    return _moveTaskExcluding(node.task.id, excluded);
+  }
+
+  /// Mover uma folha da visão por prioridade: como folha não tem descendentes,
+  /// basta excluir a própria da lista de destinos.
+  Future<void> _moveTaskEntity(TaskEntity task) =>
+      _moveTaskExcluding(task.id, {task.id});
+
+  Future<void> _moveTaskExcluding(String taskId, Set<String> excluded) async {
+    final bloc = context.read<TaskListBloc>();
+    final state = bloc.state;
+    if (state is! TaskListLoaded) return;
+
     final candidates = _flatten(state.roots)
         .where((n) => !excluded.contains(n.task.id) && !n.isMaxLevel)
         .toList();
@@ -205,7 +222,7 @@ class _TaskListPageState extends State<TaskListPage> {
     );
     if (chosen == null) return;
     bloc.add(MoveRequested(
-      taskId: node.task.id,
+      taskId: taskId,
       newParentId: chosen == '__root__' ? null : chosen,
     ));
   }
@@ -312,6 +329,15 @@ class _TaskListPageState extends State<TaskListPage> {
                               leaves: prioritized,
                               activeTaskId: activeTaskId,
                               onToggleTimer: _toggleLeafTimer,
+                              onAddTime: (leaf, minutes) => _addTime(
+                                TaskNode(task: leaf.task, level: 0),
+                                minutes,
+                              ),
+                              onToggleDone: (leaf, done) =>
+                                  _toggleDoneTask(leaf.task, done),
+                              onEdit: (leaf) => _editTaskEntity(leaf.task),
+                              onMove: (leaf) => _moveTaskEntity(leaf.task),
+                              onDelete: (leaf) => _confirmDeleteTask(leaf.task),
                             )
                           : _TaskTree(
                               nodes: _flatten(roots),
@@ -396,11 +422,21 @@ class _PriorityList extends StatelessWidget {
     required this.leaves,
     required this.activeTaskId,
     required this.onToggleTimer,
+    required this.onAddTime,
+    required this.onToggleDone,
+    required this.onEdit,
+    required this.onMove,
+    required this.onDelete,
   });
 
   final List<PrioritizedLeaf> leaves;
   final String? activeTaskId;
   final void Function(PrioritizedLeaf leaf, bool start) onToggleTimer;
+  final void Function(PrioritizedLeaf leaf, int minutes) onAddTime;
+  final void Function(PrioritizedLeaf leaf, bool done) onToggleDone;
+  final void Function(PrioritizedLeaf leaf) onEdit;
+  final void Function(PrioritizedLeaf leaf) onMove;
+  final void Function(PrioritizedLeaf leaf) onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -417,6 +453,11 @@ class _PriorityList extends StatelessWidget {
           isActive: isActive,
           today: today,
           onToggleTimer: () => onToggleTimer(leaf, !isActive),
+          onAddTime: () => onAddTime(leaf, TaskTimerActions.quickMinutes),
+          onToggleDone: () => onToggleDone(leaf, !leaf.task.isDone),
+          onEdit: () => onEdit(leaf),
+          onMove: () => onMove(leaf),
+          onDelete: () => onDelete(leaf),
         );
       },
     );

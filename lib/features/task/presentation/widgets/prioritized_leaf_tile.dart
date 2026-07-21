@@ -1,24 +1,37 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/theme_context_extensions.dart';
+import '../../../../core/ui/task_crud_menu.dart';
+import '../../../../core/ui/task_running_badge.dart';
+import '../../../../core/ui/task_timer_actions.dart';
 import '../../../../core/utils/formatters/date_formatter.dart';
 import '../../../../core/utils/formatters/duration_formatter.dart';
 import '../../domain/entities/prioritized_leaf.dart';
 
-/// Item da listagem por prioridade: título, subtítulo (mãe › avó), pontuação
-/// e cronômetro em 1 toque.
+/// Item da listagem por prioridade: título, subtítulo (mãe › avó), tempo
+/// gasto/estimado, pontuação, cronômetro em 1 toque e menu de CRUD.
 class PrioritizedLeafTile extends StatelessWidget {
   const PrioritizedLeafTile({
     super.key,
     required this.leaf,
     required this.isActive,
     required this.onToggleTimer,
+    required this.onAddTime,
+    required this.onToggleDone,
+    required this.onEdit,
+    required this.onMove,
+    required this.onDelete,
     required this.today,
   });
 
   final PrioritizedLeaf leaf;
   final bool isActive;
   final VoidCallback onToggleTimer;
+  final VoidCallback onAddTime;
+  final VoidCallback onToggleDone;
+  final VoidCallback onEdit;
+  final VoidCallback onMove;
+  final VoidCallback onDelete;
   final DateTime today;
 
   @override
@@ -41,42 +54,75 @@ class PrioritizedLeafTile extends StatelessWidget {
           ),
         ),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (leaf.ancestryLabel.isNotEmpty)
-                  Text(
-                    leaf.ancestryLabel,
-                    style: context.text.labelSmall,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                Text(
-                  task.title,
-                  style: context.text.titleMedium,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+          Row(
+            children: [
+              InkWell(
+                onTap: onToggleDone,
+                customBorder: const CircleBorder(),
+                child: Icon(
+                  task.isDone
+                      ? Icons.check_circle_rounded
+                      : Icons.circle_outlined,
+                  color: task.isDone ? colors.success : colors.textMuted,
+                  size: 22,
                 ),
-                SizedBox(height: context.space.xs),
-                Text(
-                  '${DurationFormatter.hm(task.estimatedMinutes ?? 0)}'
+              ),
+              SizedBox(width: context.space.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (leaf.ancestryLabel.isNotEmpty)
+                      Text(
+                        leaf.ancestryLabel,
+                        style: context.text.labelSmall,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    Text(
+                      task.title,
+                      style: context.text.titleMedium,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+              TaskCrudMenu(
+                onEdit: onEdit,
+                onMove: onMove,
+                onDelete: onDelete,
+              ),
+            ],
+          ),
+          SizedBox(height: context.space.xs),
+          Row(
+            children: [
+              if (isActive) ...[
+                const TaskRunningBadge(),
+                SizedBox(width: context.space.md),
+              ],
+              Expanded(
+                child: Text(
+                  'gasto ${DurationFormatter.hm(task.spentMinutes)}'
+                  ' · est. ${DurationFormatter.hm(task.estimatedMinutes ?? 0)}'
                   ' · ${DateFormatter.relativeLabel(task.dueDate ?? today, today)}'
                   ' · prio ${leaf.priority}',
                   style: context.text.labelSmall,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-          IconButton(
-            onPressed: onToggleTimer,
-            tooltip: isActive ? 'Parar' : 'Iniciar',
-            icon: Icon(
-              isActive ? Icons.stop_rounded : Icons.play_arrow_rounded,
-              color: isActive ? colors.timerActive : colors.primary,
-            ),
+          SizedBox(height: context.space.sm),
+          TaskTimerActions(
+            isActive: isActive,
+            onToggleTimer: onToggleTimer,
+            onAddTime: onAddTime,
           ),
         ],
       ),
