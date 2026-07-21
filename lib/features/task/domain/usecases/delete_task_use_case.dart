@@ -16,15 +16,19 @@ class DeleteTaskParams extends Equatable {
 }
 
 /// Exclui uma tarefa **em cascata** (ela e todas as filhas/netas). Se o pai
-/// ficar sem filhas, seu `hasChildren` é atualizado.
+/// ficar sem filhas, seu `hasChildren` é atualizado. Devolve a subárvore
+/// removida (raiz primeiro) para permitir **desfazer** (`RestoreTasksUseCase`).
 @lazySingleton
-class DeleteTaskUseCase implements UseCase<Unit, DeleteTaskParams> {
+class DeleteTaskUseCase
+    implements UseCase<List<TaskEntity>, DeleteTaskParams> {
   const DeleteTaskUseCase(this._repository);
 
   final TaskRepository _repository;
 
   @override
-  Future<Either<Failure, Unit>> call(DeleteTaskParams params) async {
+  Future<Either<Failure, List<TaskEntity>>> call(
+    DeleteTaskParams params,
+  ) async {
     final result = await _repository.getTasks();
     final failure = result.getLeft().toNullable();
     if (failure != null) return Left(failure);
@@ -68,6 +72,8 @@ class DeleteTaskUseCase implements UseCase<Unit, DeleteTaskParams> {
       }
     }
 
-    return const Right(unit);
+    // Subárvore removida (raiz primeiro), para o undo recriar preservando ids.
+    final removed = [for (final id in toDelete) byId[id]!];
+    return Right(removed);
   }
 }

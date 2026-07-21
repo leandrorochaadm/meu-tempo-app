@@ -1,21 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../core/router/routes.dart';
 import '../../../../core/theme/theme_context_extensions.dart';
 import '../../../../core/ui/app_empty_state.dart';
 import '../../../../core/ui/app_list_skeleton.dart';
 import '../../../../core/ui/task_timer_actions.dart';
-import '../../../../core/di/injection.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
-import '../../../appointment/presentation/bloc/agenda_bloc.dart';
-import '../../../appointment/presentation/pages/agenda_page.dart';
 import '../../../list/domain/entities/task_list_entity.dart';
-import '../../../list/presentation/bloc/list_manager_bloc.dart';
-import '../../../list/presentation/pages/lists_page.dart';
-import '../../../migration/presentation/bloc/migration_bloc.dart';
-import '../../../migration/presentation/pages/migration_page.dart';
-import '../../../report/presentation/bloc/report_bloc.dart';
-import '../../../report/presentation/pages/report_page.dart';
 import '../../domain/entities/prioritized_leaf.dart';
 import '../../domain/entities/task_entity.dart';
 import '../../domain/entities/task_node.dart';
@@ -131,41 +124,42 @@ class _TaskListPageState extends State<TaskListPage> {
     );
     if (confirmed ?? false) {
       bloc.add(DeleteRequested(task.id));
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(
+          content: Text('"${task.title}" excluída'),
+          action: SnackBarAction(
+            label: 'Desfazer',
+            onPressed: () => bloc.add(const TaskDeletionUndone()),
+          ),
+        ));
     }
   }
 
   void _onMenu(String value) {
     switch (value) {
       case 'agenda':
-        _push(getIt<AgendaBloc>(), const AgendaPage());
+        context.push(Routes.agenda);
       case 'lists':
-        _push(getIt<ListManagerBloc>(), const ListsPage());
+        context.push(Routes.lists);
       case 'report':
-        _push(getIt<ReportBloc>(), const ReportPage());
+        context.push(Routes.report);
       case 'migration':
-        _push(getIt<MigrationBloc>(), const MigrationPage());
+        context.push(Routes.migration);
+      case 'settings':
+        context.push(Routes.settings);
       case 'logout':
         context.read<AuthBloc>().add(const AuthSignOutRequested());
     }
-  }
-
-  void _push<B extends StateStreamableSource<Object?>>(B bloc, Widget page) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => BlocProvider<B>(create: (_) => bloc, child: page),
-      ),
-    );
   }
 
   Future<void> _editTask(TaskNode node) => _editTaskEntity(node.task);
 
   Future<void> _editTaskEntity(TaskEntity task) async {
     final bloc = context.read<TaskListBloc>();
-    final result = await Navigator.of(context).push<EditTaskResult>(
-      MaterialPageRoute(
-        builder: (_) => EditTaskPage(task: task, today: DateTime.now()),
-      ),
-    );
+    final result =
+        await context.push<EditTaskResult>(Routes.editTask, extra: task);
     if (result != null) {
       bloc.add(EditRequested(
         taskId: task.id,
@@ -316,6 +310,7 @@ class _TaskListPageState extends State<TaskListPage> {
               PopupMenuItem(value: 'lists', child: Text('Listas')),
               PopupMenuItem(value: 'report', child: Text('Relatório')),
               PopupMenuItem(value: 'migration', child: Text('Pendências')),
+              PopupMenuItem(value: 'settings', child: Text('Configurações')),
               PopupMenuItem(value: 'logout', child: Text('Sair')),
             ],
           ),

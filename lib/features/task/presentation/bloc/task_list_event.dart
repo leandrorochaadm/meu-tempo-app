@@ -98,6 +98,11 @@ class DeleteRequested extends TaskListEvent {
   List<Object?> get props => [taskId];
 }
 
+/// Desfaz a última exclusão (recria a subárvore removida).
+class TaskDeletionUndone extends TaskListEvent {
+  const TaskDeletionUndone();
+}
+
 /// Edita os campos de uma tarefa.
 class EditRequested extends TaskListEvent {
   const EditRequested({

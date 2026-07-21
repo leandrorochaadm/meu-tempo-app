@@ -8,7 +8,9 @@ import '../models/day_config_model.dart';
 
 abstract class ConfigRemoteDataSource {
   Stream<DayConfigModel> watchConfig();
+  Future<DayConfigModel> getConfig();
   Future<void> setAvailableMinutes(int minutes);
+  Future<void> markOnboarded();
 }
 
 @LazySingleton(as: ConfigRemoteDataSource)
@@ -19,6 +21,7 @@ class ConfigRemoteDataSourceImpl implements ConfigRemoteDataSource {
   final FirebaseAuth _auth;
 
   static const String _availableField = 'availableMinutesPerDay';
+  static const String _onboardedField = 'onboarded';
 
   String get _uid {
     final uid = _auth.currentUser?.uid;
@@ -46,9 +49,31 @@ class ConfigRemoteDataSourceImpl implements ConfigRemoteDataSource {
   }
 
   @override
+  Future<DayConfigModel> getConfig() async {
+    try {
+      final snap = await _doc.get();
+      final data = snap.data();
+      return data == null
+          ? const DayConfigModel()
+          : DayConfigModel.fromJson(data);
+    } on FirebaseException catch (e) {
+      throw mapFirestoreException(e);
+    }
+  }
+
+  @override
   Future<void> setAvailableMinutes(int minutes) async {
     try {
       await _doc.set({_availableField: minutes}, SetOptions(merge: true));
+    } on FirebaseException catch (e) {
+      throw mapFirestoreException(e);
+    }
+  }
+
+  @override
+  Future<void> markOnboarded() async {
+    try {
+      await _doc.set({_onboardedField: true}, SetOptions(merge: true));
     } on FirebaseException catch (e) {
       throw mapFirestoreException(e);
     }

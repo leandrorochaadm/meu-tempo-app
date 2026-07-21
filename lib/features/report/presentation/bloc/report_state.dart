@@ -12,11 +12,12 @@ class ReportLoading extends ReportState {
 }
 
 class ReportLoaded extends ReportState {
-  const ReportLoaded(this.rows);
+  const ReportLoaded(this.rows, {required this.period});
   final List<ListReportRow> rows;
+  final ReportPeriodEnum period;
 
   @override
-  List<Object?> get props => [rows];
+  List<Object?> get props => [rows, period];
 }
 
 class ReportError extends ReportState {

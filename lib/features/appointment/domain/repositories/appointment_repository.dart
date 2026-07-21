@@ -10,4 +10,10 @@ abstract class AppointmentRepository {
   Future<Either<Failure, AppointmentEntity>> create(AppointmentEntity a);
 
   Future<Either<Failure, Unit>> delete(String appointmentId);
+
+  /// Soma [minutes] ao tempo real do compromisso (cronômetro ou registro manual).
+  Future<Either<Failure, Unit>> addSpentMinutes(
+    String appointmentId,
+    int minutes,
+  );
 }

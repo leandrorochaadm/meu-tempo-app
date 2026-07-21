@@ -1,9 +1,21 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/appointment/presentation/bloc/agenda_bloc.dart';
+import '../../features/appointment/presentation/pages/agenda_page.dart';
 import '../../features/auth/presentation/bloc/auth_bloc.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
+import '../../features/config/presentation/bloc/settings_bloc.dart';
+import '../../features/config/presentation/pages/settings_page.dart';
+import '../../features/list/presentation/bloc/list_manager_bloc.dart';
+import '../../features/list/presentation/pages/lists_page.dart';
+import '../../features/migration/presentation/bloc/migration_bloc.dart';
+import '../../features/migration/presentation/pages/migration_page.dart';
+import '../../features/report/presentation/bloc/report_bloc.dart';
+import '../../features/report/presentation/pages/report_page.dart';
+import '../../features/task/domain/entities/task_entity.dart';
 import '../../features/task/presentation/bloc/task_list_bloc.dart';
+import '../../features/task/presentation/pages/edit_task_page.dart';
 import '../../features/task/presentation/pages/task_list_page.dart';
 import '../di/injection.dart';
 import 'go_router_refresh_stream.dart';
@@ -41,6 +53,48 @@ class AppRouter {
         builder: (_, _) => BlocProvider(
           create: (_) => getIt<TaskListBloc>(),
           child: const TaskListPage(),
+        ),
+      ),
+      GoRoute(
+        path: Routes.lists,
+        builder: (_, _) => BlocProvider(
+          create: (_) => getIt<ListManagerBloc>(),
+          child: const ListsPage(),
+        ),
+      ),
+      GoRoute(
+        path: Routes.agenda,
+        builder: (_, _) => BlocProvider(
+          create: (_) => getIt<AgendaBloc>(),
+          child: const AgendaPage(),
+        ),
+      ),
+      GoRoute(
+        path: Routes.report,
+        builder: (_, _) => BlocProvider(
+          create: (_) => getIt<ReportBloc>(),
+          child: const ReportPage(),
+        ),
+      ),
+      GoRoute(
+        path: Routes.migration,
+        builder: (_, _) => BlocProvider(
+          create: (_) => getIt<MigrationBloc>(),
+          child: const MigrationPage(),
+        ),
+      ),
+      GoRoute(
+        path: Routes.settings,
+        builder: (_, _) => BlocProvider(
+          create: (_) => getIt<SettingsBloc>(),
+          child: const SettingsPage(),
+        ),
+      ),
+      GoRoute(
+        path: Routes.editTask,
+        builder: (_, state) => EditTaskPage(
+          task: state.extra! as TaskEntity,
+          today: DateTime.now(),
         ),
       ),
     ],

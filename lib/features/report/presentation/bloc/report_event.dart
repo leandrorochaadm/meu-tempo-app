@@ -26,3 +26,19 @@ class ReportListsUpdated extends ReportEvent {
   @override
   List<Object?> get props => [result];
 }
+
+class ReportEntriesUpdated extends ReportEvent {
+  const ReportEntriesUpdated(this.result);
+  final Either<Failure, List<TimeEntryEntity>> result;
+
+  @override
+  List<Object?> get props => [result];
+}
+
+class ReportPeriodChanged extends ReportEvent {
+  const ReportPeriodChanged(this.period);
+  final ReportPeriodEnum period;
+
+  @override
+  List<Object?> get props => [period];
+}

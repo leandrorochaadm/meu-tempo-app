@@ -10,6 +10,7 @@ import '../../../../core/usecase/usecase.dart';
 import '../../../task/domain/entities/task_entity.dart';
 import '../../../task/domain/usecases/delete_task_use_case.dart';
 import '../../../task/domain/usecases/edit_task_use_case.dart';
+import '../../../task/domain/usecases/restore_tasks_use_case.dart';
 import '../../../task/domain/usecases/watch_tasks_use_case.dart';
 import '../../domain/usecases/get_pending_migrations_use_case.dart';
 import '../../domain/usecases/migrate_task_use_case.dart';
@@ -27,12 +28,14 @@ class MigrationBloc extends Bloc<MigrationEvent, MigrationState> {
     this._migrateTask,
     this._deleteTask,
     this._editTask,
+    this._restoreTasks,
   ) : super(const MigrationLoading()) {
     on<MigrationStarted>(_onStarted);
     on<MigrationTasksUpdated>(_onUpdated);
     on<TaskMigrated>(_onMigrated);
     on<TaskUnmigrated>(_onUnmigrated);
     on<TaskDiscarded>(_onDiscarded);
+    on<TaskDiscardUndone>(_onDiscardUndone);
   }
 
   final WatchTasksUseCase _watchTasks;
@@ -40,9 +43,13 @@ class MigrationBloc extends Bloc<MigrationEvent, MigrationState> {
   final MigrateTaskUseCase _migrateTask;
   final DeleteTaskUseCase _deleteTask;
   final EditTaskUseCase _editTask;
+  final RestoreTasksUseCase _restoreTasks;
 
   StreamSubscription<Either<Failure, List<TaskEntity>>>? _sub;
   late DateTime _today;
+
+  /// Última subárvore descartada, guardada para o "Desfazer".
+  List<TaskEntity> _lastDiscarded = const [];
 
   Future<void> _onStarted(
     MigrationStarted e,
@@ -88,7 +95,18 @@ class MigrationBloc extends Bloc<MigrationEvent, MigrationState> {
     TaskDiscarded e,
     Emitter<MigrationState> emit,
   ) async {
-    await _deleteTask(DeleteTaskParams(taskId: e.taskId));
+    final result = await _deleteTask(DeleteTaskParams(taskId: e.taskId));
+    result.match((_) {}, (removed) => _lastDiscarded = removed);
+  }
+
+  Future<void> _onDiscardUndone(
+    TaskDiscardUndone e,
+    Emitter<MigrationState> emit,
+  ) async {
+    final removed = _lastDiscarded;
+    if (removed.isEmpty) return;
+    _lastDiscarded = const [];
+    await _restoreTasks(RestoreTasksParams(tasks: removed));
   }
 
   @override

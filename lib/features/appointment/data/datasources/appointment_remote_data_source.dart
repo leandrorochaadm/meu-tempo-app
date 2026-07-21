@@ -4,12 +4,14 @@ import 'package:injectable/injectable.dart';
 
 import '../../../../core/constants/firestore_paths.dart';
 import '../../../../core/error/exceptions.dart';
+import '../appointment_fields.dart';
 import '../models/appointment_model.dart';
 
 abstract class AppointmentRemoteDataSource {
   Stream<List<AppointmentModel>> watchForDay(DateTime day);
   Future<AppointmentModel> create(AppointmentModel a);
   Future<void> delete(String id);
+  Future<void> addSpentMinutes(String id, int minutes);
 }
 
 @LazySingleton(as: AppointmentRemoteDataSource)
@@ -18,9 +20,6 @@ class AppointmentRemoteDataSourceImpl implements AppointmentRemoteDataSource {
 
   final FirebaseFirestore _firestore;
   final FirebaseAuth _auth;
-
-  static const String _dateField = 'date';
-  static const String _startField = 'startMinute';
 
   String get _uid {
     final uid = _auth.currentUser?.uid;
@@ -37,10 +36,10 @@ class AppointmentRemoteDataSourceImpl implements AppointmentRemoteDataSource {
       final start = Timestamp.fromDate(day);
       final end = Timestamp.fromDate(day.add(const Duration(days: 1)));
       return _collection
-          .where(_dateField, isGreaterThanOrEqualTo: start)
-          .where(_dateField, isLessThan: end)
-          .orderBy(_dateField)
-          .orderBy(_startField)
+          .where(AppointmentFields.date, isGreaterThanOrEqualTo: start)
+          .where(AppointmentFields.date, isLessThan: end)
+          .orderBy(AppointmentFields.date)
+          .orderBy(AppointmentFields.startMinute)
           .snapshots()
           .map((snap) => snap.docs
               .map((d) => AppointmentModel.fromDoc(d.id, d.data()))
@@ -65,6 +64,17 @@ class AppointmentRemoteDataSourceImpl implements AppointmentRemoteDataSource {
   Future<void> delete(String id) async {
     try {
       await _collection.doc(id).delete();
+    } on FirebaseException catch (e) {
+      throw mapFirestoreException(e);
+    }
+  }
+
+  @override
+  Future<void> addSpentMinutes(String id, int minutes) async {
+    try {
+      await _collection.doc(id).update({
+        AppointmentFields.spentMinutes: FieldValue.increment(minutes),
+      });
     } on FirebaseException catch (e) {
       throw mapFirestoreException(e);
     }

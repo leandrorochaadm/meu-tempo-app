@@ -42,3 +42,8 @@ class TaskDiscarded extends MigrationEvent {
   @override
   List<Object?> get props => [taskId];
 }
+
+/// Desfaz o último descarte (recria a subárvore removida).
+class TaskDiscardUndone extends MigrationEvent {
+  const TaskDiscardUndone();
+}

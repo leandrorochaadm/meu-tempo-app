@@ -1,0 +1,1 @@
+{"flutter":{"platforms":{"dart":{"lib/firebase_options.dart":{"projectId":"meu-tempo-dev","configurations":{"web":"1:588975528122:web:dbc3c6d2b8f4a782250a83"}}}}},"firestore":{"rules":"firestore.rules","indexes":"firestore.indexes.json"}}

@@ -10,7 +10,12 @@ import '../../../../core/usecase/usecase.dart';
 import '../../../config/domain/entities/day_config_entity.dart';
 import '../../../config/domain/usecases/watch_config_use_case.dart';
 import '../../../list/domain/usecases/ensure_inbox_exists_use_case.dart';
+import '../../../task/domain/entities/active_timer_entity.dart';
 import '../../../task/domain/entities/task_entity.dart';
+import '../../../task/domain/entities/timer_target_type_enum.dart';
+import '../../../task/domain/usecases/start_timer_use_case.dart';
+import '../../../task/domain/usecases/stop_timer_use_case.dart';
+import '../../../task/domain/usecases/watch_active_timer_use_case.dart';
 import '../../../task/domain/usecases/watch_tasks_use_case.dart';
 import '../../domain/entities/appointment_entity.dart';
 import '../../domain/entities/day_fit.dart';
@@ -35,13 +40,19 @@ class AgendaBloc extends Bloc<AgendaEvent, AgendaState> {
     this._watchConfig,
     this._watchTasks,
     this._ensureInbox,
+    this._startTimer,
+    this._stopTimer,
+    this._watchActiveTimer,
   ) : super(const AgendaLoading()) {
     on<AgendaStarted>(_onStarted);
     on<AgendaAppointmentsUpdated>(_onAppointmentsUpdated);
     on<AgendaConfigUpdated>(_onConfigUpdated);
     on<AgendaTasksUpdated>(_onTasksUpdated);
+    on<AgendaActiveTimerUpdated>(_onActiveTimerUpdated);
     on<AppointmentCreated>(_onCreated);
     on<AppointmentDeleted>(_onDeleted);
+    on<AppointmentTimerStarted>(_onTimerStarted);
+    on<AppointmentTimerStopped>(_onTimerStopped);
   }
 
   final WatchAppointmentsForDayUseCase _watchAppointments;
@@ -51,16 +62,24 @@ class AgendaBloc extends Bloc<AgendaEvent, AgendaState> {
   final WatchConfigUseCase _watchConfig;
   final WatchTasksUseCase _watchTasks;
   final EnsureInboxExistsUseCase _ensureInbox;
+  final StartTimerUseCase _startTimer;
+  final StopTimerUseCase _stopTimer;
+  final WatchActiveTimerUseCase _watchActiveTimer;
 
   StreamSubscription<Either<Failure, List<AppointmentEntity>>>? _apptSub;
   StreamSubscription<Either<Failure, DayConfigEntity>>? _configSub;
   StreamSubscription<Either<Failure, List<TaskEntity>>>? _tasksSub;
+  StreamSubscription<Either<Failure, ActiveTimerEntity?>>? _timerSub;
 
   late DateTime _today;
   String? _inboxListId;
   List<AppointmentEntity> _appointments = const [];
   List<TaskEntity> _tasks = const [];
   int _availableMinutes = 480;
+
+  /// Id do compromisso com cronômetro ativo (`null` quando o ativo é de tarefa
+  /// ou não há cronômetro).
+  String? _activeAppointmentId;
 
   Future<void> _onStarted(AgendaStarted e, Emitter<AgendaState> emit) async {
     emit(const AgendaLoading());
@@ -81,6 +100,22 @@ class AgendaBloc extends Bloc<AgendaEvent, AgendaState> {
     await _tasksSub?.cancel();
     _tasksSub =
         _watchTasks(const NoParams()).listen((r) => add(AgendaTasksUpdated(r)));
+
+    await _timerSub?.cancel();
+    _timerSub = _watchActiveTimer(const NoParams())
+        .listen((r) => add(AgendaActiveTimerUpdated(r)));
+  }
+
+  void _onActiveTimerUpdated(
+    AgendaActiveTimerUpdated e,
+    Emitter<AgendaState> emit,
+  ) {
+    final active = e.result.getRight().toNullable();
+    _activeAppointmentId =
+        (active != null && active.targetType == TimerTargetTypeEnum.appointment)
+            ? active.targetId
+            : null;
+    _emit(emit);
   }
 
   void _onAppointmentsUpdated(
@@ -123,7 +158,11 @@ class AgendaBloc extends Bloc<AgendaEvent, AgendaState> {
       appointmentDurations: apptDurations,
       availableMinutes: _availableMinutes,
     );
-    emit(AgendaLoaded(appointments: _appointments, fit: fit));
+    emit(AgendaLoaded(
+      appointments: _appointments,
+      fit: fit,
+      activeAppointmentId: _activeAppointmentId,
+    ));
   }
 
   bool _isSameDay(DateTime a, DateTime b) =>
@@ -154,6 +193,37 @@ class AgendaBloc extends Bloc<AgendaEvent, AgendaState> {
     result.match((f) => emit(AgendaError(_mapFailure(f))), (_) {});
   }
 
+  Future<void> _onTimerStarted(
+    AppointmentTimerStarted e,
+    Emitter<AgendaState> emit,
+  ) async {
+    final listId = _listIdOf(e.appointmentId);
+    final result = await _startTimer(StartTimerParams(
+      targetId: e.appointmentId,
+      targetType: TimerTargetTypeEnum.appointment,
+      targetIsLeaf: true, // irrelevante para compromisso
+      listId: listId,
+      now: DateTime.now(),
+    ));
+    result.match((f) => emit(AgendaError(_mapFailure(f))), (_) {});
+  }
+
+  Future<void> _onTimerStopped(
+    AppointmentTimerStopped e,
+    Emitter<AgendaState> emit,
+  ) async {
+    final result = await _stopTimer(StopTimerParams(now: DateTime.now()));
+    result.match((f) => emit(AgendaError(_mapFailure(f))), (_) {});
+  }
+
+  /// Descobre a lista de um compromisso carregado (lookup, não regra).
+  String _listIdOf(String appointmentId) {
+    for (final a in _appointments) {
+      if (a.id == appointmentId) return a.listId;
+    }
+    return _inboxListId ?? '';
+  }
+
   String _mapFailure(Failure failure) => switch (failure) {
         EmptyAppointmentTitleFailure() => 'Digite um título.',
         InvalidAppointmentDurationFailure() => 'Informe uma duração válida.',
@@ -166,6 +236,7 @@ class AgendaBloc extends Bloc<AgendaEvent, AgendaState> {
     _apptSub?.cancel();
     _configSub?.cancel();
     _tasksSub?.cancel();
+    _timerSub?.cancel();
     return super.close();
   }
 }

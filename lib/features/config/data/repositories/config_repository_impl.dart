@@ -30,12 +30,34 @@ class ConfigRepositoryImpl implements ConfigRepository {
   }
 
   @override
+  Future<Either<Failure, DayConfigEntity>> getConfig() async {
+    try {
+      final model = await _dataSource.getConfig();
+      return Right(model.toEntity());
+    } on AppException catch (e, s) {
+      AppLogger.logError('getConfig falhou', error: e, stackTrace: s);
+      return Left(e.toFailure());
+    }
+  }
+
+  @override
   Future<Either<Failure, Unit>> setAvailableMinutes(int minutes) async {
     try {
       await _dataSource.setAvailableMinutes(minutes);
       return const Right(unit);
     } on AppException catch (e, s) {
       AppLogger.logError('setAvailableMinutes falhou', error: e, stackTrace: s);
+      return Left(e.toFailure());
+    }
+  }
+
+  @override
+  Future<Either<Failure, Unit>> markOnboarded() async {
+    try {
+      await _dataSource.markOnboarded();
+      return const Right(unit);
+    } on AppException catch (e, s) {
+      AppLogger.logError('markOnboarded falhou', error: e, stackTrace: s);
       return Left(e.toFailure());
     }
   }
