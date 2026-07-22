@@ -1,7 +1,11 @@
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
+import 'package:fake_async/fake_async.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:meu_tempo/core/error/auth_failures.dart';
+import 'package:meu_tempo/core/error/failures.dart';
 import 'package:meu_tempo/core/usecase/usecase.dart';
 import 'package:meu_tempo/features/auth/domain/entities/user_entity.dart';
 import 'package:meu_tempo/features/auth/domain/usecases/sign_in_with_google_use_case.dart';
@@ -97,4 +101,30 @@ void main() {
     act: (bloc) => bloc.add(const AuthSignOutRequested()),
     expect: () => [isA<AuthError>()],
   );
+
+  test('login que não completa dentro do timeout emite [Loading, AuthError]',
+      () {
+    fakeAsync((async) {
+      // Login que nunca resolve (ex.: redirect trava) — simula o congelamento.
+      final pending = Completer<Either<Failure, Unit>>();
+      when(() => signIn(any())).thenAnswer((_) => pending.future);
+
+      final bloc = build();
+      final states = <AuthState>[];
+      final sub = bloc.stream.listen(states.add);
+
+      bloc.add(const AuthGoogleSignInRequested());
+      async.flushMicrotasks();
+      expect(states, [const AuthLoading()]);
+
+      // Avança além do timeout de 30s do AuthBloc.
+      async.elapse(const Duration(seconds: 31));
+      async.flushMicrotasks();
+
+      expect(states, [const AuthLoading(), isA<AuthError>()]);
+
+      sub.cancel();
+      bloc.close();
+    });
+  });
 }

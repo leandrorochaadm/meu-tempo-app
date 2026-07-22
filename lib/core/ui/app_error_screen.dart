@@ -1,18 +1,8 @@
-import 'dart:js_interop';
-import 'dart:js_interop_unsafe';
-
 import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
-
-/// Recarrega a página inteira (Flutter Web). Usa `dart:js_interop` (built-in),
-/// sem dependência externa — chama `window.location.reload()`.
-void _reloadPage() {
-  globalContext
-      .getProperty<JSObject>('location'.toJS)
-      .callMethod('reload'.toJS);
-}
+import 'page_reload.dart';
 
 /// Tela de último recurso exibida via `ErrorWidget.builder` quando algo estoura
 /// no `build` (em release o Flutter mostraria uma tela cinza). Fica no `core`
@@ -78,7 +68,7 @@ class _ReloadButton extends StatelessWidget {
       borderRadius: BorderRadius.circular(999),
       child: InkWell(
         borderRadius: BorderRadius.circular(999),
-        onTap: _reloadPage,
+        onTap: reloadPage,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
           child: Text(
