@@ -7,12 +7,16 @@ class AppMotion extends ThemeExtension<AppMotion> {
     this.fast = const Duration(milliseconds: 150),
     this.medium = const Duration(milliseconds: 220),
     this.slow = const Duration(milliseconds: 320),
+    this.pulse = const Duration(milliseconds: 1100),
     this.curve = Curves.easeOutCubic,
   });
 
   final Duration fast;
   final Duration medium;
   final Duration slow;
+
+  /// Período do pulso "vivo" (cronômetro ativo) — meio-ciclo do fade.
+  final Duration pulse;
   final Curve curve;
 
   static const AppMotion standard = AppMotion();
@@ -22,12 +26,14 @@ class AppMotion extends ThemeExtension<AppMotion> {
     Duration? fast,
     Duration? medium,
     Duration? slow,
+    Duration? pulse,
     Curve? curve,
   }) =>
       AppMotion(
         fast: fast ?? this.fast,
         medium: medium ?? this.medium,
         slow: slow ?? this.slow,
+        pulse: pulse ?? this.pulse,
         curve: curve ?? this.curve,
       );
 

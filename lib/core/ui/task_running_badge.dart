@@ -5,9 +5,10 @@ import 'package:flutter/material.dart';
 import '../theme/theme_context_extensions.dart';
 import '../utils/formatters/duration_formatter.dart';
 
-/// Selo do cronômetro ativo numa folha — exibe o tempo da **sessão atual** ao
-/// vivo (hh:mm:ss), atualizado a cada segundo. Só é montado quando a tarefa
-/// está rodando; o [Timer] existe apenas enquanto o selo está na árvore. O
+/// Selo do cronômetro ativo numa folha/compromisso — exibe o tempo da **sessão
+/// atual** ao vivo (hh:mm:ss), atualizado a cada segundo, com um pulso suave no
+/// ícone (estado "vivo"). Só é montado quando a contagem está em andamento; o
+/// [Timer] e a animação existem apenas enquanto o selo está na árvore. O
 /// espaçamento após o selo é responsabilidade de quem o posiciona.
 class TaskRunningBadge extends StatefulWidget {
   const TaskRunningBadge({super.key, required this.startedAt});
@@ -19,9 +20,14 @@ class TaskRunningBadge extends StatefulWidget {
   State<TaskRunningBadge> createState() => _TaskRunningBadgeState();
 }
 
-class _TaskRunningBadgeState extends State<TaskRunningBadge> {
+class _TaskRunningBadgeState extends State<TaskRunningBadge>
+    with SingleTickerProviderStateMixin {
   Timer? _ticker;
   late int _elapsedSeconds;
+
+  late final AnimationController _pulse;
+  late final Animation<double> _pulseOpacity;
+  bool _pulseStarted = false;
 
   @override
   void initState() {
@@ -30,6 +36,21 @@ class _TaskRunningBadgeState extends State<TaskRunningBadge> {
     _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
       setState(_recompute);
     });
+    // Duração real vem dos tokens (context.motion) em didChangeDependencies.
+    _pulse = AnimationController(vsync: this);
+    _pulseOpacity = Tween<double>(begin: 0.4, end: 1).animate(
+      CurvedAnimation(parent: _pulse, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_pulseStarted) {
+      _pulse.duration = context.motion.pulse;
+      _pulse.repeat(reverse: true);
+      _pulseStarted = true;
+    }
   }
 
   @override
@@ -51,6 +72,7 @@ class _TaskRunningBadgeState extends State<TaskRunningBadge> {
   @override
   void dispose() {
     _ticker?.cancel();
+    _pulse.dispose();
     super.dispose();
   }
 
@@ -59,7 +81,14 @@ class _TaskRunningBadgeState extends State<TaskRunningBadge> {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(Icons.timelapse_rounded, size: 14, color: context.colors.timerActive),
+        FadeTransition(
+          opacity: _pulseOpacity,
+          child: Icon(
+            Icons.timelapse_rounded,
+            size: 14,
+            color: context.colors.timerActive,
+          ),
+        ),
         SizedBox(width: context.space.xs),
         Text(
           DurationFormatter.hms(_elapsedSeconds),

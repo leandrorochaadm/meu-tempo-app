@@ -141,6 +141,59 @@ void main() {
   );
 
   blocTest<AgendaBloc, AgendaState>(
+    'propaga activeAppointmentId e activeTimerStartedAt do cronômetro ativo',
+    build: () {
+      final startedAt = DateTime(2026, 7, 22, 9, 15);
+      when(() => watchAppts(any()))
+          .thenAnswer((_) => Stream.value(Right([appt(540)])));
+      when(() => watchActiveTimer(any())).thenAnswer(
+        (_) => Stream.value(Right<Failure, ActiveTimerEntity?>(
+          ActiveTimerEntity(
+            targetId: 'a540',
+            targetType: TimerTargetTypeEnum.appointment,
+            listId: 'inbox',
+            startedAt: startedAt,
+          ),
+        )),
+      );
+      return build();
+    },
+    act: (bloc) => bloc.add(const AgendaStarted()),
+    wait: const Duration(milliseconds: 10),
+    verify: (bloc) {
+      final state = bloc.state as AgendaLoaded;
+      expect(state.activeAppointmentId, 'a540');
+      expect(state.activeTimerStartedAt, DateTime(2026, 7, 22, 9, 15));
+    },
+  );
+
+  blocTest<AgendaBloc, AgendaState>(
+    'ignora startedAt quando o cronômetro ativo é de uma tarefa (não agenda)',
+    build: () {
+      when(() => watchAppts(any()))
+          .thenAnswer((_) => Stream.value(Right([appt(540)])));
+      when(() => watchActiveTimer(any())).thenAnswer(
+        (_) => Stream.value(Right<Failure, ActiveTimerEntity?>(
+          ActiveTimerEntity(
+            targetId: 't1',
+            targetType: TimerTargetTypeEnum.task,
+            listId: 'inbox',
+            startedAt: DateTime(2026, 7, 22, 9, 15),
+          ),
+        )),
+      );
+      return build();
+    },
+    act: (bloc) => bloc.add(const AgendaStarted()),
+    wait: const Duration(milliseconds: 10),
+    verify: (bloc) {
+      final state = bloc.state as AgendaLoaded;
+      expect(state.activeAppointmentId, isNull);
+      expect(state.activeTimerStartedAt, isNull);
+    },
+  );
+
+  blocTest<AgendaBloc, AgendaState>(
     'AppointmentCreated delega ao CreateAppointmentUseCase',
     build: () {
       when(() => watchAppts(any())).thenAnswer(

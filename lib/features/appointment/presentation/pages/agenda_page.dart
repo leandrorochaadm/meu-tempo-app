@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/theme_context_extensions.dart';
 import '../../../../core/ui/app_empty_state.dart';
 import '../../../../core/ui/app_list_skeleton.dart';
+import '../../../../core/ui/task_running_badge.dart';
 import '../../../../core/utils/formatters/duration_formatter.dart';
 import '../../../../core/utils/formatters/time_formatter.dart';
 import '../../domain/entities/appointment_entity.dart';
@@ -67,6 +68,7 @@ class _AgendaPageState extends State<AgendaPage> {
                 :final appointments,
                 :final fit,
                 :final activeAppointmentId,
+                :final activeTimerStartedAt,
               ) =>
                 Column(
                   children: [
@@ -83,10 +85,14 @@ class _AgendaPageState extends State<AgendaPage> {
                               itemCount: appointments.length,
                               separatorBuilder: (_, _) =>
                                   SizedBox(height: context.space.sm),
-                              itemBuilder: (context, i) => _AppointmentTile(
+                              itemBuilder: (context, i) {
+                                final isActive =
+                                    appointments[i].id == activeAppointmentId;
+                                return _AppointmentTile(
                                 appointment: appointments[i],
-                                isActive:
-                                    appointments[i].id == activeAppointmentId,
+                                isActive: isActive,
+                                activeStartedAt:
+                                    isActive ? activeTimerStartedAt : null,
                                 onToggleTimer: (start) =>
                                     context.read<AgendaBloc>().add(
                                           start
@@ -96,7 +102,8 @@ class _AgendaPageState extends State<AgendaPage> {
                                         ),
                                 onDelete: () => context.read<AgendaBloc>().add(
                                     AppointmentDeleted(appointments[i].id)),
-                              ),
+                              );
+                              },
                             ),
                     ),
                   ],
@@ -156,12 +163,17 @@ class _AppointmentTile extends StatelessWidget {
   const _AppointmentTile({
     required this.appointment,
     required this.isActive,
+    required this.activeStartedAt,
     required this.onToggleTimer,
     required this.onDelete,
   });
 
   final AppointmentEntity appointment;
   final bool isActive;
+
+  /// Início da sessão do cronômetro quando este compromisso está ativo (`null`
+  /// caso não esteja) — alimenta o contador ao vivo hh:mm:ss do selo.
+  final DateTime? activeStartedAt;
   final void Function(bool start) onToggleTimer;
   final VoidCallback onDelete;
 
@@ -191,6 +203,10 @@ class _AppointmentTile extends StatelessWidget {
               children: [
                 Text(appointment.title, style: context.text.titleMedium),
                 SizedBox(height: context.space.xs),
+                if (isActive && activeStartedAt != null) ...[
+                  TaskRunningBadge(startedAt: activeStartedAt!),
+                  SizedBox(height: context.space.xs),
+                ],
                 Text(
                   '${TimeFormatter.clock(appointment.startMinute)}'
                   '–${TimeFormatter.clock(appointment.endMinute)}'
