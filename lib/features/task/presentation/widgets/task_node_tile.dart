@@ -14,6 +14,7 @@ class TaskNodeTile extends StatelessWidget {
     super.key,
     required this.node,
     required this.isActive,
+    this.activeStartedAt,
     required this.onAddSubtask,
     required this.onToggleTimer,
     required this.onAddTime,
@@ -25,6 +26,10 @@ class TaskNodeTile extends StatelessWidget {
 
   final TaskNode node;
   final bool isActive;
+
+  /// Início da sessão do cronômetro quando este nó está ativo (`null` caso não
+  /// esteja) — alimenta o contador ao vivo hh:mm:ss do selo.
+  final DateTime? activeStartedAt;
   final void Function(TaskNode parent) onAddSubtask;
   final void Function(TaskNode node, bool start) onToggleTimer;
   final void Function(TaskNode node, int minutes) onAddTime;
@@ -98,7 +103,7 @@ class TaskNodeTile extends StatelessWidget {
             ],
           ),
           SizedBox(height: context.space.xs),
-          _MetaRow(node: node, isActive: isActive),
+          _MetaRow(node: node, isActive: isActive, activeStartedAt: activeStartedAt),
           if (node.isLeaf) ...[
             SizedBox(height: context.space.sm),
             TaskTimerActions(
@@ -130,17 +135,22 @@ class TaskNodeTile extends StatelessWidget {
 }
 
 class _MetaRow extends StatelessWidget {
-  const _MetaRow({required this.node, required this.isActive});
+  const _MetaRow({
+    required this.node,
+    required this.isActive,
+    required this.activeStartedAt,
+  });
 
   final TaskNode node;
   final bool isActive;
+  final DateTime? activeStartedAt;
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        if (isActive) ...[
-          const TaskRunningBadge(),
+        if (isActive && activeStartedAt != null) ...[
+          TaskRunningBadge(startedAt: activeStartedAt!),
           SizedBox(width: context.space.md),
         ],
         Text(

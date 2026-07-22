@@ -111,6 +111,7 @@ class TaskListBloc extends Bloc<TaskListEvent, TaskListState> {
   List<TaskEntity> _latestTasks = const [];
   List<TaskListEntity> _lists = const [];
   String? _activeTaskId;
+  DateTime? _activeStartedAt;
 
   /// Filtro de lista ativo na tela (`null` = "Todas as listas"). Estado de UI.
   String? _selectedListId;
@@ -146,11 +147,10 @@ class TaskListBloc extends Bloc<TaskListEvent, TaskListState> {
         .listen((result) => add(TaskListUpdated(result)));
 
     await _timerSub?.cancel();
-    _timerSub = _watchActiveTimer(const NoParams()).listen(
-      (result) => add(ActiveTimerUpdated(
-        result.getRight().toNullable()?.targetId,
-      )),
-    );
+    _timerSub = _watchActiveTimer(const NoParams()).listen((result) {
+      final active = result.getRight().toNullable();
+      add(ActiveTimerUpdated(active?.targetId, active?.startedAt));
+    });
 
     await _listsSub?.cancel();
     _listsSub = _watchLists(const NoParams())
@@ -193,6 +193,7 @@ class TaskListBloc extends Bloc<TaskListEvent, TaskListState> {
 
   void _onTimerUpdated(ActiveTimerUpdated event, Emitter<TaskListState> emit) {
     _activeTaskId = event.activeTaskId;
+    _activeStartedAt = event.startedAt;
     _emitLoaded(emit);
   }
 
@@ -207,6 +208,7 @@ class TaskListBloc extends Bloc<TaskListEvent, TaskListState> {
       _buildTree(filtered),
       prioritized: _getPrioritized(filtered, DateTime.now()),
       activeTaskId: _activeTaskId,
+      activeTimerStartedAt: _activeStartedAt,
       lists: _lists,
       selectedListId: _selectedListId,
     ));

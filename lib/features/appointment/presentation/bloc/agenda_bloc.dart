@@ -81,6 +81,9 @@ class AgendaBloc extends Bloc<AgendaEvent, AgendaState> {
   /// ou não há cronômetro).
   String? _activeAppointmentId;
 
+  /// Início da sessão do cronômetro quando o ativo é um compromisso.
+  DateTime? _activeStartedAt;
+
   Future<void> _onStarted(AgendaStarted e, Emitter<AgendaState> emit) async {
     emit(const AgendaLoading());
     final now = DateTime.now();
@@ -111,10 +114,10 @@ class AgendaBloc extends Bloc<AgendaEvent, AgendaState> {
     Emitter<AgendaState> emit,
   ) {
     final active = e.result.getRight().toNullable();
-    _activeAppointmentId =
-        (active != null && active.targetType == TimerTargetTypeEnum.appointment)
-            ? active.targetId
-            : null;
+    final isAppointment =
+        active != null && active.targetType == TimerTargetTypeEnum.appointment;
+    _activeAppointmentId = isAppointment ? active.targetId : null;
+    _activeStartedAt = isAppointment ? active.startedAt : null;
     _emit(emit);
   }
 
@@ -162,6 +165,7 @@ class AgendaBloc extends Bloc<AgendaEvent, AgendaState> {
       appointments: _appointments,
       fit: fit,
       activeAppointmentId: _activeAppointmentId,
+      activeTimerStartedAt: _activeStartedAt,
     ));
   }
 

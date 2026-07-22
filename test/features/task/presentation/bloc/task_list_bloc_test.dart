@@ -8,6 +8,7 @@ import 'package:meu_tempo/features/list/domain/usecases/ensure_inbox_exists_use_
 import 'package:meu_tempo/features/list/domain/usecases/watch_lists_use_case.dart';
 import 'package:meu_tempo/features/task/domain/entities/task_entity.dart';
 import 'package:meu_tempo/features/task/domain/entities/active_timer_entity.dart';
+import 'package:meu_tempo/features/task/domain/entities/timer_target_type_enum.dart';
 import 'package:meu_tempo/features/task/domain/task_failures.dart';
 import 'package:meu_tempo/features/task/domain/usecases/add_subtask_use_case.dart';
 import 'package:meu_tempo/features/task/domain/usecases/build_task_tree_use_case.dart';
@@ -208,6 +209,53 @@ void main() {
         task,
       ),
     ],
+  );
+
+  final startedAt = DateTime(2026, 7, 22, 10, 30);
+  final activeTimer = ActiveTimerEntity(
+    targetId: 't1',
+    targetType: TimerTargetTypeEnum.task,
+    listId: 'inbox',
+    startedAt: startedAt,
+  );
+
+  blocTest<TaskListBloc, TaskListState>(
+    'propaga activeTaskId e activeTimerStartedAt do cronômetro ativo ao State',
+    build: () {
+      when(() => watchTasks(any()))
+          .thenAnswer((_) => Stream.value(Right([task])));
+      when(() => watchActiveTimer(any())).thenAnswer(
+        (_) => Stream.value(Right<Failure, ActiveTimerEntity?>(activeTimer)),
+      );
+      return build();
+    },
+    act: (bloc) => bloc.add(const TaskListStarted()),
+    verify: (bloc) {
+      final state = bloc.state as TaskListLoaded;
+      expect(state.activeTaskId, 't1');
+      expect(state.activeTimerStartedAt, startedAt);
+    },
+  );
+
+  blocTest<TaskListBloc, TaskListState>(
+    'zera activeTimerStartedAt (=null) quando o cronômetro para',
+    build: () {
+      when(() => watchTasks(any()))
+          .thenAnswer((_) => Stream.value(Right([task])));
+      when(() => watchActiveTimer(any())).thenAnswer(
+        (_) => Stream.fromIterable([
+          Right<Failure, ActiveTimerEntity?>(activeTimer),
+          const Right<Failure, ActiveTimerEntity?>(null),
+        ]),
+      );
+      return build();
+    },
+    act: (bloc) => bloc.add(const TaskListStarted()),
+    verify: (bloc) {
+      final state = bloc.state as TaskListLoaded;
+      expect(state.activeTaskId, isNull);
+      expect(state.activeTimerStartedAt, isNull);
+    },
   );
 
   blocTest<TaskListBloc, TaskListState>(
