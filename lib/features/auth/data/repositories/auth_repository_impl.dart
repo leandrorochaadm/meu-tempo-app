@@ -15,10 +15,10 @@ class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDataSource _dataSource;
 
   @override
-  Future<Either<Failure, UserEntity>> signInWithGoogle() async {
+  Future<Either<Failure, Unit>> signInWithGoogle() async {
     try {
-      final model = await _dataSource.signInWithGoogle();
-      return Right(model.toEntity());
+      await _dataSource.signInWithGoogle();
+      return const Right(unit);
     } on AppException catch (e, s) {
       AppLogger.logError('signInWithGoogle falhou', error: e, stackTrace: s);
       return Left(e.toFailure());

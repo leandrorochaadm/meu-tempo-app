@@ -18,11 +18,11 @@ void main() {
 
   test('SignInWithGoogleUseCase delega ao repositório', () async {
     when(() => repository.signInWithGoogle())
-        .thenAnswer((_) async => const Right(user));
+        .thenAnswer((_) async => const Right(unit));
 
     final result = await SignInWithGoogleUseCase(repository)(const NoParams());
 
-    expect(result.getRight().toNullable(), user);
+    expect(result.isRight(), isTrue);
     verify(() => repository.signInWithGoogle()).called(1);
   });
 

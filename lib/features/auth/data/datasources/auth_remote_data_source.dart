@@ -6,7 +6,10 @@ import '../models/user_model.dart';
 
 /// Acesso ao Firebase Auth. Lança [AppException] em caso de erro.
 abstract class AuthRemoteDataSource {
-  Future<UserModel> signInWithGoogle();
+  /// Inicia o login SSO Google via **redirect** (a página navega para o Google
+  /// e volta). O login efetivo chega depois pelo [authState] — este método só
+  /// dispara o fluxo, não retorna o usuário.
+  Future<void> signInWithGoogle();
   Future<void> signOut();
   Stream<UserModel?> authState();
   UserModel? currentUser();
@@ -19,14 +22,13 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   final FirebaseAuth _auth;
 
   @override
-  Future<UserModel> signInWithGoogle() async {
+  Future<void> signInWithGoogle() async {
     try {
       final provider = GoogleAuthProvider();
-      // Fluxo Web: popup do Google via firebase_auth (sem plugin extra).
-      final credential = await _auth.signInWithPopup(provider);
-      final user = credential.user;
-      if (user == null) throw const AuthException();
-      return UserModel.fromFirebaseUser(user);
+      // Fluxo Web mobile: redirect (não popup). O popup é frágil em navegador
+      // de celular e incompatível com cross-origin isolation; o redirect
+      // navega para o Google e volta. O login chega pelo `authStateChanges`.
+      await _auth.signInWithRedirect(provider);
     } on FirebaseAuthException catch (e) {
       throw mapFirebaseAuthException(e);
     }

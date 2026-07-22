@@ -43,17 +43,26 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         : AuthAuthenticated(event.user!));
   }
 
+  /// Rede de segurança: se o login não iniciar/resolver nesse tempo, sai do
+  /// estado de carregamento com erro em vez de ficar girando para sempre.
+  static const _signInTimeout = Duration(seconds: 30);
+
   Future<void> _onSignInRequested(
     AuthGoogleSignInRequested event,
     Emitter<AuthState> emit,
   ) async {
     emit(const AuthLoading());
-    final result = await _signInWithGoogle(const NoParams());
-    // Sucesso emite via stream (AuthStateChanged); aqui só tratamos erro.
-    result.match(
-      (failure) => emit(AuthError(_mapFailure(failure))),
-      (_) {},
-    );
+    try {
+      final result =
+          await _signInWithGoogle(const NoParams()).timeout(_signInTimeout);
+      // Sucesso emite via stream (AuthStateChanged); aqui só tratamos erro.
+      result.match(
+        (failure) => emit(AuthError(_mapFailure(failure))),
+        (_) {},
+      );
+    } on TimeoutException {
+      emit(AuthError(_mapFailure(const AuthFailure())));
+    }
   }
 
   Future<void> _onSignOutRequested(
