@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/theme_context_extensions.dart';
 import '../../../../core/ui/app_empty_state.dart';
 import '../../../../core/ui/app_list_skeleton.dart';
+import '../../../../core/ui/app_undo_snackbar.dart';
 import '../../../../core/utils/formatters/date_formatter.dart';
 import '../../domain/entities/task_entity.dart';
 import '../../domain/entities/time_entry_entity.dart';
@@ -59,15 +60,11 @@ class _TimeEntryPageState extends State<TimeEntryPage> {
 
   void _delete(TimeEntryEntity entry) {
     final bloc = context.read<TimeEntryBloc>()..add(TimeEntryDeleted(entry));
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(
-        content: const Text('Registro excluído'),
-        action: SnackBarAction(
-          label: 'Desfazer',
-          onPressed: () => bloc.add(const TimeEntryUndoRequested()),
-        ),
-      ));
+    AppUndoSnackBar.show(
+      context,
+      message: 'Registro excluído',
+      onUndo: () => bloc.add(const TimeEntryUndoRequested()),
+    );
   }
 
   /// Bottom sheet de edição de um registro: duração (chips) + data (calendário).

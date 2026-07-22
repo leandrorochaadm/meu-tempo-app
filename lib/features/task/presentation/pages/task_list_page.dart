@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../core/constants/app_defaults.dart';
 import '../../../../core/router/routes.dart';
 import '../../../../core/theme/theme_context_extensions.dart';
 import '../../../../core/ui/app_empty_state.dart';
 import '../../../../core/ui/app_list_skeleton.dart';
+import '../../../../core/ui/app_undo_snackbar.dart';
 import '../../../../core/ui/task_timer_actions.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../list/domain/entities/task_list_entity.dart';
@@ -93,19 +93,11 @@ class _TaskListPageState extends State<TaskListPage> {
       ..add(CompleteToggled(taskId: task.id, done: done));
     if (done) {
       // Desfazer (H13): reabre a folha.
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(
-          SnackBar(
-            duration: AppDefaults.undoSnackbarDuration,
-            content: Text('"${task.title}" concluída'),
-            action: SnackBarAction(
-              label: 'Desfazer',
-              onPressed: () =>
-                  bloc.add(CompleteToggled(taskId: task.id, done: false)),
-            ),
-          ),
-        );
+      AppUndoSnackBar.show(
+        context,
+        message: '"${task.title}" concluída',
+        onUndo: () => bloc.add(CompleteToggled(taskId: task.id, done: false)),
+      );
     }
   }
 
@@ -138,18 +130,11 @@ class _TaskListPageState extends State<TaskListPage> {
     if (confirmed ?? false) {
       bloc.add(DeleteRequested(task.id));
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(
-          SnackBar(
-            duration: AppDefaults.undoSnackbarDuration,
-            content: Text('"${task.title}" excluída'),
-            action: SnackBarAction(
-              label: 'Desfazer',
-              onPressed: () => bloc.add(const TaskDeletionUndone()),
-            ),
-          ),
-        );
+      AppUndoSnackBar.show(
+        context,
+        message: '"${task.title}" excluída',
+        onUndo: () => bloc.add(const TaskDeletionUndone()),
+      );
     }
   }
 

@@ -100,6 +100,9 @@ void main() {
 
     verify(() => bloc.add(TimeEntryDeleted(entry))).called(1);
     expect(find.text('Desfazer'), findsOneWidget);
+    // persist deve ser false para o snackbar sumir sozinho (ver Flutter 3.41+).
+    final snackBar = tester.widget<SnackBar>(find.byType(SnackBar));
+    expect(snackBar.persist, isFalse);
   });
 
   testWidgets('desfazer dispara TimeEntryUndoRequested', (tester) async {

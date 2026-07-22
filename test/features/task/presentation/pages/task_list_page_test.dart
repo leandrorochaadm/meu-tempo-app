@@ -140,6 +140,9 @@ void main() {
     final snackBar = tester.widget<SnackBar>(find.byType(SnackBar));
     expect(snackBar.duration, AppDefaults.undoSnackbarDuration);
     expect(snackBar.duration, const Duration(seconds: 10));
+    // persist deve ser false: no Flutter 3.41+ ele assume true quando há action,
+    // o que ignora o duration e deixa o snackbar fixo na tela (regressão).
+    expect(snackBar.persist, isFalse);
   });
 
   testWidgets('iniciar cronômetro na prioridade dispara TimerStartRequested',
