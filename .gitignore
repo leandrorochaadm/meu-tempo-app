@@ -46,3 +46,9 @@ app.*.map.json
 
 # Perfil persistente do Chrome em dev (mantém sessão do Firebase Auth)
 .dev-chrome/
+
+# Cache local de deploy do Firebase Hosting
+.firebase/
+
+# Artefatos locais (planos, arquivos de trabalho temporários)
+temp/
