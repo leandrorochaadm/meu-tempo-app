@@ -92,18 +92,24 @@ import 'package:meu_tempo/features/report/presentation/bloc/report_bloc.dart'
     as _i318;
 import 'package:meu_tempo/features/report/presentation/bloc/report_detail_bloc.dart'
     as _i73;
+import 'package:meu_tempo/features/task/data/datasources/task_list_filter_local_data_source.dart'
+    as _i820;
 import 'package:meu_tempo/features/task/data/datasources/task_remote_data_source.dart'
     as _i592;
 import 'package:meu_tempo/features/task/data/datasources/time_entry_remote_data_source.dart'
     as _i52;
 import 'package:meu_tempo/features/task/data/datasources/timer_remote_data_source.dart'
     as _i588;
+import 'package:meu_tempo/features/task/data/repositories/task_list_filter_repository_impl.dart'
+    as _i372;
 import 'package:meu_tempo/features/task/data/repositories/task_repository_impl.dart'
     as _i1011;
 import 'package:meu_tempo/features/task/data/repositories/time_entry_repository_impl.dart'
     as _i877;
 import 'package:meu_tempo/features/task/data/repositories/timer_repository_impl.dart'
     as _i825;
+import 'package:meu_tempo/features/task/domain/repositories/task_list_filter_repository.dart'
+    as _i74;
 import 'package:meu_tempo/features/task/domain/repositories/task_repository.dart'
     as _i521;
 import 'package:meu_tempo/features/task/domain/repositories/time_entry_repository.dart'
@@ -124,14 +130,20 @@ import 'package:meu_tempo/features/task/domain/usecases/delete_time_entry_use_ca
     as _i855;
 import 'package:meu_tempo/features/task/domain/usecases/edit_task_use_case.dart'
     as _i43;
+import 'package:meu_tempo/features/task/domain/usecases/filter_tasks_by_list_use_case.dart'
+    as _i1069;
 import 'package:meu_tempo/features/task/domain/usecases/get_prioritized_leaves_use_case.dart'
     as _i1067;
+import 'package:meu_tempo/features/task/domain/usecases/get_task_list_filter_use_case.dart'
+    as _i247;
 import 'package:meu_tempo/features/task/domain/usecases/move_task_use_case.dart'
     as _i213;
 import 'package:meu_tempo/features/task/domain/usecases/register_manual_time_use_case.dart'
     as _i1025;
 import 'package:meu_tempo/features/task/domain/usecases/restore_tasks_use_case.dart'
     as _i942;
+import 'package:meu_tempo/features/task/domain/usecases/save_task_list_filter_use_case.dart'
+    as _i32;
 import 'package:meu_tempo/features/task/domain/usecases/seed_first_access_use_case.dart'
     as _i159;
 import 'package:meu_tempo/features/task/domain/usecases/start_timer_use_case.dart'
@@ -152,15 +164,21 @@ import 'package:meu_tempo/features/task/presentation/bloc/task_list_bloc.dart'
     as _i35;
 import 'package:meu_tempo/features/task/presentation/bloc/time_entry_bloc.dart'
     as _i821;
+import 'package:shared_preferences/shared_preferences.dart' as _i460;
 
 extension GetItInjectableX on _i174.GetIt {
   // initializes the registration of main-scope dependencies inside of GetIt
-  _i174.GetIt init({
+  Future<_i174.GetIt> init({
     String? environment,
     _i526.EnvironmentFilter? environmentFilter,
-  }) {
+  }) async {
     final gh = _i526.GetItHelper(this, environment, environmentFilter);
+    final preferencesModule = _$PreferencesModule();
     final firebaseModule = _$FirebaseModule();
+    await gh.factoryAsync<_i460.SharedPreferences>(
+      () => preferencesModule.prefs,
+      preResolve: true,
+    );
     gh.lazySingleton<_i59.FirebaseAuth>(() => firebaseModule.firebaseAuth);
     gh.lazySingleton<_i974.FirebaseFirestore>(() => firebaseModule.firestore);
     gh.lazySingleton<_i483.CheckFitsInDayUseCase>(
@@ -177,6 +195,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i27.BuildTaskTreeUseCase>(
       () => const _i27.BuildTaskTreeUseCase(),
+    );
+    gh.lazySingleton<_i1069.FilterTasksByListUseCase>(
+      () => const _i1069.FilterTasksByListUseCase(),
     );
     gh.lazySingleton<_i1067.GetPrioritizedLeavesUseCase>(
       () => const _i1067.GetPrioritizedLeavesUseCase(),
@@ -200,6 +221,11 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i52.TimeEntryRemoteDataSourceImpl(
         gh<_i974.FirebaseFirestore>(),
         gh<_i59.FirebaseAuth>(),
+      ),
+    );
+    gh.lazySingleton<_i820.TaskListFilterLocalDataSource>(
+      () => _i820.TaskListFilterLocalDataSourceImpl(
+        gh<_i460.SharedPreferences>(),
       ),
     );
     gh.lazySingleton<_i592.TaskRemoteDataSource>(
@@ -230,6 +256,11 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i219.TaskListRepository>(
       () => _i924.TaskListRepositoryImpl(gh<_i813.TaskListRemoteDataSource>()),
+    );
+    gh.lazySingleton<_i74.TaskListFilterRepository>(
+      () => _i372.TaskListFilterRepositoryImpl(
+        gh<_i820.TaskListFilterLocalDataSource>(),
+      ),
     );
     gh.lazySingleton<_i397.WatchActiveTimerUseCase>(
       () => _i397.WatchActiveTimerUseCase(gh<_i381.TimerRepository>()),
@@ -290,6 +321,12 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i259.AppointmentRepository>(),
         gh<_i706.TimeEntryRepository>(),
       ),
+    );
+    gh.lazySingleton<_i247.GetTaskListFilterUseCase>(
+      () => _i247.GetTaskListFilterUseCase(gh<_i74.TaskListFilterRepository>()),
+    );
+    gh.lazySingleton<_i32.SaveTaskListFilterUseCase>(
+      () => _i32.SaveTaskListFilterUseCase(gh<_i74.TaskListFilterRepository>()),
     );
     gh.lazySingleton<_i666.DeleteListUseCase>(
       () => _i666.DeleteListUseCase(
@@ -421,27 +458,6 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i658.CreateTaskUseCase>(),
       ),
     );
-    gh.factory<_i35.TaskListBloc>(
-      () => _i35.TaskListBloc(
-        gh<_i1035.WatchTasksUseCase>(),
-        gh<_i658.CreateTaskUseCase>(),
-        gh<_i655.EnsureInboxExistsUseCase>(),
-        gh<_i650.AddSubtaskUseCase>(),
-        gh<_i27.BuildTaskTreeUseCase>(),
-        gh<_i1067.GetPrioritizedLeavesUseCase>(),
-        gh<_i397.WatchActiveTimerUseCase>(),
-        gh<_i210.StartTimerUseCase>(),
-        gh<_i726.StopTimerUseCase>(),
-        gh<_i1025.RegisterManualTimeUseCase>(),
-        gh<_i623.CompleteTaskUseCase>(),
-        gh<_i162.DeleteTaskUseCase>(),
-        gh<_i43.EditTaskUseCase>(),
-        gh<_i213.MoveTaskUseCase>(),
-        gh<_i689.WatchListsUseCase>(),
-        gh<_i159.SeedFirstAccessUseCase>(),
-        gh<_i942.RestoreTasksUseCase>(),
-      ),
-    );
     gh.factory<_i492.MigrationBloc>(
       () => _i492.MigrationBloc(
         gh<_i1035.WatchTasksUseCase>(),
@@ -466,8 +482,34 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i397.WatchActiveTimerUseCase>(),
       ),
     );
+    gh.factory<_i35.TaskListBloc>(
+      () => _i35.TaskListBloc(
+        gh<_i1035.WatchTasksUseCase>(),
+        gh<_i658.CreateTaskUseCase>(),
+        gh<_i655.EnsureInboxExistsUseCase>(),
+        gh<_i650.AddSubtaskUseCase>(),
+        gh<_i27.BuildTaskTreeUseCase>(),
+        gh<_i1067.GetPrioritizedLeavesUseCase>(),
+        gh<_i397.WatchActiveTimerUseCase>(),
+        gh<_i210.StartTimerUseCase>(),
+        gh<_i726.StopTimerUseCase>(),
+        gh<_i1025.RegisterManualTimeUseCase>(),
+        gh<_i623.CompleteTaskUseCase>(),
+        gh<_i162.DeleteTaskUseCase>(),
+        gh<_i43.EditTaskUseCase>(),
+        gh<_i213.MoveTaskUseCase>(),
+        gh<_i689.WatchListsUseCase>(),
+        gh<_i159.SeedFirstAccessUseCase>(),
+        gh<_i942.RestoreTasksUseCase>(),
+        gh<_i1069.FilterTasksByListUseCase>(),
+        gh<_i247.GetTaskListFilterUseCase>(),
+        gh<_i32.SaveTaskListFilterUseCase>(),
+      ),
+    );
     return this;
   }
 }
+
+class _$PreferencesModule extends _i767.PreferencesModule {}
 
 class _$FirebaseModule extends _i767.FirebaseModule {}

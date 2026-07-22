@@ -15,10 +15,13 @@ import 'package:meu_tempo/features/task/domain/usecases/complete_task_use_case.d
 import 'package:meu_tempo/features/task/domain/usecases/create_task_use_case.dart';
 import 'package:meu_tempo/features/task/domain/usecases/delete_task_use_case.dart';
 import 'package:meu_tempo/features/task/domain/usecases/edit_task_use_case.dart';
+import 'package:meu_tempo/features/task/domain/usecases/filter_tasks_by_list_use_case.dart';
 import 'package:meu_tempo/features/task/domain/usecases/get_prioritized_leaves_use_case.dart';
+import 'package:meu_tempo/features/task/domain/usecases/get_task_list_filter_use_case.dart';
 import 'package:meu_tempo/features/task/domain/usecases/move_task_use_case.dart';
 import 'package:meu_tempo/features/task/domain/usecases/register_manual_time_use_case.dart';
 import 'package:meu_tempo/features/task/domain/usecases/restore_tasks_use_case.dart';
+import 'package:meu_tempo/features/task/domain/usecases/save_task_list_filter_use_case.dart';
 import 'package:meu_tempo/features/task/domain/usecases/seed_first_access_use_case.dart';
 import 'package:meu_tempo/features/task/domain/usecases/start_timer_use_case.dart';
 import 'package:meu_tempo/features/task/domain/usecases/stop_timer_use_case.dart';
@@ -57,7 +60,13 @@ class _MockSeedFirstAccess extends Mock implements SeedFirstAccessUseCase {}
 
 class _MockRestore extends Mock implements RestoreTasksUseCase {}
 
+class _MockGetFilter extends Mock implements GetTaskListFilterUseCase {}
+
+class _MockSaveFilter extends Mock implements SaveTaskListFilterUseCase {}
+
 class _FakeNoParams extends Fake implements NoParams {}
+
+class _FakeSaveFilterParams extends Fake implements SaveTaskListFilterParams {}
 
 class _FakeSeedParams extends Fake implements SeedFirstAccessParams {}
 
@@ -97,7 +106,10 @@ void main() {
   late _MockWatchLists watchLists;
   late _MockSeedFirstAccess seedFirstAccess;
   late _MockRestore restoreTasks;
+  late _MockGetFilter getFilter;
+  late _MockSaveFilter saveFilter;
   const buildTree = BuildTaskTreeUseCase();
+  const filterByList = FilterTasksByListUseCase();
 
   const inbox = TaskListEntity(id: 'inbox', name: 'Entrada', isDefault: true);
   final task = TaskEntity(
@@ -120,6 +132,7 @@ void main() {
     registerFallbackValue(_FakeMoveParams());
     registerFallbackValue(_FakeSeedParams());
     registerFallbackValue(_FakeRestoreParams());
+    registerFallbackValue(_FakeSaveFilterParams());
   });
 
   setUp(() {
@@ -138,6 +151,11 @@ void main() {
     watchLists = _MockWatchLists();
     seedFirstAccess = _MockSeedFirstAccess();
     restoreTasks = _MockRestore();
+    getFilter = _MockGetFilter();
+    saveFilter = _MockSaveFilter();
+    when(() => getFilter(any()))
+        .thenAnswer((_) async => const Right<Failure, String?>(null));
+    when(() => saveFilter(any())).thenAnswer((_) async => const Right(unit));
     when(() => ensureInbox(any())).thenAnswer((_) async => const Right(inbox));
     when(() => seedFirstAccess(any()))
         .thenAnswer((_) async => const Right(unit));
@@ -169,6 +187,9 @@ void main() {
         watchLists,
         seedFirstAccess,
         restoreTasks,
+        filterByList,
+        getFilter,
+        saveFilter,
       );
 
   blocTest<TaskListBloc, TaskListState>(

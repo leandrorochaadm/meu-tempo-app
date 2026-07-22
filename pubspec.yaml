@@ -58,6 +58,9 @@ dependencies:
   # Formatação de data/hora/duração (pt-BR) — usada pelos formatters do core
   intl: ^0.20.2
 
+  # Preferência de UI local no dispositivo (ex.: filtro de lista da home)
+  shared_preferences: ^2.3.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

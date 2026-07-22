@@ -22,7 +22,7 @@ Future<void> main() async {
       const Settings(persistenceEnabled: false);
 
   await initializeDateFormatting('pt_BR');
-  configureDependencies();
+  await configureDependencies();
 
   runApp(const MeuTempoApp());
 }

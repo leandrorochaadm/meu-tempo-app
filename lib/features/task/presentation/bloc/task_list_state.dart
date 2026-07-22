@@ -17,6 +17,7 @@ class TaskListLoaded extends TaskListState {
     this.prioritized = const [],
     this.activeTaskId,
     this.lists = const [],
+    this.selectedListId,
   });
 
   /// Árvore de tarefas (raízes = mães), com agregação pronta nos [TaskNode].
@@ -28,11 +29,15 @@ class TaskListLoaded extends TaskListState {
   /// Id da folha com cronômetro rodando (`null` = nenhum).
   final String? activeTaskId;
 
-  /// Listas do usuário (para escolher onde criar a tarefa).
+  /// Listas do usuário (para escolher onde criar a tarefa e filtrar).
   final List<TaskListEntity> lists;
 
+  /// Lista escolhida como filtro da tela (`null` = "Todas as listas").
+  final String? selectedListId;
+
   @override
-  List<Object?> get props => [roots, prioritized, activeTaskId, lists];
+  List<Object?> get props =>
+      [roots, prioritized, activeTaskId, lists, selectedListId];
 }
 
 class TaskListEmpty extends TaskListState {

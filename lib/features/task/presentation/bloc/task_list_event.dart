@@ -30,6 +30,15 @@ class TaskListListsUpdated extends TaskListEvent {
   List<Object?> get props => [result];
 }
 
+/// Troca o filtro de lista da tela principal (`null` = "Todas as listas").
+class ListFilterChanged extends TaskListEvent {
+  const ListFilterChanged(this.listId);
+  final String? listId;
+
+  @override
+  List<Object?> get props => [listId];
+}
+
 /// Criação rápida: título + lista escolhida (`null` = "Entrada").
 class TaskCreated extends TaskListEvent {
   const TaskCreated(this.title, {this.listId});

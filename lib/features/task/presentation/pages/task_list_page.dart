@@ -14,6 +14,7 @@ import '../../domain/entities/task_entity.dart';
 import '../../domain/entities/task_node.dart';
 import '../../domain/services/ancestry_label_builder.dart';
 import '../bloc/task_list_bloc.dart';
+import '../widgets/list_filter_bar.dart';
 import '../widgets/prioritized_leaf_tile.dart';
 import '../widgets/quick_add_task_widget.dart';
 import '../widgets/task_node_tile.dart';
@@ -407,33 +408,60 @@ class _TaskListPageState extends State<TaskListPage> {
                       :final roots,
                       :final prioritized,
                       :final activeTaskId,
+                      :final lists,
+                      :final selectedListId,
                     ) =>
-                      _priorityView
-                          ? _PriorityList(
-                              leaves: prioritized,
-                              activeTaskId: activeTaskId,
-                              onToggleTimer: _toggleLeafTimer,
-                              onAddTime: (leaf, minutes) => _addTime(
-                                TaskNode(task: leaf.task, level: 0),
-                                minutes,
-                              ),
-                              onToggleDone: (leaf, done) =>
-                                  _toggleDoneTask(leaf.task, done),
-                              onEdit: (leaf) => _editTaskEntity(leaf.task),
-                              onMove: (leaf) => _moveTaskEntity(leaf.task),
-                              onDelete: (leaf) => _confirmDeleteTask(leaf.task),
-                            )
-                          : _TaskTree(
-                              nodes: _flatten(roots),
-                              activeTaskId: activeTaskId,
-                              onAddSubtask: _startSubtask,
-                              onToggleTimer: _toggleTimer,
-                              onAddTime: _addTime,
-                              onToggleDone: _toggleDone,
-                              onDelete: _confirmDelete,
-                              onEdit: _editTask,
-                              onMove: _moveTask,
-                            ),
+                      Column(
+                        children: [
+                          ListFilterBar(
+                            lists: lists,
+                            selectedListId: selectedListId,
+                            onSelected: (id) => context
+                                .read<TaskListBloc>()
+                                .add(ListFilterChanged(id)),
+                          ),
+                          Expanded(
+                            child: (roots.isEmpty &&
+                                    prioritized.isEmpty &&
+                                    selectedListId != null)
+                                ? const AppEmptyState(
+                                    icon: Icons.filter_list_off_rounded,
+                                    title: 'Nenhuma tarefa nesta lista',
+                                    message: 'Crie uma tarefa acima ou '
+                                        'troque de lista no filtro.',
+                                  )
+                                : _priorityView
+                                    ? _PriorityList(
+                                        leaves: prioritized,
+                                        activeTaskId: activeTaskId,
+                                        onToggleTimer: _toggleLeafTimer,
+                                        onAddTime: (leaf, minutes) => _addTime(
+                                          TaskNode(task: leaf.task, level: 0),
+                                          minutes,
+                                        ),
+                                        onToggleDone: (leaf, done) =>
+                                            _toggleDoneTask(leaf.task, done),
+                                        onEdit: (leaf) =>
+                                            _editTaskEntity(leaf.task),
+                                        onMove: (leaf) =>
+                                            _moveTaskEntity(leaf.task),
+                                        onDelete: (leaf) =>
+                                            _confirmDeleteTask(leaf.task),
+                                      )
+                                    : _TaskTree(
+                                        nodes: _flatten(roots),
+                                        activeTaskId: activeTaskId,
+                                        onAddSubtask: _startSubtask,
+                                        onToggleTimer: _toggleTimer,
+                                        onAddTime: _addTime,
+                                        onToggleDone: _toggleDone,
+                                        onDelete: _confirmDelete,
+                                        onEdit: _editTask,
+                                        onMove: _moveTask,
+                                      ),
+                          ),
+                        ],
+                      ),
                     TaskListError() => const AppEmptyState(
                         icon: Icons.checklist_rounded,
                         title: 'Sua lista está vazia',

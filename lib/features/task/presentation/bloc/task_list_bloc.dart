@@ -23,10 +23,13 @@ import '../../domain/usecases/complete_task_use_case.dart';
 import '../../domain/usecases/create_task_use_case.dart';
 import '../../domain/usecases/delete_task_use_case.dart';
 import '../../domain/usecases/edit_task_use_case.dart';
+import '../../domain/usecases/filter_tasks_by_list_use_case.dart';
 import '../../domain/usecases/get_prioritized_leaves_use_case.dart';
+import '../../domain/usecases/get_task_list_filter_use_case.dart';
 import '../../domain/usecases/move_task_use_case.dart';
 import '../../domain/usecases/register_manual_time_use_case.dart';
 import '../../domain/usecases/restore_tasks_use_case.dart';
+import '../../domain/usecases/save_task_list_filter_use_case.dart';
 import '../../domain/usecases/seed_first_access_use_case.dart';
 import '../../domain/usecases/start_timer_use_case.dart';
 import '../../domain/usecases/stop_timer_use_case.dart';
@@ -58,10 +61,14 @@ class TaskListBloc extends Bloc<TaskListEvent, TaskListState> {
     this._watchLists,
     this._seedFirstAccess,
     this._restoreTasks,
+    this._filterTasksByList,
+    this._getTaskListFilter,
+    this._saveTaskListFilter,
   ) : super(const TaskListLoading()) {
     on<TaskListStarted>(_onStarted);
     on<TaskListUpdated>(_onUpdated);
     on<TaskListListsUpdated>(_onListsUpdated);
+    on<ListFilterChanged>(_onListFilterChanged);
     on<ActiveTimerUpdated>(_onTimerUpdated);
     on<TaskCreated>(_onCreated);
     on<SubtaskRequested>(_onSubtaskRequested);
@@ -92,6 +99,9 @@ class TaskListBloc extends Bloc<TaskListEvent, TaskListState> {
   final WatchListsUseCase _watchLists;
   final SeedFirstAccessUseCase _seedFirstAccess;
   final RestoreTasksUseCase _restoreTasks;
+  final FilterTasksByListUseCase _filterTasksByList;
+  final GetTaskListFilterUseCase _getTaskListFilter;
+  final SaveTaskListFilterUseCase _saveTaskListFilter;
 
   StreamSubscription<Either<Failure, List<TaskEntity>>>? _tasksSub;
   StreamSubscription<Either<Failure, ActiveTimerEntity?>>? _timerSub;
@@ -101,6 +111,9 @@ class TaskListBloc extends Bloc<TaskListEvent, TaskListState> {
   List<TaskEntity> _latestTasks = const [];
   List<TaskListEntity> _lists = const [];
   String? _activeTaskId;
+
+  /// Filtro de lista ativo na tela (`null` = "Todas as listas"). Estado de UI.
+  String? _selectedListId;
 
   /// Última subárvore excluída, guardada para o "Desfazer" (H13).
   List<TaskEntity> _lastDeleted = const [];
@@ -117,6 +130,10 @@ class TaskListBloc extends Bloc<TaskListEvent, TaskListState> {
       return;
     }
     _inboxListId = inbox.getRight().toNullable()!.id;
+
+    // Filtro de lista salvo (última usada). Se falhar, fica em "Todas".
+    final savedFilter = await _getTaskListFilter(const NoParams());
+    _selectedListId = savedFilter.getRight().toNullable();
 
     // Primeiro acesso: semeia uma tarefa-exemplo (idempotente).
     await _seedFirstAccess(SeedFirstAccessParams(
@@ -144,8 +161,24 @@ class TaskListBloc extends Bloc<TaskListEvent, TaskListState> {
     final lists = e.result.getRight().toNullable();
     if (lists != null) {
       _lists = lists;
+      // Se a lista filtrada foi excluída, volta para "Todas" (lookup, não regra).
+      final stillExists =
+          _selectedListId == null || lists.any((l) => l.id == _selectedListId);
+      if (!stillExists) {
+        _selectedListId = null;
+        _saveTaskListFilter(const SaveTaskListFilterParams(null));
+      }
       _emitLoaded(emit);
     }
+  }
+
+  Future<void> _onListFilterChanged(
+    ListFilterChanged event,
+    Emitter<TaskListState> emit,
+  ) async {
+    _selectedListId = event.listId;
+    await _saveTaskListFilter(SaveTaskListFilterParams(event.listId));
+    _emitLoaded(emit);
   }
 
   void _onUpdated(TaskListUpdated event, Emitter<TaskListState> emit) {
@@ -165,14 +198,17 @@ class TaskListBloc extends Bloc<TaskListEvent, TaskListState> {
 
   void _emitLoaded(Emitter<TaskListState> emit) {
     if (_latestTasks.isEmpty) {
-      emit(const TaskListEmpty());
+      emit(const TaskListEmpty()); // Sem nenhuma tarefa: empty global (1º acesso).
       return;
     }
+    // Filtro por lista resolvido no UseCase — a UI recebe pronto.
+    final filtered = _filterTasksByList(_latestTasks, _selectedListId);
     emit(TaskListLoaded(
-      _buildTree(_latestTasks),
-      prioritized: _getPrioritized(_latestTasks, DateTime.now()),
+      _buildTree(filtered),
+      prioritized: _getPrioritized(filtered, DateTime.now()),
       activeTaskId: _activeTaskId,
       lists: _lists,
+      selectedListId: _selectedListId,
     ));
   }
 
