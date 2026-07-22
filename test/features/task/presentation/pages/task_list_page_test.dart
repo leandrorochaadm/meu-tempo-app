@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:meu_tempo/core/theme/app_theme.dart';
 import 'package:meu_tempo/features/auth/domain/entities/user_entity.dart';
 import 'package:meu_tempo/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:meu_tempo/features/list/domain/entities/task_list_entity.dart';
 import 'package:meu_tempo/features/task/domain/entities/prioritized_leaf.dart';
 import 'package:meu_tempo/features/task/domain/entities/task_entity.dart';
 import 'package:meu_tempo/features/task/presentation/bloc/task_list_bloc.dart';
@@ -138,5 +139,95 @@ void main() {
     verify(() => taskBloc.add(
           const TimerStartRequested(taskId: 't1', isLeaf: true),
         )).called(1);
+  });
+
+  // --- Filtro por lista (ListFilterBar) ---
+
+  const twoLists = [
+    TaskListEntity(id: 'inbox', name: 'Entrada', isDefault: true),
+    TaskListEntity(id: 'work', name: 'Profissional'),
+  ];
+
+  testWidgets('mostra o chip de filtro com 2+ listas', (tester) async {
+    setView(tester);
+    when(() => taskBloc.state).thenReturn(
+      TaskListLoaded(const [], prioritized: [leaf], lists: twoLists),
+    );
+
+    await tester.pumpWidget(harness());
+
+    expect(find.text('Todas as listas'), findsOneWidget);
+  });
+
+  testWidgets('oculta o chip de filtro com menos de 2 listas', (tester) async {
+    setView(tester);
+    when(() => taskBloc.state).thenReturn(
+      TaskListLoaded(
+        const [],
+        prioritized: [leaf],
+        lists: const [TaskListEntity(id: 'inbox', name: 'Entrada', isDefault: true)],
+      ),
+    );
+
+    await tester.pumpWidget(harness());
+
+    expect(find.text('Todas as listas'), findsNothing);
+  });
+
+  testWidgets('trocar de lista no seletor dispara ListFilterChanged',
+      (tester) async {
+    setView(tester);
+    when(() => taskBloc.state).thenReturn(
+      TaskListLoaded(const [], prioritized: [leaf], lists: twoLists),
+    );
+
+    await tester.pumpWidget(harness());
+    await tester.tap(find.text('Todas as listas'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Profissional'));
+    await tester.pumpAndSettle();
+
+    verify(() => taskBloc.add(const ListFilterChanged('work'))).called(1);
+  });
+
+  testWidgets('escolher "Todas as listas" dispara ListFilterChanged(null)',
+      (tester) async {
+    setView(tester);
+    when(() => taskBloc.state).thenReturn(
+      const TaskListLoaded(
+        [],
+        prioritized: [],
+        lists: twoLists,
+        selectedListId: 'work',
+      ),
+    );
+
+    await tester.pumpWidget(harness());
+    // O chip mostra a lista atual ("Profissional"); abre o seletor.
+    await tester.tap(find.text('Profissional'));
+    await tester.pumpAndSettle();
+    // Opção "Todas as listas" dentro do bottom sheet.
+    await tester.tap(find.text('Todas as listas'));
+    await tester.pumpAndSettle();
+
+    verify(() => taskBloc.add(const ListFilterChanged(null))).called(1);
+  });
+
+  testWidgets('empty-filtrado mostra aviso mantendo o chip', (tester) async {
+    setView(tester);
+    when(() => taskBloc.state).thenReturn(
+      const TaskListLoaded(
+        [],
+        prioritized: [],
+        lists: twoLists,
+        selectedListId: 'work',
+      ),
+    );
+
+    await tester.pumpWidget(harness());
+
+    expect(find.text('Nenhuma tarefa nesta lista'), findsOneWidget);
+    // O chip continua visível, exibindo a lista filtrada.
+    expect(find.text('Profissional'), findsOneWidget);
   });
 }

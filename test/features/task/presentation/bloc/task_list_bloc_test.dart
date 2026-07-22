@@ -522,4 +522,148 @@ void main() {
       verifyNever(() => completeTask(any()));
     },
   );
+
+  // --- Filtro por lista ---
+
+  final taskA = TaskEntity(
+    id: 'a1',
+    title: 'Tarefa A',
+    listId: 'A',
+    createdAt: DateTime(2026, 7, 20),
+  );
+  final taskB = TaskEntity(
+    id: 'b1',
+    title: 'Tarefa B',
+    listId: 'B',
+    createdAt: DateTime(2026, 7, 20),
+  );
+
+  blocTest<TaskListBloc, TaskListState>(
+    'started aplica o filtro salvo (só as tarefas da lista salva)',
+    build: () {
+      when(() => getFilter(any()))
+          .thenAnswer((_) async => const Right<Failure, String?>('A'));
+      when(() => watchTasks(any()))
+          .thenAnswer((_) => Stream.value(Right([taskA, taskB])));
+      return build();
+    },
+    act: (bloc) => bloc.add(const TaskListStarted()),
+    expect: () => [
+      const TaskListLoading(),
+      isA<TaskListLoaded>()
+          .having((s) => s.roots.map((n) => n.task.id).toList(), 'roots', ['a1'])
+          .having((s) => s.selectedListId, 'selectedListId', 'A'),
+    ],
+  );
+
+  blocTest<TaskListBloc, TaskListState>(
+    'ListFilterChanged persiste a escolha e re-filtra',
+    build: () {
+      when(() => watchTasks(any()))
+          .thenAnswer((_) => Stream.value(Right([taskA, taskB])));
+      return build();
+    },
+    act: (bloc) async {
+      bloc.add(const TaskListStarted());
+      await Future<void>.delayed(Duration.zero);
+      bloc.add(const ListFilterChanged('B'));
+      await Future<void>.delayed(Duration.zero);
+    },
+    verify: (bloc) {
+      final params = verify(() => saveFilter(captureAny())).captured.last
+          as SaveTaskListFilterParams;
+      expect(params.listId, 'B');
+      final state = bloc.state as TaskListLoaded;
+      expect(state.roots.map((n) => n.task.id).toList(), ['b1']);
+      expect(state.selectedListId, 'B');
+    },
+  );
+
+  blocTest<TaskListBloc, TaskListState>(
+    'reseta o filtro para "Todas" quando a lista filtrada é excluída',
+    build: () {
+      when(() => getFilter(any()))
+          .thenAnswer((_) async => const Right<Failure, String?>('B'));
+      when(() => watchTasks(any()))
+          .thenAnswer((_) => Stream.value(Right([taskA, taskB])));
+      // As listas do usuário não contêm mais a lista "B".
+      when(() => watchLists(any())).thenAnswer(
+        (_) => Stream.value(const Right([inbox])),
+      );
+      return build();
+    },
+    act: (bloc) async {
+      bloc.add(const TaskListStarted());
+      await Future<void>.delayed(Duration.zero);
+    },
+    verify: (bloc) {
+      verify(() => saveFilter(const SaveTaskListFilterParams(null))).called(1);
+      expect((bloc.state as TaskListLoaded).selectedListId, isNull);
+    },
+  );
+
+  blocTest<TaskListBloc, TaskListState>(
+    'getFilter falho cai em "Todas as listas" (mostra tudo)',
+    build: () {
+      when(() => getFilter(any())).thenAnswer(
+        (_) async => const Left<Failure, String?>(ServerFailure()),
+      );
+      when(() => watchTasks(any()))
+          .thenAnswer((_) => Stream.value(Right([taskA, taskB])));
+      return build();
+    },
+    act: (bloc) => bloc.add(const TaskListStarted()),
+    expect: () => [
+      const TaskListLoading(),
+      isA<TaskListLoaded>()
+          .having((s) => s.roots.map((n) => n.task.id).toSet(), 'roots',
+              {'a1', 'b1'})
+          .having((s) => s.selectedListId, 'selectedListId', isNull),
+    ],
+  );
+
+  blocTest<TaskListBloc, TaskListState>(
+    'mantém o filtro quando a lista filtrada ainda existe (não reseta)',
+    build: () {
+      when(() => getFilter(any()))
+          .thenAnswer((_) async => const Right<Failure, String?>('B'));
+      when(() => watchTasks(any()))
+          .thenAnswer((_) => Stream.value(Right([taskA, taskB])));
+      when(() => watchLists(any())).thenAnswer(
+        (_) => Stream.value(const Right([
+          inbox,
+          TaskListEntity(id: 'B', name: 'Lista B'),
+        ])),
+      );
+      return build();
+    },
+    act: (bloc) async {
+      bloc.add(const TaskListStarted());
+      await Future<void>.delayed(Duration.zero);
+    },
+    verify: (bloc) {
+      verifyNever(() => saveFilter(const SaveTaskListFilterParams(null)));
+      expect((bloc.state as TaskListLoaded).selectedListId, 'B');
+    },
+  );
+
+  blocTest<TaskListBloc, TaskListState>(
+    'filtro sem tarefas emite Loaded vazio (não Empty) mantendo o filtro',
+    build: () {
+      when(() => getFilter(any()))
+          .thenAnswer((_) async => const Right<Failure, String?>('A'));
+      // Só há tarefa da lista B; o filtro "A" esvazia a listagem.
+      when(() => watchTasks(any()))
+          .thenAnswer((_) => Stream.value(Right([taskB])));
+      return build();
+    },
+    act: (bloc) => bloc.add(const TaskListStarted()),
+    expect: () => [
+      const TaskListLoading(),
+      isA<TaskListLoaded>()
+          .having((s) => s.roots, 'roots', isEmpty)
+          .having((s) => s.prioritized, 'prioritized', isEmpty)
+          .having((s) => s.selectedListId, 'selectedListId', 'A'),
+    ],
+  );
 }
