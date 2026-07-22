@@ -10,6 +10,7 @@ import 'core/di/injection.dart';
 import 'core/logging/app_logger.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
+import 'core/ui/app_error_screen.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'firebase_options.dart';
 
@@ -26,6 +27,10 @@ Future<void> main() async {
     );
     FlutterError.presentError(details);
   };
+
+  // Erro no `build` de um widget: em release o Flutter mostraria uma tela cinza
+  // sem contexto. Troca por uma tela de erro no tema do app com botão recarregar.
+  ErrorWidget.builder = (details) => const AppErrorScreen();
 
   await runZonedGuarded(() async {
     WidgetsFlutterBinding.ensureInitialized();

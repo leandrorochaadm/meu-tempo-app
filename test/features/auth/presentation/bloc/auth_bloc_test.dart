@@ -71,7 +71,7 @@ void main() {
   blocTest<AuthBloc, AuthState>(
     'sign-in com sucesso emite só [Loading] (usuário vem pelo stream)',
     build: () {
-      when(() => signIn(any())).thenAnswer((_) async => const Right(user));
+      when(() => signIn(any())).thenAnswer((_) async => const Right(unit));
       return build();
     },
     act: (bloc) => bloc.add(const AuthGoogleSignInRequested()),

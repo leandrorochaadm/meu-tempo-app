@@ -5,8 +5,9 @@ import '../entities/user_entity.dart';
 
 /// Contrato de autenticação. Implementado na camada `data`.
 abstract class AuthRepository {
-  /// Login via SSO Google (popup no Web).
-  Future<Either<Failure, UserEntity>> signInWithGoogle();
+  /// Inicia o login via SSO Google (redirect no Web). Retorna `Unit` no sucesso:
+  /// o usuário autenticado chega pelo [authState], não por este retorno.
+  Future<Either<Failure, Unit>> signInWithGoogle();
 
   /// Encerra a sessão.
   Future<Either<Failure, Unit>> signOut();
