@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/constants/app_defaults.dart';
 import '../../../../core/router/routes.dart';
 import '../../../../core/theme/theme_context_extensions.dart';
 import '../../../../core/ui/app_empty_state.dart';
@@ -53,12 +54,14 @@ class _TaskListPageState extends State<TaskListPage> {
     final bloc = context.read<TaskListBloc>();
     final parent = _subtaskParent;
     if (parent != null) {
-      bloc.add(SubtaskRequested(
-        parentId: parent.task.id,
-        parentLevel: parent.level,
-        listId: parent.task.listId,
-        title: title,
-      ));
+      bloc.add(
+        SubtaskRequested(
+          parentId: parent.task.id,
+          parentLevel: parent.level,
+          listId: parent.task.listId,
+          title: title,
+        ),
+      );
     } else {
       bloc.add(TaskCreated(title, listId: _selectedListId));
     }
@@ -66,23 +69,24 @@ class _TaskListPageState extends State<TaskListPage> {
 
   void _toggleTimer(TaskNode node, bool start) {
     context.read<TaskListBloc>().add(
-          start
-              ? TimerStartRequested(taskId: node.task.id, isLeaf: node.isLeaf)
-              : const TimerStopRequested(),
-        );
+      start
+          ? TimerStartRequested(taskId: node.task.id, isLeaf: node.isLeaf)
+          : const TimerStopRequested(),
+    );
   }
 
   void _addTime(TaskNode node, int minutes) {
     context.read<TaskListBloc>().add(
-          ManualTimeRequested(
-            taskId: node.task.id,
-            isLeaf: node.isLeaf,
-            minutes: minutes,
-          ),
-        );
+      ManualTimeRequested(
+        taskId: node.task.id,
+        isLeaf: node.isLeaf,
+        minutes: minutes,
+      ),
+    );
   }
 
-  void _toggleDone(TaskNode node, bool done) => _toggleDoneTask(node.task, done);
+  void _toggleDone(TaskNode node, bool done) =>
+      _toggleDoneTask(node.task, done);
 
   void _toggleDoneTask(TaskEntity task, bool done) {
     final bloc = context.read<TaskListBloc>()
@@ -91,14 +95,17 @@ class _TaskListPageState extends State<TaskListPage> {
       // Desfazer (H13): reabre a folha.
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(
-          content: Text('"${task.title}" concluída'),
-          action: SnackBarAction(
-            label: 'Desfazer',
-            onPressed: () =>
-                bloc.add(CompleteToggled(taskId: task.id, done: false)),
+        ..showSnackBar(
+          SnackBar(
+            duration: AppDefaults.undoSnackbarDuration,
+            content: Text('"${task.title}" concluída'),
+            action: SnackBarAction(
+              label: 'Desfazer',
+              onPressed: () =>
+                  bloc.add(CompleteToggled(taskId: task.id, done: false)),
+            ),
           ),
-        ));
+        );
     }
   }
 
@@ -111,9 +118,11 @@ class _TaskListPageState extends State<TaskListPage> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Excluir tarefa?'),
-        content: Text(hasChildren
-            ? 'Isso apaga "${task.title}" e todas as filhas/netas.'
-            : 'Isso apaga "${task.title}".'),
+        content: Text(
+          hasChildren
+              ? 'Isso apaga "${task.title}" e todas as filhas/netas.'
+              : 'Isso apaga "${task.title}".',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
@@ -131,13 +140,16 @@ class _TaskListPageState extends State<TaskListPage> {
       if (!mounted) return;
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(
-          content: Text('"${task.title}" excluída'),
-          action: SnackBarAction(
-            label: 'Desfazer',
-            onPressed: () => bloc.add(const TaskDeletionUndone()),
+        ..showSnackBar(
+          SnackBar(
+            duration: AppDefaults.undoSnackbarDuration,
+            content: Text('"${task.title}" excluída'),
+            action: SnackBarAction(
+              label: 'Desfazer',
+              onPressed: () => bloc.add(const TaskDeletionUndone()),
+            ),
           ),
-        ));
+        );
     }
   }
 
@@ -168,11 +180,13 @@ class _TaskListPageState extends State<TaskListPage> {
     // Candidatos a mãe: exclui a própria e seus descendentes (evita ciclo).
     final excluded = _excludedFor(task.id, state.roots);
     final candidates = _moveCandidates(state.roots, excluded)
-        .map((c) => ParentCandidate(
-              id: c.node.task.id,
-              title: c.node.task.title,
-              path: c.path,
-            ))
+        .map(
+          (c) => ParentCandidate(
+            id: c.node.task.id,
+            title: c.node.task.title,
+            path: c.path,
+          ),
+        )
         .toList();
 
     // Breadcrumb da mãe atual (regra de ancestralidade vive no domínio).
@@ -186,21 +200,25 @@ class _TaskListPageState extends State<TaskListPage> {
       currentParentLabel: currentParentLabel,
     );
 
-    final result =
-        await context.push<EditTaskResult>(Routes.editTask, extra: args);
+    final result = await context.push<EditTaskResult>(
+      Routes.editTask,
+      extra: args,
+    );
     if (result == null) return;
-    bloc.add(EditRequested(
-      taskId: task.id,
-      title: result.title,
-      estimatedMinutes: result.estimatedMinutes,
-      dueDate: result.dueDate,
-      importance: result.importance,
-      listId: result.listId,
-      newParentId: result.newParentId,
-      parentChanged: result.parentChanged,
-      isDone: result.isDone,
-      doneChanged: result.doneChanged,
-    ));
+    bloc.add(
+      EditRequested(
+        taskId: task.id,
+        title: result.title,
+        estimatedMinutes: result.estimatedMinutes,
+        dueDate: result.dueDate,
+        importance: result.importance,
+        listId: result.listId,
+        newParentId: result.newParentId,
+        parentChanged: result.parentChanged,
+        isDone: result.isDone,
+        doneChanged: result.doneChanged,
+      ),
+    );
   }
 
   /// Conjunto a excluir dos candidatos a mãe: a própria tarefa e todos os seus
@@ -265,27 +283,31 @@ class _TaskListPageState extends State<TaskListPage> {
     if (state is! TaskListLoaded) return;
 
     final candidates = _moveCandidates(state.roots, excluded)
-        .map((c) => ParentCandidate(
-              id: c.node.task.id,
-              title: c.node.task.title,
-              path: c.path,
-            ))
+        .map(
+          (c) => ParentCandidate(
+            id: c.node.task.id,
+            title: c.node.task.title,
+            path: c.path,
+          ),
+        )
         .toList();
 
     final chosen = await showTaskParentPicker(context, candidates);
     if (chosen == null) return;
-    bloc.add(MoveRequested(
-      taskId: taskId,
-      newParentId: chosen == kMakeRootSentinel ? null : chosen,
-    ));
+    bloc.add(
+      MoveRequested(
+        taskId: taskId,
+        newParentId: chosen == kMakeRootSentinel ? null : chosen,
+      ),
+    );
   }
 
   void _toggleLeafTimer(PrioritizedLeaf leaf, bool start) {
     context.read<TaskListBloc>().add(
-          start
-              ? TimerStartRequested(taskId: leaf.task.id, isLeaf: true)
-              : const TimerStopRequested(),
-        );
+      start
+          ? TimerStartRequested(taskId: leaf.task.id, isLeaf: true)
+          : const TimerStopRequested(),
+    );
   }
 
   /// Achata a árvore em ordem (pré-ordem) preservando a indentação por nível.
@@ -330,10 +352,10 @@ class _TaskListPageState extends State<TaskListPage> {
   }
 
   String _levelLabel(int level) => switch (level) {
-        0 => 'tarefa mãe',
-        1 => 'tarefa filha',
-        _ => 'tarefa neta',
-      };
+    0 => 'tarefa mãe',
+    1 => 'tarefa filha',
+    _ => 'tarefa neta',
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -351,9 +373,9 @@ class _TaskListPageState extends State<TaskListPage> {
         title: const Text('Meu Tempo'),
         actions: [
           IconButton(
-            icon: Icon(_priorityView
-                ? Icons.account_tree_rounded
-                : Icons.sort_rounded),
+            icon: Icon(
+              _priorityView ? Icons.account_tree_rounded : Icons.sort_rounded,
+            ),
             tooltip: _priorityView ? 'Ver hierarquia' : 'Ver por prioridade',
             onPressed: () => setState(() => _priorityView = !_priorityView),
           ),
@@ -400,10 +422,10 @@ class _TaskListPageState extends State<TaskListPage> {
                   return switch (state) {
                     TaskListLoading() => const AppListSkeleton(),
                     TaskListEmpty() => const AppEmptyState(
-                        icon: Icons.checklist_rounded,
-                        title: 'Sua lista está vazia',
-                        message: 'Toque em + para criar sua primeira tarefa.',
-                      ),
+                      icon: Icons.checklist_rounded,
+                      title: 'Sua lista está vazia',
+                      message: 'Toque em + para criar sua primeira tarefa.',
+                    ),
                     TaskListLoaded(
                       :final roots,
                       :final prioritized,
@@ -422,54 +444,56 @@ class _TaskListPageState extends State<TaskListPage> {
                                 .add(ListFilterChanged(id)),
                           ),
                           Expanded(
-                            child: (roots.isEmpty &&
+                            child:
+                                (roots.isEmpty &&
                                     prioritized.isEmpty &&
                                     selectedListId != null)
                                 ? const AppEmptyState(
                                     icon: Icons.filter_list_off_rounded,
                                     title: 'Nenhuma tarefa nesta lista',
-                                    message: 'Crie uma tarefa acima ou '
+                                    message:
+                                        'Crie uma tarefa acima ou '
                                         'troque de lista no filtro.',
                                   )
                                 : _priorityView
-                                    ? _PriorityList(
-                                        leaves: prioritized,
-                                        activeTaskId: activeTaskId,
-                                        activeStartedAt: activeTimerStartedAt,
-                                        onToggleTimer: _toggleLeafTimer,
-                                        onAddTime: (leaf, minutes) => _addTime(
-                                          TaskNode(task: leaf.task, level: 0),
-                                          minutes,
-                                        ),
-                                        onToggleDone: (leaf, done) =>
-                                            _toggleDoneTask(leaf.task, done),
-                                        onEdit: (leaf) =>
-                                            _editTaskEntity(leaf.task),
-                                        onMove: (leaf) =>
-                                            _moveTaskEntity(leaf.task),
-                                        onDelete: (leaf) =>
-                                            _confirmDeleteTask(leaf.task),
-                                      )
-                                    : _TaskTree(
-                                        nodes: _flatten(roots),
-                                        activeTaskId: activeTaskId,
-                                        activeStartedAt: activeTimerStartedAt,
-                                        onAddSubtask: _startSubtask,
-                                        onToggleTimer: _toggleTimer,
-                                        onAddTime: _addTime,
-                                        onToggleDone: _toggleDone,
-                                        onDelete: _confirmDelete,
-                                        onEdit: _editTask,
-                                        onMove: _moveTask,
-                                      ),
+                                ? _PriorityList(
+                                    leaves: prioritized,
+                                    activeTaskId: activeTaskId,
+                                    activeStartedAt: activeTimerStartedAt,
+                                    onToggleTimer: _toggleLeafTimer,
+                                    onAddTime: (leaf, minutes) => _addTime(
+                                      TaskNode(task: leaf.task, level: 0),
+                                      minutes,
+                                    ),
+                                    onToggleDone: (leaf, done) =>
+                                        _toggleDoneTask(leaf.task, done),
+                                    onEdit: (leaf) =>
+                                        _editTaskEntity(leaf.task),
+                                    onMove: (leaf) =>
+                                        _moveTaskEntity(leaf.task),
+                                    onDelete: (leaf) =>
+                                        _confirmDeleteTask(leaf.task),
+                                  )
+                                : _TaskTree(
+                                    nodes: _flatten(roots),
+                                    activeTaskId: activeTaskId,
+                                    activeStartedAt: activeTimerStartedAt,
+                                    onAddSubtask: _startSubtask,
+                                    onToggleTimer: _toggleTimer,
+                                    onAddTime: _addTime,
+                                    onToggleDone: _toggleDone,
+                                    onDelete: _confirmDelete,
+                                    onEdit: _editTask,
+                                    onMove: _moveTask,
+                                  ),
                           ),
                         ],
                       ),
                     TaskListError() => const AppEmptyState(
-                        icon: Icons.checklist_rounded,
-                        title: 'Sua lista está vazia',
-                        message: 'Toque em + para criar sua primeira tarefa.',
-                      ),
+                      icon: Icons.checklist_rounded,
+                      title: 'Sua lista está vazia',
+                      message: 'Toque em + para criar sua primeira tarefa.',
+                    ),
                   };
                 },
               ),

@@ -7,4 +7,7 @@ class AppDefaults {
 
   /// Tempo estimado padrão da criação rápida (minutos).
   static const int defaultEstimatedMinutes = 30;
+
+  /// Tempo que o snackbar de "Desfazer" (concluir/excluir) fica visível.
+  static const Duration undoSnackbarDuration = Duration(seconds: 10);
 }
