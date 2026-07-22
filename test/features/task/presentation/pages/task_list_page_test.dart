@@ -2,6 +2,7 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:meu_tempo/core/constants/app_defaults.dart';
 import 'package:meu_tempo/core/theme/app_theme.dart';
 import 'package:meu_tempo/features/auth/domain/entities/user_entity.dart';
 import 'package:meu_tempo/features/auth/presentation/bloc/auth_bloc.dart';
@@ -125,6 +126,20 @@ void main() {
     await tester.pump();
 
     expect(find.text('Desfazer'), findsOneWidget);
+  });
+
+  testWidgets('snackbar de desfazer fica visível por 10 segundos',
+      (tester) async {
+    setView(tester);
+    when(() => taskBloc.state).thenReturn(loadedWithLeaf());
+
+    await tester.pumpWidget(harness());
+    await tester.tap(find.byIcon(Icons.circle_outlined));
+    await tester.pump();
+
+    final snackBar = tester.widget<SnackBar>(find.byType(SnackBar));
+    expect(snackBar.duration, AppDefaults.undoSnackbarDuration);
+    expect(snackBar.duration, const Duration(seconds: 10));
   });
 
   testWidgets('iniciar cronômetro na prioridade dispara TimerStartRequested',
