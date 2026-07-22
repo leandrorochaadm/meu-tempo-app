@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/theme_context_extensions.dart';
+import '../../../../core/ui/swipe_action_tile.dart';
 import '../../../../core/ui/task_crud_menu.dart';
 import '../../../../core/ui/task_running_badge.dart';
 import '../../../../core/ui/task_timer_actions.dart';
@@ -44,91 +45,104 @@ class TaskNodeTile extends StatelessWidget {
     final task = node.task;
     final accent = colors.categoryAt(node.level);
 
-    return Container(
-      margin: EdgeInsets.only(left: context.space.xl * node.level),
-      padding: EdgeInsets.symmetric(
-        horizontal: context.space.lg,
-        vertical: context.space.md,
-      ),
-      decoration: BoxDecoration(
-        color: isActive ? colors.timerActiveSurface : colors.surface,
-        borderRadius: context.radius.lgRadius,
-        border: Border(
-          left: BorderSide(
-            color: isActive ? colors.timerActive : accent,
-            width: 3,
+    return SwipeActionTile(
+      itemKey: ValueKey(task.id),
+      // Só folha conclui; mãe/avó não têm conclusão (swipe-direita desabilitado).
+      onSwipeComplete: node.isLeaf
+          ? () => onToggleDone(node, !task.isDone)
+          : null,
+      onSwipeEdit: () => onEdit(node),
+      onLongPressDelete: () => onDelete(node),
+      child: Container(
+        margin: EdgeInsets.only(left: context.space.xl * node.level),
+        padding: EdgeInsets.symmetric(
+          horizontal: context.space.lg,
+          vertical: context.space.md,
+        ),
+        decoration: BoxDecoration(
+          color: isActive ? colors.timerActiveSurface : colors.surface,
+          borderRadius: context.radius.lgRadius,
+          border: Border(
+            left: BorderSide(
+              color: isActive ? colors.timerActive : accent,
+              width: 3,
+            ),
           ),
         ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              if (node.isLeaf)
-                InkWell(
-                  onTap: () => onToggleDone(node, !task.isDone),
-                  customBorder: const CircleBorder(),
-                  child: Icon(
-                    task.isDone
-                        ? Icons.check_circle_rounded
-                        : Icons.circle_outlined,
-                    color: task.isDone ? colors.success : colors.textMuted,
-                    size: 22,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                if (node.isLeaf)
+                  InkWell(
+                    onTap: () => onToggleDone(node, !task.isDone),
+                    customBorder: const CircleBorder(),
+                    child: Icon(
+                      task.isDone
+                          ? Icons.check_circle_rounded
+                          : Icons.circle_outlined,
+                      color: task.isDone ? colors.success : colors.textMuted,
+                      size: 22,
+                    ),
+                  )
+                else
+                  Icon(Icons.folder_rounded, color: accent, size: 22),
+                SizedBox(width: context.space.md),
+                Expanded(
+                  child: Text(
+                    task.title,
+                    style: context.text.titleMedium,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                )
-              else
-                Icon(Icons.folder_rounded, color: accent, size: 22),
-              SizedBox(width: context.space.md),
-              Expanded(
-                child: Text(
-                  task.title,
-                  style: context.text.titleMedium,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                 ),
-              ),
-              if (!node.isMaxLevel)
-                IconButton(
-                  visualDensity: VisualDensity.compact,
-                  icon: Icon(Icons.add_rounded, color: colors.primary),
-                  tooltip: 'Adicionar subtarefa',
-                  onPressed: () => onAddSubtask(node),
+                if (!node.isMaxLevel)
+                  IconButton(
+                    visualDensity: VisualDensity.compact,
+                    icon: Icon(Icons.add_rounded, color: colors.primary),
+                    tooltip: 'Adicionar subtarefa',
+                    onPressed: () => onAddSubtask(node),
+                  ),
+                TaskCrudMenu(
+                  onEdit: () => onEdit(node),
+                  onMove: () => onMove(node),
+                  onDelete: () => onDelete(node),
                 ),
-              TaskCrudMenu(
-                onEdit: () => onEdit(node),
-                onMove: () => onMove(node),
-                onDelete: () => onDelete(node),
-              ),
-            ],
-          ),
-          SizedBox(height: context.space.xs),
-          _MetaRow(node: node, isActive: isActive, activeStartedAt: activeStartedAt),
-          if (node.isLeaf) ...[
-            SizedBox(height: context.space.sm),
-            TaskTimerActions(
-              isActive: isActive,
-              onToggleTimer: () => onToggleTimer(node, !isActive),
-              onAddTime: () => onAddTime(node, TaskTimerActions.quickMinutes),
-            ),
-          ] else ...[
-            SizedBox(height: context.space.sm),
-            ClipRRect(
-              borderRadius: context.radius.pillRadius,
-              child: LinearProgressIndicator(
-                value: node.progress,
-                minHeight: 6,
-                backgroundColor: colors.surfaceHigh,
-                valueColor: AlwaysStoppedAnimation(accent),
-              ),
+              ],
             ),
             SizedBox(height: context.space.xs),
-            Text(
-              '${node.doneLeafCount}/${node.leafCount} concluídas',
-              style: context.text.labelSmall,
+            _MetaRow(
+              node: node,
+              isActive: isActive,
+              activeStartedAt: activeStartedAt,
             ),
+            if (node.isLeaf) ...[
+              SizedBox(height: context.space.sm),
+              TaskTimerActions(
+                isActive: isActive,
+                onToggleTimer: () => onToggleTimer(node, !isActive),
+                onAddTime: () => onAddTime(node, TaskTimerActions.quickMinutes),
+              ),
+            ] else ...[
+              SizedBox(height: context.space.sm),
+              ClipRRect(
+                borderRadius: context.radius.pillRadius,
+                child: LinearProgressIndicator(
+                  value: node.progress,
+                  minHeight: 6,
+                  backgroundColor: colors.surfaceHigh,
+                  valueColor: AlwaysStoppedAnimation(accent),
+                ),
+              ),
+              SizedBox(height: context.space.xs),
+              Text(
+                '${node.doneLeafCount}/${node.leafCount} concluídas',
+                style: context.text.labelSmall,
+              ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }
