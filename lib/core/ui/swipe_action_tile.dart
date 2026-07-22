@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../theme/theme_context_extensions.dart';
 
@@ -29,19 +30,31 @@ class SwipeActionTile extends StatelessWidget {
   final VoidCallback? onSwipeComplete;
   final Widget child;
 
+  /// Fração da largura que o arrasto precisa cruzar para disparar a ação.
+  /// Padrão do Dismissible é 0.4; reduzido para gesto mais leve no celular.
+  static const double _dismissThreshold = 0.25;
+
   @override
   Widget build(BuildContext context) {
     final canComplete = onSwipeComplete != null;
 
     return GestureDetector(
-      onLongPress: onLongPressDelete,
+      onLongPress: () {
+        HapticFeedback.mediumImpact();
+        onLongPressDelete();
+      },
       child: Dismissible(
         key: itemKey,
         direction: canComplete
             ? DismissDirection.horizontal
             : DismissDirection.endToStart,
+        dismissThresholds: const {
+          DismissDirection.startToEnd: _dismissThreshold,
+          DismissDirection.endToStart: _dismissThreshold,
+        },
         // Nunca descarta de fato: dispara a ação e volta ao lugar.
         confirmDismiss: (direction) async {
+          HapticFeedback.lightImpact();
           if (direction == DismissDirection.startToEnd) {
             onSwipeComplete?.call();
           } else {
