@@ -1,5 +1,5 @@
 # Atalhos de desenvolvimento — Meu Tempo
-.PHONY: gen watch test run analyze build
+.PHONY: gen watch test run analyze build deploy ship
 
 # Gera código (json_serializable + injectable)
 gen:
@@ -35,3 +35,14 @@ analyze:
 # Build de produção do PWA — sem cache (sempre online)
 build:
 	flutter build web --release --pwa-strategy=none
+
+# Build + deploy completo no Firebase num único comando.
+# Depende de `build`: o Make roda o build antes e só então publica.
+# Publica a página (Hosting), as regras e os índices do Firestore.
+deploy: build
+	firebase deploy --only hosting,firestore:rules,firestore:indexes
+
+# Pipeline completa "tudo de uma vez": analisa, testa e faz build + deploy.
+# Cada etapa é pré-requisito da próxima e o Make PARA na primeira que falhar —
+# se o analyze acusar issue ou um teste quebrar, o deploy não acontece.
+ship: analyze test deploy
