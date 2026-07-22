@@ -15,6 +15,7 @@ class PrioritizedLeafTile extends StatelessWidget {
     super.key,
     required this.leaf,
     required this.isActive,
+    this.activeStartedAt,
     required this.onToggleTimer,
     required this.onAddTime,
     required this.onToggleDone,
@@ -26,6 +27,10 @@ class PrioritizedLeafTile extends StatelessWidget {
 
   final PrioritizedLeaf leaf;
   final bool isActive;
+
+  /// Início da sessão do cronômetro quando esta folha está ativa (`null` caso
+  /// não esteja) — alimenta o contador ao vivo hh:mm:ss do selo.
+  final DateTime? activeStartedAt;
   final VoidCallback onToggleTimer;
   final VoidCallback onAddTime;
   final VoidCallback onToggleDone;
@@ -101,8 +106,8 @@ class PrioritizedLeafTile extends StatelessWidget {
           SizedBox(height: context.space.xs),
           Row(
             children: [
-              if (isActive) ...[
-                const TaskRunningBadge(),
+              if (isActive && activeStartedAt != null) ...[
+                TaskRunningBadge(startedAt: activeStartedAt!),
                 SizedBox(width: context.space.md),
               ],
               Expanded(

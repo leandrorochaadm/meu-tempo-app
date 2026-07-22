@@ -49,13 +49,15 @@ class TaskCreated extends TaskListEvent {
   List<Object?> get props => [title, listId];
 }
 
-/// Emitido internamente quando o cronômetro ativo muda.
+/// Emitido internamente quando o cronômetro ativo muda. Carrega o id da folha
+/// ativa e o início da sessão (`startedAt`), base do contador ao vivo hh:mm:ss.
 class ActiveTimerUpdated extends TaskListEvent {
-  const ActiveTimerUpdated(this.activeTaskId);
+  const ActiveTimerUpdated(this.activeTaskId, this.startedAt);
   final String? activeTaskId;
+  final DateTime? startedAt;
 
   @override
-  List<Object?> get props => [activeTaskId];
+  List<Object?> get props => [activeTaskId, startedAt];
 }
 
 /// Inicia o cronômetro numa folha (pausa o anterior automaticamente).

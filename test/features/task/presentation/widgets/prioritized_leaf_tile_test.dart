@@ -46,13 +46,18 @@ void main() {
     deleteTapped = false;
   });
 
-  Widget harness({required PrioritizedLeaf leaf, required bool isActive}) =>
+  Widget harness({
+    required PrioritizedLeaf leaf,
+    required bool isActive,
+    DateTime? activeStartedAt,
+  }) =>
       MaterialApp(
         theme: AppTheme.dark,
         home: Scaffold(
           body: PrioritizedLeafTile(
             leaf: leaf,
             isActive: isActive,
+            activeStartedAt: activeStartedAt,
             today: today,
             onToggleTimer: () => timerTapped = true,
             onAddTime: () => addTimeTapped = true,
@@ -80,7 +85,11 @@ void main() {
 
   testWidgets('shows running badge when active', (tester) async {
     setView(tester);
-    await tester.pumpWidget(harness(leaf: leaf(), isActive: true));
+    await tester.pumpWidget(harness(
+      leaf: leaf(),
+      isActive: true,
+      activeStartedAt: DateTime.now(),
+    ));
 
     expect(find.byType(TaskRunningBadge), findsOneWidget);
   });

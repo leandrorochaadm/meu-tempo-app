@@ -408,6 +408,7 @@ class _TaskListPageState extends State<TaskListPage> {
                       :final roots,
                       :final prioritized,
                       :final activeTaskId,
+                      :final activeTimerStartedAt,
                       :final lists,
                       :final selectedListId,
                     ) =>
@@ -434,6 +435,7 @@ class _TaskListPageState extends State<TaskListPage> {
                                     ? _PriorityList(
                                         leaves: prioritized,
                                         activeTaskId: activeTaskId,
+                                        activeStartedAt: activeTimerStartedAt,
                                         onToggleTimer: _toggleLeafTimer,
                                         onAddTime: (leaf, minutes) => _addTime(
                                           TaskNode(task: leaf.task, level: 0),
@@ -451,6 +453,7 @@ class _TaskListPageState extends State<TaskListPage> {
                                     : _TaskTree(
                                         nodes: _flatten(roots),
                                         activeTaskId: activeTaskId,
+                                        activeStartedAt: activeTimerStartedAt,
                                         onAddSubtask: _startSubtask,
                                         onToggleTimer: _toggleTimer,
                                         onAddTime: _addTime,
@@ -489,6 +492,7 @@ class _TaskTree extends StatelessWidget {
   const _TaskTree({
     required this.nodes,
     required this.activeTaskId,
+    required this.activeStartedAt,
     required this.onAddSubtask,
     required this.onToggleTimer,
     required this.onAddTime,
@@ -500,6 +504,7 @@ class _TaskTree extends StatelessWidget {
 
   final List<TaskNode> nodes;
   final String? activeTaskId;
+  final DateTime? activeStartedAt;
   final void Function(TaskNode parent) onAddSubtask;
   final void Function(TaskNode node, bool start) onToggleTimer;
   final void Function(TaskNode node, int minutes) onAddTime;
@@ -514,17 +519,21 @@ class _TaskTree extends StatelessWidget {
       padding: EdgeInsets.all(context.space.lg),
       itemCount: nodes.length,
       separatorBuilder: (_, _) => SizedBox(height: context.space.sm),
-      itemBuilder: (context, i) => TaskNodeTile(
-        node: nodes[i],
-        isActive: nodes[i].task.id == activeTaskId,
-        onAddSubtask: onAddSubtask,
-        onToggleTimer: onToggleTimer,
-        onAddTime: onAddTime,
-        onToggleDone: onToggleDone,
-        onDelete: onDelete,
-        onEdit: onEdit,
-        onMove: onMove,
-      ),
+      itemBuilder: (context, i) {
+        final isActive = nodes[i].task.id == activeTaskId;
+        return TaskNodeTile(
+          node: nodes[i],
+          isActive: isActive,
+          activeStartedAt: isActive ? activeStartedAt : null,
+          onAddSubtask: onAddSubtask,
+          onToggleTimer: onToggleTimer,
+          onAddTime: onAddTime,
+          onToggleDone: onToggleDone,
+          onDelete: onDelete,
+          onEdit: onEdit,
+          onMove: onMove,
+        );
+      },
     );
   }
 }
@@ -533,6 +542,7 @@ class _PriorityList extends StatelessWidget {
   const _PriorityList({
     required this.leaves,
     required this.activeTaskId,
+    required this.activeStartedAt,
     required this.onToggleTimer,
     required this.onAddTime,
     required this.onToggleDone,
@@ -543,6 +553,7 @@ class _PriorityList extends StatelessWidget {
 
   final List<PrioritizedLeaf> leaves;
   final String? activeTaskId;
+  final DateTime? activeStartedAt;
   final void Function(PrioritizedLeaf leaf, bool start) onToggleTimer;
   final void Function(PrioritizedLeaf leaf, int minutes) onAddTime;
   final void Function(PrioritizedLeaf leaf, bool done) onToggleDone;
@@ -563,6 +574,7 @@ class _PriorityList extends StatelessWidget {
         return PrioritizedLeafTile(
           leaf: leaf,
           isActive: isActive,
+          activeStartedAt: isActive ? activeStartedAt : null,
           today: today,
           onToggleTimer: () => onToggleTimer(leaf, !isActive),
           onAddTime: () => onAddTime(leaf, TaskTimerActions.quickMinutes),

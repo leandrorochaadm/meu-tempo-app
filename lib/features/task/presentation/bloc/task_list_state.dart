@@ -16,6 +16,7 @@ class TaskListLoaded extends TaskListState {
     this.roots, {
     this.prioritized = const [],
     this.activeTaskId,
+    this.activeTimerStartedAt,
     this.lists = const [],
     this.selectedListId,
   });
@@ -29,6 +30,10 @@ class TaskListLoaded extends TaskListState {
   /// Id da folha com cronômetro rodando (`null` = nenhum).
   final String? activeTaskId;
 
+  /// Início da sessão do cronômetro ativo (`null` = nenhum) — base do contador
+  /// ao vivo hh:mm:ss no selo da tarefa em execução.
+  final DateTime? activeTimerStartedAt;
+
   /// Listas do usuário (para escolher onde criar a tarefa e filtrar).
   final List<TaskListEntity> lists;
 
@@ -37,7 +42,7 @@ class TaskListLoaded extends TaskListState {
 
   @override
   List<Object?> get props =>
-      [roots, prioritized, activeTaskId, lists, selectedListId];
+      [roots, prioritized, activeTaskId, activeTimerStartedAt, lists, selectedListId];
 }
 
 class TaskListEmpty extends TaskListState {
