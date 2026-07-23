@@ -6,7 +6,6 @@ import 'package:fpdart/fpdart.dart';
 import 'package:injectable/injectable.dart';
 
 import '../../../../core/error/failures.dart';
-import '../../../../core/usecase/usecase.dart';
 import '../../../task/domain/entities/task_entity.dart';
 import '../../../task/domain/usecases/delete_task_use_case.dart';
 import '../../../task/domain/usecases/edit_task_use_case.dart';
@@ -58,7 +57,7 @@ class MigrationBloc extends Bloc<MigrationEvent, MigrationState> {
     emit(const MigrationLoading());
     _today = DateTime.now();
     await _sub?.cancel();
-    _sub = _watchTasks(const NoParams())
+    _sub = _watchTasks(const WatchTasksParams())
         .listen((r) => add(MigrationTasksUpdated(r)));
   }
 

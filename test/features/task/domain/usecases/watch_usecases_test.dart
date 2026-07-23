@@ -23,10 +23,10 @@ void main() {
       listId: 'inbox',
       createdAt: DateTime(2026, 7, 20),
     );
-    when(() => repo.watchTasks())
+    when(() => repo.watchTasks(includeDone: any(named: 'includeDone')))
         .thenAnswer((_) => Stream.value(Right([task])));
 
-    final stream = WatchTasksUseCase(repo)(const NoParams());
+    final stream = WatchTasksUseCase(repo)(const WatchTasksParams());
 
     await expectLater(
       stream,
@@ -34,6 +34,22 @@ void main() {
         (e) => e.getRight().toNullable()?.single == task,
       )),
     );
+  });
+
+  test('WatchTasksUseCase repassa includeDone do Params ao repositório',
+      () async {
+    final repo = _MockTaskRepository();
+    when(() => repo.watchTasks(includeDone: any(named: 'includeDone')))
+        .thenAnswer((_) => Stream.value(const Right(<TaskEntity>[])));
+
+    // Padrão inclui as concluídas.
+    await WatchTasksUseCase(repo)(const WatchTasksParams()).first;
+    verify(() => repo.watchTasks(includeDone: true)).called(1);
+
+    // Ocultando: passa includeDone: false.
+    await WatchTasksUseCase(repo)(const WatchTasksParams(includeDone: false))
+        .first;
+    verify(() => repo.watchTasks(includeDone: false)).called(1);
   });
 
   test('WatchListsUseCase repassa o stream do repositório', () async {

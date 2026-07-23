@@ -122,6 +122,7 @@ void main() {
 
   setUpAll(() {
     registerFallbackValue(_FakeNoParams());
+    registerFallbackValue(const WatchTasksParams());
     registerFallbackValue(_FakeCreateParams());
     registerFallbackValue(_FakeSubtaskParams());
     registerFallbackValue(_FakeStartParams());
@@ -259,7 +260,8 @@ void main() {
   );
 
   blocTest<TaskListBloc, TaskListState>(
-    'started sem tarefas emite [Loading, Empty]',
+    'started sem tarefas E concluídas ocultas (padrão) emite [Loading, Loaded '
+    'vazio] — mantém o chip na tela (evita beco sem saída)',
     build: () {
       when(() => watchTasks(any())).thenAnswer(
         (_) => Stream.value(const Right(<TaskEntity>[])),
@@ -267,7 +269,34 @@ void main() {
       return build();
     },
     act: (bloc) => bloc.add(const TaskListStarted()),
-    expect: () => [const TaskListLoading(), const TaskListEmpty()],
+    expect: () => [
+      const TaskListLoading(),
+      isA<TaskListLoaded>()
+          .having((s) => s.roots, 'roots', isEmpty)
+          .having((s) => s.prioritized, 'prioritized', isEmpty)
+          .having((s) => s.hideDone, 'hideDone', isTrue),
+    ],
+  );
+
+  blocTest<TaskListBloc, TaskListState>(
+    'started sem tarefas E mostrando concluídas (sem filtro) emite '
+    '[Loading, Loaded vazio, Empty]',
+    build: () {
+      when(() => watchTasks(any())).thenAnswer(
+        (_) => Stream.value(const Right(<TaskEntity>[])),
+      );
+      return build();
+    },
+    act: (bloc) async {
+      bloc.add(const TaskListStarted());
+      await Future<void>.delayed(Duration.zero);
+      bloc.add(const HideDoneToggled(false)); // sem filtro → empty global
+    },
+    expect: () => [
+      const TaskListLoading(),
+      isA<TaskListLoaded>(),
+      const TaskListEmpty(),
+    ],
   );
 
   blocTest<TaskListBloc, TaskListState>(
@@ -371,7 +400,7 @@ void main() {
     },
     expect: () => [
       const TaskListLoading(),
-      const TaskListEmpty(),
+      isA<TaskListLoaded>(),
       isA<TaskListError>(),
     ],
   );
@@ -624,6 +653,63 @@ void main() {
       final state = bloc.state as TaskListLoaded;
       expect(state.roots.map((n) => n.task.id).toList(), ['b1']);
       expect(state.selectedListId, 'B');
+    },
+  );
+
+  blocTest<TaskListBloc, TaskListState>(
+    'started assina o fluxo com includeDone: false (oculta concluídas por padrão)',
+    build: () {
+      when(() => watchTasks(any()))
+          .thenAnswer((_) => Stream.value(Right([taskA])));
+      return build();
+    },
+    act: (bloc) => bloc.add(const TaskListStarted()),
+    verify: (_) {
+      final params =
+          verify(() => watchTasks(captureAny())).captured.last as WatchTasksParams;
+      expect(params.includeDone, isFalse);
+    },
+  );
+
+  blocTest<TaskListBloc, TaskListState>(
+    'HideDoneToggled(false) re-assina com includeDone: true e reflete no State',
+    build: () {
+      when(() => watchTasks(any()))
+          .thenAnswer((_) => Stream.value(Right([taskA])));
+      return build();
+    },
+    act: (bloc) async {
+      bloc.add(const TaskListStarted());
+      await Future<void>.delayed(Duration.zero);
+      bloc.add(const HideDoneToggled(false));
+      await Future<void>.delayed(Duration.zero);
+    },
+    verify: (bloc) {
+      final params = verify(() => watchTasks(captureAny())).captured
+          .map((p) => (p as WatchTasksParams).includeDone)
+          .toList();
+      // Primeira assinatura oculta (false); após o toggle, inclui (true).
+      expect(params, containsAllInOrder([false, true]));
+      expect((bloc.state as TaskListLoaded).hideDone, isFalse);
+    },
+  );
+
+  blocTest<TaskListBloc, TaskListState>(
+    'HideDoneToggled com o mesmo valor é no-op (não re-assina)',
+    build: () {
+      when(() => watchTasks(any()))
+          .thenAnswer((_) => Stream.value(Right([taskA])));
+      return build();
+    },
+    act: (bloc) async {
+      bloc.add(const TaskListStarted());
+      await Future<void>.delayed(Duration.zero);
+      bloc.add(const HideDoneToggled(true)); // já está ocultando (padrão)
+      await Future<void>.delayed(Duration.zero);
+    },
+    verify: (_) {
+      // Só a assinatura inicial — o toggle redundante não re-assina.
+      verify(() => watchTasks(any())).called(1);
     },
   );
 

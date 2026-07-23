@@ -102,7 +102,8 @@ class AgendaBloc extends Bloc<AgendaEvent, AgendaState> {
 
     await _tasksSub?.cancel();
     _tasksSub =
-        _watchTasks(const NoParams()).listen((r) => add(AgendaTasksUpdated(r)));
+        _watchTasks(const WatchTasksParams())
+            .listen((r) => add(AgendaTasksUpdated(r)));
 
     await _timerSub?.cancel();
     _timerSub = _watchActiveTimer(const NoParams())

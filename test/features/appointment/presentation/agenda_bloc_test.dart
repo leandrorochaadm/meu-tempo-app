@@ -69,6 +69,7 @@ void main() {
   setUpAll(() {
     registerFallbackValue(_FakeDayParams());
     registerFallbackValue(_FakeNoParams());
+    registerFallbackValue(const WatchTasksParams());
     registerFallbackValue(_FakeCreateParams());
     registerFallbackValue(_FakeDeleteParams());
     registerFallbackValue(_FakeStartParams());

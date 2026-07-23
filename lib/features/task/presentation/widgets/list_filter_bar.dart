@@ -48,22 +48,12 @@ class ListFilterBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Fricção: filtrar só faz sentido com 2+ listas (a "Entrada" sempre existe).
     if (lists.length < 2) return const SizedBox.shrink();
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Padding(
-        padding: EdgeInsets.fromLTRB(
-          context.space.lg,
-          context.space.md,
-          context.space.lg,
-          0,
-        ),
-        child: ActionChip(
-          avatar: Icon(Icons.filter_list_rounded, color: context.colors.primary),
-          label: Text(_labelFor(selectedListId)),
-          onPressed: () => _openPicker(context),
-        ),
-      ),
+    return ActionChip(
+      avatar: Icon(Icons.filter_list_rounded, color: context.colors.primary),
+      label: Text(_labelFor(selectedListId)),
+      onPressed: () => _openPicker(context),
     );
   }
 }

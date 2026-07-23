@@ -2,6 +2,7 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:meu_tempo/core/constants/app_defaults.dart';
 import 'package:meu_tempo/core/theme/app_theme.dart';
 import 'package:meu_tempo/features/auth/domain/entities/user_entity.dart';
@@ -21,6 +22,12 @@ class _MockAuthBloc extends MockBloc<AuthEvent, AuthState> implements AuthBloc {
 void main() {
   late _MockTaskListBloc taskBloc;
   late _MockAuthBloc authBloc;
+
+  setUpAll(() async {
+    // O PrioritizedLeafTile formata datas com DateFormat(..., 'pt_BR'); sem isto
+    // a intl lança LocaleDataException ao renderizar a folha.
+    await initializeDateFormatting('pt_BR');
+  });
 
   setUp(() {
     taskBloc = _MockTaskListBloc();
@@ -247,5 +254,71 @@ void main() {
     expect(find.text('Nenhuma tarefa nesta lista'), findsOneWidget);
     // O chip continua visível, exibindo a lista filtrada.
     expect(find.text('Profissional'), findsOneWidget);
+  });
+
+  // --- Filtro de concluídas (HideDoneChip) ---
+
+  testWidgets('mostra o chip de concluídas sempre (rótulo de ação)',
+      (tester) async {
+    setView(tester);
+    when(() => taskBloc.state).thenReturn(loadedWithLeaf());
+
+    await tester.pumpWidget(harness());
+
+    // hideDone padrão = true → o chip oferece a ação de mostrar.
+    expect(find.text('Mostrar concluídas'), findsOneWidget);
+  });
+
+  testWidgets('chip aparece mesmo sem filtro de lista (<2 listas)',
+      (tester) async {
+    setView(tester);
+    when(() => taskBloc.state).thenReturn(loadedWithLeaf());
+
+    await tester.pumpWidget(harness());
+
+    // Sem o filtro de lista, mas o de concluídas continua disponível.
+    expect(find.text('Todas as listas'), findsNothing);
+    expect(find.text('Mostrar concluídas'), findsOneWidget);
+  });
+
+  testWidgets('tocar no chip dispara HideDoneToggled(false) quando oculto',
+      (tester) async {
+    setView(tester);
+    // hideDone padrão = true (oculto) → tocar pede para mostrar (false).
+    when(() => taskBloc.state).thenReturn(loadedWithLeaf());
+
+    await tester.pumpWidget(harness());
+    await tester.tap(find.text('Mostrar concluídas'));
+    await tester.pump();
+
+    verify(() => taskBloc.add(const HideDoneToggled(false))).called(1);
+  });
+
+  testWidgets('tocar no chip dispara HideDoneToggled(true) quando exibindo',
+      (tester) async {
+    setView(tester);
+    when(() => taskBloc.state).thenReturn(
+      TaskListLoaded(const [], prioritized: [leaf], hideDone: false),
+    );
+
+    await tester.pumpWidget(harness());
+    await tester.tap(find.text('Ocultar concluídas'));
+    await tester.pump();
+
+    verify(() => taskBloc.add(const HideDoneToggled(true))).called(1);
+  });
+
+  testWidgets('vazio com concluídas ocultas mostra "Nada pendente"',
+      (tester) async {
+    setView(tester);
+    when(() => taskBloc.state).thenReturn(
+      const TaskListLoaded([], prioritized: []),
+    );
+
+    await tester.pumpWidget(harness());
+
+    expect(find.text('Nada pendente por aqui'), findsOneWidget);
+    // O chip permanece acessível para reexibir as concluídas.
+    expect(find.text('Mostrar concluídas'), findsOneWidget);
   });
 }

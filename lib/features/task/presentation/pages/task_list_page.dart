@@ -15,6 +15,7 @@ import '../../domain/entities/task_entity.dart';
 import '../../domain/entities/task_node.dart';
 import '../../domain/services/ancestry_label_builder.dart';
 import '../bloc/task_list_bloc.dart';
+import '../widgets/hide_done_chip.dart';
 import '../widgets/list_filter_bar.dart';
 import '../widgets/prioritized_leaf_tile.dart';
 import '../widgets/quick_add_task_widget.dart';
@@ -418,28 +419,60 @@ class _TaskListPageState extends State<TaskListPage> {
                       :final activeTimerStartedAt,
                       :final lists,
                       :final selectedListId,
+                      :final hideDone,
                     ) =>
                       Column(
                         children: [
-                          ListFilterBar(
-                            lists: lists,
-                            selectedListId: selectedListId,
-                            onSelected: (id) => context
-                                .read<TaskListBloc>()
-                                .add(ListFilterChanged(id)),
+                          Padding(
+                            padding: EdgeInsets.fromLTRB(
+                              context.space.lg,
+                              context.space.md,
+                              context.space.lg,
+                              0,
+                            ),
+                            child: Wrap(
+                              spacing: context.space.sm,
+                              runSpacing: context.space.sm,
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              children: [
+                                ListFilterBar(
+                                  lists: lists,
+                                  selectedListId: selectedListId,
+                                  onSelected: (id) => context
+                                      .read<TaskListBloc>()
+                                      .add(ListFilterChanged(id)),
+                                ),
+                                HideDoneChip(
+                                  hideDone: hideDone,
+                                  onChanged: (hide) => context
+                                      .read<TaskListBloc>()
+                                      .add(HideDoneToggled(hide)),
+                                ),
+                              ],
+                            ),
                           ),
                           Expanded(
                             child:
-                                (roots.isEmpty &&
-                                    prioritized.isEmpty &&
-                                    selectedListId != null)
-                                ? const AppEmptyState(
-                                    icon: Icons.filter_list_off_rounded,
-                                    title: 'Nenhuma tarefa nesta lista',
-                                    message:
-                                        'Crie uma tarefa acima ou '
-                                        'troque de lista no filtro.',
-                                  )
+                                (roots.isEmpty && prioritized.isEmpty)
+                                // Lista filtrada tem prioridade na mensagem; se não
+                                // há filtro de lista mas as concluídas estão ocultas,
+                                // explica o filtro de concluídas.
+                                ? (selectedListId != null
+                                    ? const AppEmptyState(
+                                        icon: Icons.filter_list_off_rounded,
+                                        title: 'Nenhuma tarefa nesta lista',
+                                        message:
+                                            'Crie uma tarefa acima ou '
+                                            'troque de lista no filtro.',
+                                      )
+                                    : const AppEmptyState(
+                                        icon: Icons.done_all_rounded,
+                                        title: 'Nada pendente por aqui',
+                                        message:
+                                            'As tarefas concluídas estão '
+                                            'ocultas. Toque em "Mostrar '
+                                            'concluídas" para vê-las.',
+                                      ))
                                 : _priorityView
                                 ? _PriorityList(
                                     leaves: prioritized,

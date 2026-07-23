@@ -39,6 +39,16 @@ class ListFilterChanged extends TaskListEvent {
   List<Object?> get props => [listId];
 }
 
+/// Alterna ocultar/mostrar as tarefas concluídas (troca a fonte de dados: a
+/// query passa a incluir ou não as concluídas). `hide == true` = ocultar.
+class HideDoneToggled extends TaskListEvent {
+  const HideDoneToggled(this.hide);
+  final bool hide;
+
+  @override
+  List<Object?> get props => [hide];
+}
+
 /// Criação rápida: título + lista escolhida (`null` = "Entrada").
 class TaskCreated extends TaskListEvent {
   const TaskCreated(this.title, {this.listId});

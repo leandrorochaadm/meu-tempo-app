@@ -51,6 +51,7 @@ void main() {
 
   setUpAll(() {
     registerFallbackValue(_FakeNoParams());
+    registerFallbackValue(const WatchTasksParams());
     registerFallbackValue(_FakeMigrateParams());
     registerFallbackValue(_FakeDeleteParams());
     registerFallbackValue(_FakeEditParams());

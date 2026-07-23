@@ -16,9 +16,13 @@ class TaskRepositoryImpl implements TaskRepository {
   final TaskRemoteDataSource _dataSource;
 
   @override
-  Stream<Either<Failure, List<TaskEntity>>> watchTasks() async* {
+  Stream<Either<Failure, List<TaskEntity>>> watchTasks({
+    required bool includeDone,
+  }) async* {
     try {
-      yield* _dataSource.watchTasks().map<Either<Failure, List<TaskEntity>>>(
+      yield* _dataSource
+          .watchTasks(includeDone: includeDone)
+          .map<Either<Failure, List<TaskEntity>>>(
             (models) => Right(models.map((m) => m.toEntity()).toList()),
           );
     } on AppException catch (e, s) {

@@ -19,6 +19,7 @@ class TaskListLoaded extends TaskListState {
     this.activeTimerStartedAt,
     this.lists = const [],
     this.selectedListId,
+    this.hideDone = true,
   });
 
   /// Árvore de tarefas (raízes = mães), com agregação pronta nos [TaskNode].
@@ -40,9 +41,19 @@ class TaskListLoaded extends TaskListState {
   /// Lista escolhida como filtro da tela (`null` = "Todas as listas").
   final String? selectedListId;
 
+  /// Se as tarefas concluídas estão ocultas (padrão `true`). Reflete o chip.
+  final bool hideDone;
+
   @override
-  List<Object?> get props =>
-      [roots, prioritized, activeTaskId, activeTimerStartedAt, lists, selectedListId];
+  List<Object?> get props => [
+        roots,
+        prioritized,
+        activeTaskId,
+        activeTimerStartedAt,
+        lists,
+        selectedListId,
+        hideDone,
+      ];
 }
 
 class TaskListEmpty extends TaskListState {

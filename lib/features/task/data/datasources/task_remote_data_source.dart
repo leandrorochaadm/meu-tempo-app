@@ -8,7 +8,10 @@ import '../models/task_model.dart';
 import '../task_fields.dart';
 
 abstract class TaskRemoteDataSource {
-  Stream<List<TaskModel>> watchTasks();
+  /// Fluxo das tarefas. `includeDone == false` filtra as concluídas já na query
+  /// (menos leitura/banda no caso comum) — usa o índice composto
+  /// `isDone + createdAt` (ver `firestore.indexes.json`).
+  Stream<List<TaskModel>> watchTasks({required bool includeDone});
   Future<TaskModel> create(TaskModel task);
   Future<void> setHasChildren(String taskId, bool value);
   Future<void> addSpentMinutes(String taskId, int delta);
@@ -35,9 +38,13 @@ class TaskRemoteDataSourceImpl implements TaskRemoteDataSource {
       _firestore.collection(FirestorePaths.tasks(_uid));
 
   @override
-  Stream<List<TaskModel>> watchTasks() {
+  Stream<List<TaskModel>> watchTasks({required bool includeDone}) {
     try {
-      return _collection
+      Query<Map<String, dynamic>> query = _collection;
+      if (!includeDone) {
+        query = query.where(TaskFields.isDone, isEqualTo: false);
+      }
+      return query
           .orderBy(TaskFields.createdAt, descending: true)
           .snapshots()
           .map(

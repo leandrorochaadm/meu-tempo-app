@@ -69,6 +69,7 @@ class TaskListBloc extends Bloc<TaskListEvent, TaskListState> {
     on<TaskListUpdated>(_onUpdated);
     on<TaskListListsUpdated>(_onListsUpdated);
     on<ListFilterChanged>(_onListFilterChanged);
+    on<HideDoneToggled>(_onHideDoneToggled);
     on<ActiveTimerUpdated>(_onTimerUpdated);
     on<TaskCreated>(_onCreated);
     on<SubtaskRequested>(_onSubtaskRequested);
@@ -116,6 +117,10 @@ class TaskListBloc extends Bloc<TaskListEvent, TaskListState> {
   /// Filtro de lista ativo na tela (`null` = "Todas as listas"). Estado de UI.
   String? _selectedListId;
 
+  /// Se as concluídas estão ocultas (padrão `true`). Estado de UI só da sessão —
+  /// não é persistido. Controla `includeDone` da query (filtro no backend).
+  bool _hideDone = true;
+
   /// Última subárvore excluída, guardada para o "Desfazer" (H13).
   List<TaskEntity> _lastDeleted = const [];
 
@@ -142,9 +147,7 @@ class TaskListBloc extends Bloc<TaskListEvent, TaskListState> {
       inboxListId: _inboxListId!,
     ));
 
-    await _tasksSub?.cancel();
-    _tasksSub = _watchTasks(const NoParams())
-        .listen((result) => add(TaskListUpdated(result)));
+    await _subscribeTasks();
 
     await _timerSub?.cancel();
     _timerSub = _watchActiveTimer(const NoParams()).listen((result) {
@@ -170,6 +173,24 @@ class TaskListBloc extends Bloc<TaskListEvent, TaskListState> {
       }
       _emitLoaded(emit);
     }
+  }
+
+  /// (Re)assina o fluxo de tarefas respeitando o filtro de concluídas. Ao ocultar
+  /// (`_hideDone`), a query já vem sem as concluídas — menos leitura no backend.
+  Future<void> _subscribeTasks() async {
+    await _tasksSub?.cancel();
+    _tasksSub = _watchTasks(WatchTasksParams(includeDone: !_hideDone))
+        .listen((result) => add(TaskListUpdated(result)));
+  }
+
+  Future<void> _onHideDoneToggled(
+    HideDoneToggled event,
+    Emitter<TaskListState> emit,
+  ) async {
+    if (_hideDone == event.hide) return;
+    _hideDone = event.hide;
+    // Troca a fonte de dados; o novo snapshot dispara TaskListUpdated → estado.
+    await _subscribeTasks();
   }
 
   Future<void> _onListFilterChanged(
@@ -198,11 +219,16 @@ class TaskListBloc extends Bloc<TaskListEvent, TaskListState> {
   }
 
   void _emitLoaded(Emitter<TaskListState> emit) {
-    if (_latestTasks.isEmpty) {
-      emit(const TaskListEmpty()); // Sem nenhuma tarefa: empty global (1º acesso).
+    // Empty global (1º acesso) só quando não há tarefa E nenhum filtro ativo —
+    // com filtro (lista ou concluídas ocultas) emitimos Loaded para manter os
+    // chips na tela e mostrar um empty-state contextual.
+    final noFilters = _selectedListId == null && !_hideDone;
+    if (_latestTasks.isEmpty && noFilters) {
+      emit(const TaskListEmpty());
       return;
     }
-    // Filtro por lista resolvido no UseCase — a UI recebe pronto.
+    // Filtro por lista resolvido no UseCase — a UI recebe pronto. As concluídas
+    // já vêm filtradas do backend (`includeDone`), não há filtro aqui.
     final filtered = _filterTasksByList(_latestTasks, _selectedListId);
     emit(TaskListLoaded(
       _buildTree(filtered),
@@ -211,6 +237,7 @@ class TaskListBloc extends Bloc<TaskListEvent, TaskListState> {
       activeTimerStartedAt: _activeStartedAt,
       lists: _lists,
       selectedListId: _selectedListId,
+      hideDone: _hideDone,
     ));
   }
 

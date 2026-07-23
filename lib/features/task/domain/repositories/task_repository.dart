@@ -5,8 +5,11 @@ import '../entities/task_entity.dart';
 
 /// Contrato de I/O das tarefas (só operações primitivas).
 abstract class TaskRepository {
-  /// Fluxo das tarefas do usuário logado.
-  Stream<Either<Failure, List<TaskEntity>>> watchTasks();
+  /// Fluxo das tarefas do usuário logado. `includeDone == false` traz apenas as
+  /// pendentes (filtro aplicado no backend), reduzindo leitura no caso comum.
+  Stream<Either<Failure, List<TaskEntity>>> watchTasks({
+    required bool includeDone,
+  });
 
   /// Cria uma tarefa (o `id` é gerado pelo Firestore) e devolve com o `id`.
   Future<Either<Failure, TaskEntity>> create(TaskEntity task);
