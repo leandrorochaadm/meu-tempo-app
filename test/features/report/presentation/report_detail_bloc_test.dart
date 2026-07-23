@@ -44,6 +44,7 @@ void main() {
 
   setUpAll(() {
     registerFallbackValue(_FakeNoParams());
+    registerFallbackValue(const WatchTasksParams());
     registerFallbackValue(_FakeEntriesParams());
     registerFallbackValue(_FakeTasksParams());
   });

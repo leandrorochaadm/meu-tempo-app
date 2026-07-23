@@ -57,6 +57,16 @@ class TaskReport extends Equatable {
   /// Soma das estimativas das folhas (tarefas) com tempo no período.
   final int totalEstimatedMinutes;
 
+  /// Fração (0..1) que o tempo gasto de [node] representa no total do período.
+  /// `0` quando o total é zero (sem base de comparação).
+  double shareRatio(ReportTreeNode node) =>
+      totalSpentMinutes == 0 ? 0 : node.spentMinutes / totalSpentMinutes;
+
+  /// Percentual (0..100) que o tempo gasto de [node] representa no total gasto do
+  /// período. `null` quando o total é zero (sem base de comparação).
+  double? sharePercent(ReportTreeNode node) =>
+      totalSpentMinutes == 0 ? null : shareRatio(node) * 100;
+
   bool get isEmpty => nodes.isEmpty;
 
   @override

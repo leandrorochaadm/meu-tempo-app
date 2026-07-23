@@ -34,10 +34,11 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
   }
 
-  ReportDetailLoaded loaded(List<ReportTreeNode> nodes) => ReportDetailLoaded(
+  ReportDetailLoaded loaded(List<ReportTreeNode> nodes, {int total = 0}) =>
+      ReportDetailLoaded(
         report: TaskReport(
           nodes: nodes,
-          totalSpentMinutes: 0,
+          totalSpentMinutes: total,
           totalEstimatedMinutes: 0,
         ),
         listName: 'Profissional',
@@ -115,6 +116,18 @@ void main() {
     expect(find.text('Mãe/Avó'), findsNothing);
     // Filha só aparece após expandir.
     expect(find.text('Montar proposta'), findsNothing);
+  });
+
+  testWidgets('exibe o percentual de participação de cada nó no total',
+      (tester) async {
+    setView(tester);
+    // mãe 120 + compromisso 60 = 180 gasto → 66,7% e 33,3%.
+    stub(loaded([motherNode, apptNode], total: 180));
+
+    await tester.pumpWidget(harness());
+
+    expect(find.text('66,7%'), findsOneWidget);
+    expect(find.text('33,3%'), findsOneWidget);
   });
 
   testWidgets('tocar na raiz expande as filhas inline', (tester) async {

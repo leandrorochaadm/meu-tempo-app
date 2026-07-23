@@ -67,6 +67,8 @@ void main() {
     expect(find.text('Profissional'), findsOneWidget);
     // now=2026-07-20 (segunda) → semana atual 20/07–26/07.
     expect(find.text('20/07 – 26/07'), findsOneWidget);
+    // única lista → representa 100% do tempo gasto do período.
+    expect(find.text('100,0%'), findsOneWidget);
   });
 
   testWidgets('exibe o total do período (real / estimado)', (tester) async {

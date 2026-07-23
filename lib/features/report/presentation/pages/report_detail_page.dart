@@ -5,6 +5,7 @@ import '../../../../core/theme/theme_context_extensions.dart';
 import '../../../../core/ui/app_empty_state.dart';
 import '../../../../core/ui/app_list_skeleton.dart';
 import '../../../../core/utils/formatters/duration_formatter.dart';
+import '../../../../core/utils/formatters/percent_formatter.dart';
 import '../../../task/domain/entities/timer_target_type_enum.dart';
 import '../../domain/entities/report_period_enum.dart';
 import '../../domain/entities/report_tree_node.dart';
@@ -100,7 +101,7 @@ class _ReportDetailPageState extends State<ReportDetailPage> {
                                 padding: EdgeInsets.all(context.space.lg),
                                 children: [
                                   for (final root in report.nodes)
-                                    ..._renderRoot(root),
+                                    ..._renderRoot(report, root),
                                 ],
                               ),
                             ),
@@ -115,12 +116,14 @@ class _ReportDetailPageState extends State<ReportDetailPage> {
   }
 
   /// Renderiza uma raiz e, se expandida, seus descendentes achatados+indentados.
-  List<Widget> _renderRoot(ReportTreeNode root) {
+  List<Widget> _renderRoot(TaskReport report, ReportTreeNode root) {
     final widgets = <Widget>[
       Padding(
         padding: EdgeInsets.only(bottom: context.space.md),
         child: _NodeTile(
           node: root,
+          shareRatio: report.shareRatio(root),
+          sharePercent: report.sharePercent(root),
           expandable: !root.isLeaf,
           expanded: _expanded.contains(root.id),
           onTap: root.isLeaf ? null : () => _toggle(root.id),
@@ -128,18 +131,28 @@ class _ReportDetailPageState extends State<ReportDetailPage> {
       ),
     ];
     if (!root.isLeaf && _expanded.contains(root.id)) {
-      _appendDescendants(root, widgets);
+      _appendDescendants(report, root, widgets);
     }
     return widgets;
   }
 
-  void _appendDescendants(ReportTreeNode node, List<Widget> out) {
+  void _appendDescendants(
+    TaskReport report,
+    ReportTreeNode node,
+    List<Widget> out,
+  ) {
     for (final child in node.children) {
       out.add(Padding(
         padding: EdgeInsets.only(bottom: context.space.md),
-        child: _NodeTile(node: child, expandable: false, expanded: false),
+        child: _NodeTile(
+          node: child,
+          shareRatio: report.shareRatio(child),
+          sharePercent: report.sharePercent(child),
+          expandable: false,
+          expanded: false,
+        ),
       ));
-      if (!child.isLeaf) _appendDescendants(child, out);
+      if (!child.isLeaf) _appendDescendants(report, child, out);
     }
   }
 }
@@ -217,12 +230,20 @@ class _SortSelector extends StatelessWidget {
 class _NodeTile extends StatelessWidget {
   const _NodeTile({
     required this.node,
+    required this.shareRatio,
+    required this.sharePercent,
     required this.expandable,
     required this.expanded,
     this.onTap,
   });
 
   final ReportTreeNode node;
+
+  /// Fração (0..1) do tempo total gasto do período — preenchimento da barra.
+  final double shareRatio;
+
+  /// Participação do item no tempo total gasto (0..100); null se total = 0.
+  final double? sharePercent;
   final bool expandable;
   final bool expanded;
   final VoidCallback? onTap;
@@ -268,6 +289,29 @@ class _NodeTile extends StatelessWidget {
           ),
           SizedBox(height: context.space.xs),
           Text(_subtitle(), style: context.text.labelSmall),
+          SizedBox(height: context.space.sm),
+          Row(
+            children: [
+              Expanded(
+                child: ClipRRect(
+                  borderRadius: context.radius.pillRadius,
+                  child: LinearProgressIndicator(
+                    value: shareRatio,
+                    minHeight: 8,
+                    backgroundColor: colors.surfaceHigh,
+                    valueColor: AlwaysStoppedAnimation(accent),
+                  ),
+                ),
+              ),
+              if (sharePercent != null) ...[
+                SizedBox(width: context.space.sm),
+                Text(
+                  PercentFormatter.decimal1(sharePercent!),
+                  style: context.text.labelSmall,
+                ),
+              ],
+            ],
+          ),
         ],
       ),
     );

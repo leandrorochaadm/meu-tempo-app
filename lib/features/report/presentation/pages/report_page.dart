@@ -7,6 +7,7 @@ import '../../../../core/theme/theme_context_extensions.dart';
 import '../../../../core/ui/app_empty_state.dart';
 import '../../../../core/ui/app_list_skeleton.dart';
 import '../../../../core/utils/formatters/duration_formatter.dart';
+import '../../../../core/utils/formatters/percent_formatter.dart';
 import '../../domain/entities/list_report.dart';
 import '../../domain/entities/list_report_row.dart';
 import '../../domain/entities/period_range.dart';
@@ -103,6 +104,10 @@ class _ReportPageState extends State<ReportPage> {
                                     itemBuilder: (context, i) => _ReportRowTile(
                                       row: report.rows[i],
                                       index: i,
+                                      shareRatio:
+                                          report.shareRatio(report.rows[i]),
+                                      sharePercent:
+                                          report.sharePercent(report.rows[i]),
                                       onTap: () => _openDetail(
                                         context,
                                         report.rows[i],
@@ -253,20 +258,26 @@ class _ReportRowTile extends StatelessWidget {
   const _ReportRowTile({
     required this.row,
     required this.index,
+    required this.shareRatio,
+    required this.sharePercent,
     required this.onTap,
   });
 
   final ListReportRow row;
   final int index;
+
+  /// Fração (0..1) do tempo total gasto do período — preenchimento da barra.
+  final double shareRatio;
+
+  /// Participação do item no tempo total gasto (0..100); null se total = 0.
+  final double? sharePercent;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
     final accent = colors.categoryAt(index);
-    final ratio = row.estimatedMinutes == 0
-        ? 0.0
-        : (row.spentMinutes / row.estimatedMinutes).clamp(0.0, 1.0);
+    final percent = sharePercent;
 
     return InkWell(
       onTap: onTap,
@@ -296,14 +307,27 @@ class _ReportRowTile extends StatelessWidget {
               ],
             ),
             SizedBox(height: context.space.sm),
-            ClipRRect(
-              borderRadius: context.radius.pillRadius,
-              child: LinearProgressIndicator(
-                value: ratio,
-                minHeight: 8,
-                backgroundColor: colors.surfaceHigh,
-                valueColor: AlwaysStoppedAnimation(accent),
-              ),
+            Row(
+              children: [
+                Expanded(
+                  child: ClipRRect(
+                    borderRadius: context.radius.pillRadius,
+                    child: LinearProgressIndicator(
+                      value: shareRatio,
+                      minHeight: 8,
+                      backgroundColor: colors.surfaceHigh,
+                      valueColor: AlwaysStoppedAnimation(accent),
+                    ),
+                  ),
+                ),
+                if (percent != null) ...[
+                  SizedBox(width: context.space.sm),
+                  Text(
+                    PercentFormatter.decimal1(percent),
+                    style: context.text.labelSmall,
+                  ),
+                ],
+              ],
             ),
           ],
         ),
