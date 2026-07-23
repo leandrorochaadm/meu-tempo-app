@@ -26,6 +26,8 @@ class _FakeNoParams extends Fake implements NoParams {}
 
 class _FakeEntriesParams extends Fake implements WatchTimeEntriesParams {}
 
+class _FakeTasksParams extends Fake implements WatchTasksParams {}
+
 void main() {
   late _MockWatchTasks watchTasks;
   late _MockWatchLists watchLists;
@@ -36,6 +38,7 @@ void main() {
   setUpAll(() {
     registerFallbackValue(_FakeNoParams());
     registerFallbackValue(_FakeEntriesParams());
+    registerFallbackValue(_FakeTasksParams());
   });
 
   setUp(() {
@@ -76,7 +79,8 @@ void main() {
     wait: const Duration(milliseconds: 10),
     expect: () => [
       const ReportLoading(),
-      isA<ReportLoaded>().having((s) => s.rows.first.spentMinutes, 'real', 30),
+      isA<ReportLoaded>()
+          .having((s) => s.report.rows.first.spentMinutes, 'real', 30),
     ],
   );
 

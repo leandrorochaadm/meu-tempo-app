@@ -4,6 +4,7 @@ import '../../../list/domain/entities/task_list_entity.dart';
 import '../../../task/domain/entities/task_entity.dart';
 import '../../../task/domain/entities/time_entry_entity.dart';
 import '../../../task/domain/entities/timer_target_type_enum.dart';
+import '../entities/list_report.dart';
 import '../entities/list_report_row.dart';
 
 /// Agrega tempo **estimado × real** por lista **dentro de um período**, a partir
@@ -19,7 +20,7 @@ import '../entities/list_report_row.dart';
 class GetListReportUseCase {
   const GetListReportUseCase();
 
-  List<ListReportRow> call(
+  ListReport call(
     List<TimeEntryEntity> entries,
     List<TaskEntity> tasks,
     List<TaskListEntity> lists,
@@ -57,6 +58,6 @@ class GetListReportUseCase {
     }
 
     rows.sort((a, b) => b.spentMinutes.compareTo(a.spentMinutes));
-    return rows;
+    return ListReport(rows);
   }
 }

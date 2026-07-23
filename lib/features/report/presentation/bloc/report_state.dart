@@ -13,13 +13,13 @@ class ReportLoading extends ReportState {
 
 class ReportLoaded extends ReportState {
   const ReportLoaded(
-    this.rows, {
+    this.report, {
     required this.period,
     required this.range,
     required this.offset,
     required this.canGoForward,
   });
-  final List<ListReportRow> rows;
+  final ListReport report;
   final ReportPeriodEnum period;
   final PeriodRange range;
 
@@ -30,7 +30,7 @@ class ReportLoaded extends ReportState {
   final bool canGoForward;
 
   @override
-  List<Object?> get props => [rows, period, range, offset, canGoForward];
+  List<Object?> get props => [report, period, range, offset, canGoForward];
 }
 
 class ReportError extends ReportState {

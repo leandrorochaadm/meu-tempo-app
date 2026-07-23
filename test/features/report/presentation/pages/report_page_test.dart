@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:meu_tempo/core/theme/app_theme.dart';
+import 'package:meu_tempo/features/report/domain/entities/list_report.dart';
 import 'package:meu_tempo/features/report/domain/entities/list_report_row.dart';
 import 'package:meu_tempo/features/report/domain/entities/period_range.dart';
 import 'package:meu_tempo/features/report/domain/entities/report_period_enum.dart';
@@ -34,14 +35,14 @@ void main() {
 
   ReportLoaded loaded({int offset = 0, bool canGoForward = false}) =>
       ReportLoaded(
-        const [
+        ListReport(const [
           ListReportRow(
             listId: 'prof',
             listName: 'Profissional',
             estimatedMinutes: 600,
             spentMinutes: 750,
           ),
-        ],
+        ]),
         period: ReportPeriodEnum.week,
         range: PeriodRange.at(ReportPeriodEnum.week, now, offset),
         offset: offset,
@@ -66,6 +67,39 @@ void main() {
     expect(find.text('Profissional'), findsOneWidget);
     // now=2026-07-20 (segunda) → semana atual 20/07–26/07.
     expect(find.text('20/07 – 26/07'), findsOneWidget);
+  });
+
+  testWidgets('exibe o total do período (real / estimado)', (tester) async {
+    setView(tester);
+    // Duas listas → o total (soma) difere de qualquer linha isolada.
+    when(() => bloc.state).thenReturn(
+      ReportLoaded(
+        ListReport(const [
+          ListReportRow(
+            listId: 'prof',
+            listName: 'Profissional',
+            estimatedMinutes: 600,
+            spentMinutes: 750,
+          ),
+          ListReportRow(
+            listId: 'estudo',
+            listName: 'Estudo',
+            estimatedMinutes: 120,
+            spentMinutes: 60,
+          ),
+        ]),
+        period: ReportPeriodEnum.week,
+        range: PeriodRange.at(ReportPeriodEnum.week, now, 0),
+        offset: 0,
+        canGoForward: false,
+      ),
+    );
+
+    await tester.pumpWidget(harness());
+
+    expect(find.text('Total do período'), findsOneWidget);
+    // real: 750+60 = 810 min = 13h30 · est.: 600+120 = 720 min = 12h.
+    expect(find.text('real 13h30 / est. 12h'), findsOneWidget);
   });
 
   testWidgets('seta ‹ dispara ReportPeriodStepped(-1)', (tester) async {

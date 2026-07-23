@@ -7,6 +7,7 @@ import '../../../../core/theme/theme_context_extensions.dart';
 import '../../../../core/ui/app_empty_state.dart';
 import '../../../../core/ui/app_list_skeleton.dart';
 import '../../../../core/utils/formatters/duration_formatter.dart';
+import '../../domain/entities/list_report.dart';
 import '../../domain/entities/list_report_row.dart';
 import '../../domain/entities/period_range.dart';
 import '../../domain/entities/report_period_enum.dart';
@@ -73,7 +74,7 @@ class _ReportPageState extends State<ReportPage> {
                         message: 'Tente novamente em instantes.',
                       ),
                     ReportLoaded(
-                      :final rows,
+                      :final report,
                       :final period,
                       :final range,
                       :final offset,
@@ -87,7 +88,7 @@ class _ReportPageState extends State<ReportPage> {
                             canGoForward: canGoForward,
                           ),
                           Expanded(
-                            child: rows.isEmpty
+                            child: report.isEmpty
                                 ? const AppEmptyState(
                                     icon: Icons.bar_chart_rounded,
                                     title: 'Sem dados no período',
@@ -96,21 +97,22 @@ class _ReportPageState extends State<ReportPage> {
                                   )
                                 : ListView.separated(
                                     padding: EdgeInsets.all(context.space.lg),
-                                    itemCount: rows.length,
+                                    itemCount: report.rows.length,
                                     separatorBuilder: (_, _) =>
                                         SizedBox(height: context.space.md),
                                     itemBuilder: (context, i) => _ReportRowTile(
-                                      row: rows[i],
+                                      row: report.rows[i],
                                       index: i,
                                       onTap: () => _openDetail(
                                         context,
-                                        rows[i],
+                                        report.rows[i],
                                         period,
                                         offset,
                                       ),
                                     ),
                                   ),
                           ),
+                          if (!report.isEmpty) _ReportTotalBar(report: report),
                         ],
                       ),
                   };
@@ -200,6 +202,46 @@ class _PeriodNavigator extends StatelessWidget {
                 ? () =>
                     context.read<ReportBloc>().add(const ReportPeriodStepped(1))
                 : null,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Rodapé fixo com o total do período filtrado (real × estimado).
+/// Os valores vêm prontos da entity `ListReport` — a UI só formata e exibe.
+class _ReportTotalBar extends StatelessWidget {
+  const _ReportTotalBar({required this.report});
+
+  final ListReport report;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: context.space.lg,
+        vertical: context.space.md,
+      ),
+      decoration: BoxDecoration(
+        color: colors.surfaceHigh,
+        border: Border(top: BorderSide(color: colors.border)),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              'Total do período',
+              style: context.text.titleMedium,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          SizedBox(width: context.space.sm),
+          Text(
+            'real ${DurationFormatter.hm(report.totalSpentMinutes)}'
+            ' / est. ${DurationFormatter.hm(report.totalEstimatedMinutes)}',
+            style: context.text.labelSmall,
           ),
         ],
       ),

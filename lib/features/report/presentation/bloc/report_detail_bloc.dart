@@ -77,7 +77,7 @@ class ReportDetailBloc extends Bloc<ReportDetailEvent, ReportDetailState> {
     _range = PeriodRange.at(e.period, DateTime.now(), e.offset);
 
     await _tasksSub?.cancel();
-    _tasksSub = _watchTasks(const NoParams())
+    _tasksSub = _watchTasks(const WatchTasksParams())
         .listen((r) => add(_ReportDetailTasksUpdated(r)));
     await _apptsSub?.cancel();
     _apptsSub = _watchAppointments(const NoParams())

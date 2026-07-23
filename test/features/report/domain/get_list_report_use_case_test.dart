@@ -38,7 +38,7 @@ void main() {
       );
 
   test('real = soma das entries; estimado só das folhas que tiveram tempo', () {
-    final rows = useCase(
+    final report = useCase(
       [
         entry('a', 'prof', 90),
         entry('c', 'estudo', 45),
@@ -55,28 +55,28 @@ void main() {
       ],
     );
 
-    final prof = rows.firstWhere((r) => r.listId == 'prof');
+    final prof = report.rows.firstWhere((r) => r.listId == 'prof');
     expect(prof.listName, 'Profissional');
     expect(prof.spentMinutes, 90);
     expect(prof.estimatedMinutes, 60); // só 'a' teve tempo (b excluído)
-    final estudo = rows.firstWhere((r) => r.listId == 'estudo');
+    final estudo = report.rows.firstWhere((r) => r.listId == 'estudo');
     expect(estudo.spentMinutes, 45);
     expect(estudo.estimatedMinutes, 120);
   });
 
   test('tempo de compromisso entra no real, mas não no estimado', () {
-    final rows = useCase(
+    final report = useCase(
       [entry('appt1', 'prof', 50, type: TimerTargetTypeEnum.appointment)],
       const <TaskEntity>[],
       const [TaskListEntity(id: 'prof', name: 'Profissional')],
     );
-    final prof = rows.firstWhere((r) => r.listId == 'prof');
+    final prof = report.rows.firstWhere((r) => r.listId == 'prof');
     expect(prof.spentMinutes, 50);
     expect(prof.estimatedMinutes, 0);
   });
 
   test('ordena por tempo real desc', () {
-    final rows = useCase(
+    final report = useCase(
       [entry('a', 'x', 10), entry('b', 'y', 100)],
       [leaf('a', 'x', 10), leaf('b', 'y', 10)],
       const [
@@ -84,6 +84,19 @@ void main() {
         TaskListEntity(id: 'y', name: 'Y'),
       ],
     );
-    expect(rows.first.listId, 'y');
+    expect(report.rows.first.listId, 'y');
+  });
+
+  test('totais somam real e estimado de todas as listas do período', () {
+    final report = useCase(
+      [entry('a', 'prof', 90), entry('c', 'estudo', 45)],
+      [leaf('a', 'prof', 60), leaf('c', 'estudo', 120)],
+      const [
+        TaskListEntity(id: 'prof', name: 'Profissional'),
+        TaskListEntity(id: 'estudo', name: 'Estudo'),
+      ],
+    );
+    expect(report.totalSpentMinutes, 135); // 90 + 45
+    expect(report.totalEstimatedMinutes, 180); // 60 + 120
   });
 }

@@ -13,7 +13,7 @@ import '../../../task/domain/entities/task_entity.dart';
 import '../../../task/domain/entities/time_entry_entity.dart';
 import '../../../task/domain/usecases/watch_tasks_use_case.dart';
 import '../../../task/domain/usecases/watch_time_entries_use_case.dart';
-import '../../domain/entities/list_report_row.dart';
+import '../../domain/entities/list_report.dart';
 import '../../domain/entities/period_range.dart';
 import '../../domain/entities/report_period_enum.dart';
 import '../../domain/usecases/get_list_report_use_case.dart';
@@ -60,7 +60,8 @@ class ReportBloc extends Bloc<ReportEvent, ReportState> {
     emit(const ReportLoading());
     await _tasksSub?.cancel();
     _tasksSub =
-        _watchTasks(const NoParams()).listen((r) => add(ReportTasksUpdated(r)));
+        _watchTasks(const WatchTasksParams())
+            .listen((r) => add(ReportTasksUpdated(r)));
     await _listsSub?.cancel();
     _listsSub =
         _watchLists(const NoParams()).listen((r) => add(ReportListsUpdated(r)));

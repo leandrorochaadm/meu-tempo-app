@@ -32,6 +32,8 @@ class _FakeNoParams extends Fake implements NoParams {}
 
 class _FakeEntriesParams extends Fake implements WatchTimeEntriesParams {}
 
+class _FakeTasksParams extends Fake implements WatchTasksParams {}
+
 void main() {
   late _MockWatchTasks watchTasks;
   late _MockWatchAppointments watchAppts;
@@ -43,6 +45,7 @@ void main() {
   setUpAll(() {
     registerFallbackValue(_FakeNoParams());
     registerFallbackValue(_FakeEntriesParams());
+    registerFallbackValue(_FakeTasksParams());
   });
 
   setUp(() {
