@@ -13,7 +13,6 @@ import '../../../list/domain/entities/task_list_entity.dart';
 import '../../domain/entities/prioritized_leaf.dart';
 import '../../domain/entities/task_entity.dart';
 import '../../domain/entities/task_node.dart';
-import '../../domain/services/ancestry_label_builder.dart';
 import '../bloc/task_list_bloc.dart';
 import '../widgets/hide_done_chip.dart';
 import '../widgets/list_filter_bar.dart';
@@ -147,8 +146,6 @@ class _TaskListPageState extends State<TaskListPage> {
         context.push(Routes.lists);
       case 'report':
         context.push(Routes.report);
-      case 'migration':
-        context.push(Routes.migration);
       case 'settings':
         context.push(Routes.settings);
       case 'logout':
@@ -163,28 +160,10 @@ class _TaskListPageState extends State<TaskListPage> {
     final state = bloc.state;
     if (state is! TaskListLoaded) return;
 
-    // Candidatos a mãe: exclui a própria e seus descendentes (evita ciclo).
-    final excluded = _excludedFor(task.id, state.roots);
-    final candidates = _moveCandidates(state.roots, excluded)
-        .map(
-          (c) => ParentCandidate(
-            id: c.node.task.id,
-            title: c.node.task.title,
-            path: c.path,
-          ),
-        )
-        .toList();
-
-    // Breadcrumb da mãe atual (regra de ancestralidade vive no domínio).
-    final byId = _allTasksById(state.roots);
-    final currentParentLabel = AncestryLabelBuilder.of(task, byId);
-
-    final args = EditTaskArgs(
-      task: task,
-      lists: state.lists,
-      parentCandidates: candidates,
-      currentParentLabel: currentParentLabel,
-    );
+    // Contexto de edição (candidatos a mãe + breadcrumb) já resolvido no domínio.
+    final editContext = bloc.editContextFor(task.id);
+    if (editContext == null) return;
+    final args = EditTaskArgs.fromContext(editContext, state.lists);
 
     final result = await context.push<EditTaskResult>(
       Routes.editTask,
@@ -207,76 +186,19 @@ class _TaskListPageState extends State<TaskListPage> {
     );
   }
 
-  /// Conjunto a excluir dos candidatos a mãe: a própria tarefa e todos os seus
-  /// descendentes (uma tarefa não pode virar filha de si mesma/de uma neta).
-  Set<String> _excludedFor(String taskId, List<TaskNode> roots) {
-    final excluded = <String>{};
-    void collect(TaskNode n) {
-      excluded.add(n.task.id);
-      n.children.forEach(collect);
-    }
+  Future<void> _moveTask(TaskNode node) => _moveTaskById(node.task.id);
 
-    TaskNode? find(List<TaskNode> nodes) {
-      for (final n in nodes) {
-        if (n.task.id == taskId) return n;
-        final hit = find(n.children);
-        if (hit != null) return hit;
-      }
-      return null;
-    }
+  Future<void> _moveTaskEntity(TaskEntity task) => _moveTaskById(task.id);
 
-    final node = find(roots);
-    if (node != null) {
-      collect(node);
-    } else {
-      excluded.add(taskId);
-    }
-    return excluded;
-  }
-
-  /// Índice `id → TaskEntity` de toda a árvore (para o breadcrumb da mãe atual).
-  Map<String, TaskEntity> _allTasksById(List<TaskNode> roots) {
-    final byId = <String, TaskEntity>{};
-    void visit(TaskNode n) {
-      byId[n.task.id] = n.task;
-      n.children.forEach(visit);
-    }
-
-    roots.forEach(visit);
-    return byId;
-  }
-
-  Future<void> _moveTask(TaskNode node) {
-    // Candidatos: todos os nós, menos o próprio e seus descendentes.
-    final excluded = <String>{};
-    void collect(TaskNode n) {
-      excluded.add(n.task.id);
-      n.children.forEach(collect);
-    }
-
-    collect(node);
-    return _moveTaskExcluding(node.task.id, excluded);
-  }
-
-  /// Mover uma folha da visão por prioridade: como folha não tem descendentes,
-  /// basta excluir a própria da lista de destinos.
-  Future<void> _moveTaskEntity(TaskEntity task) =>
-      _moveTaskExcluding(task.id, {task.id});
-
-  Future<void> _moveTaskExcluding(String taskId, Set<String> excluded) async {
+  /// Abre o seletor de nova mãe com os candidatos já resolvidos no domínio
+  /// (mesma regra do editar: exclui a própria, descendentes e netas).
+  Future<void> _moveTaskById(String taskId) async {
     final bloc = context.read<TaskListBloc>();
-    final state = bloc.state;
-    if (state is! TaskListLoaded) return;
+    final editContext = bloc.editContextFor(taskId);
+    if (editContext == null) return;
 
-    final candidates = _moveCandidates(state.roots, excluded)
-        .map(
-          (c) => ParentCandidate(
-            id: c.node.task.id,
-            title: c.node.task.title,
-            path: c.path,
-          ),
-        )
-        .toList();
+    final candidates =
+        editContext.parentCandidates.map(ParentCandidate.fromEntity).toList();
 
     final chosen = await showTaskParentPicker(context, candidates);
     if (chosen == null) return;
@@ -312,37 +234,6 @@ class _TaskListPageState extends State<TaskListPage> {
     return out;
   }
 
-  /// Candidatos de destino para "Mover", cada um com o breadcrumb dos ancestrais
-  /// e o nível (mãe/filha) — desambigua títulos parecidos na hierarquia.
-  List<({TaskNode node, String path})> _moveCandidates(
-    List<TaskNode> roots,
-    Set<String> excluded,
-  ) {
-    final out = <({TaskNode node, String path})>[];
-    void visit(TaskNode n, List<String> ancestors) {
-      if (!excluded.contains(n.task.id) && !n.isMaxLevel) {
-        final breadcrumb = ancestors.isEmpty
-            ? _levelLabel(n.level)
-            : '${ancestors.join(' › ')} · ${_levelLabel(n.level)}';
-        out.add((node: n, path: breadcrumb));
-      }
-      for (final c in n.children) {
-        visit(c, [...ancestors, n.task.title]);
-      }
-    }
-
-    for (final r in roots) {
-      visit(r, const []);
-    }
-    return out;
-  }
-
-  String _levelLabel(int level) => switch (level) {
-    0 => 'tarefa mãe',
-    1 => 'tarefa filha',
-    _ => 'tarefa neta',
-  };
-
   @override
   Widget build(BuildContext context) {
     final parent = _subtaskParent;
@@ -372,7 +263,6 @@ class _TaskListPageState extends State<TaskListPage> {
               PopupMenuItem(value: 'agenda', child: Text('Agenda')),
               PopupMenuItem(value: 'lists', child: Text('Listas')),
               PopupMenuItem(value: 'report', child: Text('Relatório')),
-              PopupMenuItem(value: 'migration', child: Text('Pendências')),
               PopupMenuItem(value: 'settings', child: Text('Configurações')),
               PopupMenuItem(value: 'logout', child: Text('Sair')),
             ],

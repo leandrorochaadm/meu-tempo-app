@@ -24,7 +24,9 @@ import '../../domain/usecases/create_task_use_case.dart';
 import '../../domain/usecases/delete_task_use_case.dart';
 import '../../domain/usecases/edit_task_use_case.dart';
 import '../../domain/usecases/filter_tasks_by_list_use_case.dart';
+import '../../domain/entities/task_edit_context.dart';
 import '../../domain/usecases/get_prioritized_leaves_use_case.dart';
+import '../../domain/usecases/get_task_edit_context_use_case.dart';
 import '../../domain/usecases/get_task_list_filter_use_case.dart';
 import '../../domain/usecases/move_task_use_case.dart';
 import '../../domain/usecases/register_manual_time_use_case.dart';
@@ -64,6 +66,7 @@ class TaskListBloc extends Bloc<TaskListEvent, TaskListState> {
     this._filterTasksByList,
     this._getTaskListFilter,
     this._saveTaskListFilter,
+    this._getEditContext,
   ) : super(const TaskListLoading()) {
     on<TaskListStarted>(_onStarted);
     on<TaskListUpdated>(_onUpdated);
@@ -103,6 +106,7 @@ class TaskListBloc extends Bloc<TaskListEvent, TaskListState> {
   final FilterTasksByListUseCase _filterTasksByList;
   final GetTaskListFilterUseCase _getTaskListFilter;
   final SaveTaskListFilterUseCase _saveTaskListFilter;
+  final GetTaskEditContextUseCase _getEditContext;
 
   StreamSubscription<Either<Failure, List<TaskEntity>>>? _tasksSub;
   StreamSubscription<Either<Failure, ActiveTimerEntity?>>? _timerSub;
@@ -230,9 +234,10 @@ class TaskListBloc extends Bloc<TaskListEvent, TaskListState> {
     // Filtro por lista resolvido no UseCase — a UI recebe pronto. As concluídas
     // já vêm filtradas do backend (`includeDone`), não há filtro aqui.
     final filtered = _filterTasksByList(_latestTasks, _selectedListId);
+    final now = DateTime.now();
     emit(TaskListLoaded(
-      _buildTree(filtered),
-      prioritized: _getPrioritized(filtered, DateTime.now()),
+      _buildTree(filtered, now),
+      prioritized: _getPrioritized(filtered, now),
       activeTaskId: _activeTaskId,
       activeTimerStartedAt: _activeStartedAt,
       lists: _lists,
@@ -288,6 +293,12 @@ class TaskListBloc extends Bloc<TaskListEvent, TaskListState> {
     );
     _handleWrite(result, emit);
   }
+
+  /// Contexto pronto para editar/mover uma tarefa (candidatos a mãe + breadcrumb),
+  /// resolvido no domínio sobre as tarefas já carregadas. A página consome este
+  /// dado pronto e só monta os argumentos/navega — sem calcular candidatos na UI.
+  TaskEditContext? editContextFor(String taskId) =>
+      _getEditContext(taskId, _latestTasks);
 
   /// Descobre a lista de uma folha já carregada (lookup, não regra de negócio).
   String _listIdOf(String taskId) {

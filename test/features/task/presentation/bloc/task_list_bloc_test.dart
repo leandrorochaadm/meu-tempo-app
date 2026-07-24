@@ -18,6 +18,7 @@ import 'package:meu_tempo/features/task/domain/usecases/delete_task_use_case.dar
 import 'package:meu_tempo/features/task/domain/usecases/edit_task_use_case.dart';
 import 'package:meu_tempo/features/task/domain/usecases/filter_tasks_by_list_use_case.dart';
 import 'package:meu_tempo/features/task/domain/usecases/get_prioritized_leaves_use_case.dart';
+import 'package:meu_tempo/features/task/domain/usecases/get_task_edit_context_use_case.dart';
 import 'package:meu_tempo/features/task/domain/usecases/get_task_list_filter_use_case.dart';
 import 'package:meu_tempo/features/task/domain/usecases/move_task_use_case.dart';
 import 'package:meu_tempo/features/task/domain/usecases/register_manual_time_use_case.dart';
@@ -170,6 +171,7 @@ void main() {
   });
 
   const getPrioritized = GetPrioritizedLeavesUseCase();
+  const getEditContext = GetTaskEditContextUseCase(buildTree);
 
   TaskListBloc build() => TaskListBloc(
         watchTasks,
@@ -192,6 +194,7 @@ void main() {
         filterByList,
         getFilter,
         saveFilter,
+        getEditContext,
       );
 
   blocTest<TaskListBloc, TaskListState>(
@@ -210,6 +213,23 @@ void main() {
         task,
       ),
     ],
+  );
+
+  blocTest<TaskListBloc, TaskListState>(
+    'editContextFor devolve o contexto da tarefa carregada (null se ausente)',
+    build: () {
+      when(() => watchTasks(any()))
+          .thenAnswer((_) => Stream.value(Right([task])));
+      return build();
+    },
+    act: (bloc) => bloc.add(const TaskListStarted()),
+    wait: const Duration(milliseconds: 50),
+    verify: (bloc) {
+      final ctx = bloc.editContextFor(task.id);
+      expect(ctx, isNotNull);
+      expect(ctx!.task.id, task.id);
+      expect(bloc.editContextFor('inexistente'), isNull);
+    },
   );
 
   final startedAt = DateTime(2026, 7, 22, 10, 30);

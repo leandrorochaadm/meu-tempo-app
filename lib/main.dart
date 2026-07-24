@@ -12,6 +12,7 @@ import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'core/ui/app_error_screen.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
+import 'features/task/presentation/bloc/active_timer_bloc.dart';
 import 'firebase_options.dart';
 
 Future<void> main() async {
@@ -61,8 +62,13 @@ class MeuTempoApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider<AuthBloc>(
-      create: (_) => getIt<AuthBloc>(),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<AuthBloc>(create: (_) => getIt<AuthBloc>()),
+        // Estado global do cronômetro ativo — a barra "now playing" abaixo do
+        // router o consome em qualquer tela.
+        BlocProvider<ActiveTimerBloc>(create: (_) => getIt<ActiveTimerBloc>()),
+      ],
       child: Builder(
         builder: (context) {
           final router = AppRouter(context.read<AuthBloc>()).router;

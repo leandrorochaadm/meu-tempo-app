@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
@@ -21,6 +22,7 @@ import '../../features/task/presentation/pages/edit_task_args.dart';
 import '../../features/task/presentation/pages/edit_task_page.dart';
 import '../../features/task/presentation/pages/task_list_page.dart';
 import '../../features/task/presentation/pages/time_entry_page.dart';
+import '../../features/task/presentation/widgets/active_timer_bar.dart';
 import '../di/injection.dart';
 import 'go_router_refresh_stream.dart';
 import 'routes.dart';
@@ -52,6 +54,12 @@ class AppRouter {
         path: Routes.login,
         builder: (_, _) => const LoginPage(),
       ),
+      // Shell das rotas autenticadas: mantém a barra "now playing" fixa no
+      // rodapé, dentro do Navigator raiz (assim seus Tooltip/diálogos têm
+      // Overlay/Navigator). O login fica fora — sem barra.
+      ShellRoute(
+        builder: (_, _, child) => AppShell(child: child),
+        routes: [
       GoRoute(
         path: Routes.home,
         builder: (_, _) => BlocProvider(
@@ -132,6 +140,26 @@ class AppRouter {
           );
         },
       ),
+        ],
+      ),
     ],
   );
+}
+
+/// Casca das telas autenticadas: empilha a barra do cronômetro no rodapé, acima
+/// da área segura, com o conteúdo da rota preenchendo o restante.
+class AppShell extends StatelessWidget {
+  const AppShell({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Expanded(child: child),
+        const ActiveTimerBar(),
+      ],
+    );
+  }
 }

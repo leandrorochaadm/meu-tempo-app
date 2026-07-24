@@ -78,12 +78,6 @@ import 'package:meu_tempo/features/list/domain/usecases/watch_lists_use_case.dar
     as _i689;
 import 'package:meu_tempo/features/list/presentation/bloc/list_manager_bloc.dart'
     as _i427;
-import 'package:meu_tempo/features/migration/domain/usecases/get_pending_migrations_use_case.dart'
-    as _i842;
-import 'package:meu_tempo/features/migration/domain/usecases/migrate_task_use_case.dart'
-    as _i798;
-import 'package:meu_tempo/features/migration/presentation/bloc/migration_bloc.dart'
-    as _i492;
 import 'package:meu_tempo/features/report/domain/usecases/get_list_report_use_case.dart'
     as _i67;
 import 'package:meu_tempo/features/report/domain/usecases/get_task_report_use_case.dart'
@@ -134,6 +128,8 @@ import 'package:meu_tempo/features/task/domain/usecases/filter_tasks_by_list_use
     as _i1069;
 import 'package:meu_tempo/features/task/domain/usecases/get_prioritized_leaves_use_case.dart'
     as _i1067;
+import 'package:meu_tempo/features/task/domain/usecases/get_task_edit_context_use_case.dart'
+    as _i843;
 import 'package:meu_tempo/features/task/domain/usecases/get_task_list_filter_use_case.dart'
     as _i247;
 import 'package:meu_tempo/features/task/domain/usecases/move_task_use_case.dart'
@@ -160,6 +156,8 @@ import 'package:meu_tempo/features/task/domain/usecases/watch_time_entries_by_ta
     as _i280;
 import 'package:meu_tempo/features/task/domain/usecases/watch_time_entries_use_case.dart'
     as _i892;
+import 'package:meu_tempo/features/task/presentation/bloc/active_timer_bloc.dart'
+    as _i282;
 import 'package:meu_tempo/features/task/presentation/bloc/task_list_bloc.dart'
     as _i35;
 import 'package:meu_tempo/features/task/presentation/bloc/time_entry_bloc.dart'
@@ -184,9 +182,6 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i483.CheckFitsInDayUseCase>(
       () => const _i483.CheckFitsInDayUseCase(),
     );
-    gh.lazySingleton<_i842.GetPendingMigrationsUseCase>(
-      () => const _i842.GetPendingMigrationsUseCase(),
-    );
     gh.lazySingleton<_i67.GetListReportUseCase>(
       () => const _i67.GetListReportUseCase(),
     );
@@ -207,6 +202,9 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i974.FirebaseFirestore>(),
         gh<_i59.FirebaseAuth>(),
       ),
+    );
+    gh.lazySingleton<_i843.GetTaskEditContextUseCase>(
+      () => _i843.GetTaskEditContextUseCase(gh<_i27.BuildTaskTreeUseCase>()),
     );
     gh.lazySingleton<_i788.AuthRemoteDataSource>(
       () => _i788.AuthRemoteDataSourceImpl(gh<_i59.FirebaseAuth>()),
@@ -387,9 +385,6 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i892.WatchTimeEntriesUseCase>(
       () => _i892.WatchTimeEntriesUseCase(gh<_i706.TimeEntryRepository>()),
     );
-    gh.lazySingleton<_i798.MigrateTaskUseCase>(
-      () => _i798.MigrateTaskUseCase(gh<_i521.TaskRepository>()),
-    );
     gh.lazySingleton<_i650.AddSubtaskUseCase>(
       () => _i650.AddSubtaskUseCase(gh<_i521.TaskRepository>()),
     );
@@ -452,34 +447,22 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i949.SetAvailableMinutesUseCase>(),
       ),
     );
+    gh.factory<_i282.ActiveTimerBloc>(
+      () => _i282.ActiveTimerBloc(
+        gh<_i397.WatchActiveTimerUseCase>(),
+        gh<_i1035.WatchTasksUseCase>(),
+        gh<_i689.WatchListsUseCase>(),
+        gh<_i726.StopTimerUseCase>(),
+        gh<_i843.GetTaskEditContextUseCase>(),
+        gh<_i43.EditTaskUseCase>(),
+        gh<_i213.MoveTaskUseCase>(),
+        gh<_i623.CompleteTaskUseCase>(),
+      ),
+    );
     gh.lazySingleton<_i159.SeedFirstAccessUseCase>(
       () => _i159.SeedFirstAccessUseCase(
         gh<_i330.ConfigRepository>(),
         gh<_i658.CreateTaskUseCase>(),
-      ),
-    );
-    gh.factory<_i492.MigrationBloc>(
-      () => _i492.MigrationBloc(
-        gh<_i1035.WatchTasksUseCase>(),
-        gh<_i842.GetPendingMigrationsUseCase>(),
-        gh<_i798.MigrateTaskUseCase>(),
-        gh<_i162.DeleteTaskUseCase>(),
-        gh<_i43.EditTaskUseCase>(),
-        gh<_i942.RestoreTasksUseCase>(),
-      ),
-    );
-    gh.factory<_i990.AgendaBloc>(
-      () => _i990.AgendaBloc(
-        gh<_i777.WatchAppointmentsForDayUseCase>(),
-        gh<_i176.CreateAppointmentUseCase>(),
-        gh<_i502.DeleteAppointmentUseCase>(),
-        gh<_i483.CheckFitsInDayUseCase>(),
-        gh<_i559.WatchConfigUseCase>(),
-        gh<_i1035.WatchTasksUseCase>(),
-        gh<_i655.EnsureInboxExistsUseCase>(),
-        gh<_i210.StartTimerUseCase>(),
-        gh<_i726.StopTimerUseCase>(),
-        gh<_i397.WatchActiveTimerUseCase>(),
       ),
     );
     gh.factory<_i35.TaskListBloc>(
@@ -504,6 +487,21 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i1069.FilterTasksByListUseCase>(),
         gh<_i247.GetTaskListFilterUseCase>(),
         gh<_i32.SaveTaskListFilterUseCase>(),
+        gh<_i843.GetTaskEditContextUseCase>(),
+      ),
+    );
+    gh.factory<_i990.AgendaBloc>(
+      () => _i990.AgendaBloc(
+        gh<_i777.WatchAppointmentsForDayUseCase>(),
+        gh<_i176.CreateAppointmentUseCase>(),
+        gh<_i502.DeleteAppointmentUseCase>(),
+        gh<_i483.CheckFitsInDayUseCase>(),
+        gh<_i559.WatchConfigUseCase>(),
+        gh<_i1035.WatchTasksUseCase>(),
+        gh<_i655.EnsureInboxExistsUseCase>(),
+        gh<_i210.StartTimerUseCase>(),
+        gh<_i726.StopTimerUseCase>(),
+        gh<_i397.WatchActiveTimerUseCase>(),
       ),
     );
     return this;

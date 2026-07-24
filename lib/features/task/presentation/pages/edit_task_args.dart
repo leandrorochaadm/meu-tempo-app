@@ -1,8 +1,10 @@
 import '../../../list/domain/entities/task_list_entity.dart';
+import '../../domain/entities/parent_candidate_entity.dart';
+import '../../domain/entities/task_edit_context.dart';
 import '../../domain/entities/task_entity.dart';
 
 /// Candidato a tarefa mãe, com breadcrumb dos ancestrais para desambiguar
-/// títulos parecidos. Derivado do record `({node, path})` de `_moveCandidates`.
+/// títulos parecidos. Derivado do [ParentCandidateEntity] do domínio.
 class ParentCandidate {
   const ParentCandidate({
     required this.id,
@@ -13,6 +15,22 @@ class ParentCandidate {
   final String id;
   final String title;
   final String path;
+
+  /// Monta o breadcrumb legível a partir do dado estruturado do domínio.
+  /// Ex.: "Lançar app › Fazer telas · tarefa filha" (só o nível se for raiz).
+  factory ParentCandidate.fromEntity(ParentCandidateEntity e) {
+    final level = _levelLabel(e.level);
+    final path = e.ancestorTitles.isEmpty
+        ? level
+        : '${e.ancestorTitles.join(' › ')} · $level';
+    return ParentCandidate(id: e.id, title: e.title, path: path);
+  }
+
+  static String _levelLabel(int level) => switch (level) {
+        0 => 'tarefa mãe',
+        1 => 'tarefa filha',
+        _ => 'tarefa neta',
+      };
 }
 
 /// Argumentos da rota de edição — tudo já resolvido na `presentation` de origem
@@ -34,4 +52,18 @@ class EditTaskArgs {
 
   /// Breadcrumb da mãe atual (vazio se a tarefa já é raiz).
   final String currentParentLabel;
+
+  /// Monta os argumentos a partir do contexto de domínio + listas do usuário.
+  factory EditTaskArgs.fromContext(
+    TaskEditContext context,
+    List<TaskListEntity> lists,
+  ) {
+    return EditTaskArgs(
+      task: context.task,
+      lists: lists,
+      parentCandidates:
+          context.parentCandidates.map(ParentCandidate.fromEntity).toList(),
+      currentParentLabel: context.currentParentLabel,
+    );
+  }
 }
