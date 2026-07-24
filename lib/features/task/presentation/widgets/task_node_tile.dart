@@ -64,7 +64,11 @@ class TaskNodeTile extends StatelessWidget {
           borderRadius: context.radius.lgRadius,
           border: Border(
             left: BorderSide(
-              color: isActive ? colors.timerActive : accent,
+              color: isActive
+                  ? colors.timerActive
+                  : node.isOverdue
+                      ? colors.warning
+                      : accent,
               width: 3,
             ),
           ),

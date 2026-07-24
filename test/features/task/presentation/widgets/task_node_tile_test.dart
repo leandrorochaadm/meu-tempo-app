@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:meu_tempo/core/theme/app_colors.dart';
 import 'package:meu_tempo/core/theme/app_theme.dart';
 import 'package:meu_tempo/features/task/domain/entities/task_entity.dart';
 import 'package:meu_tempo/features/task/domain/entities/task_node.dart';
@@ -90,5 +91,35 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(deleteTapped, isTrue);
+  });
+
+  // Container do card = o único com BoxDecoration que tem borda esquerda.
+  Color leftBorderColor(WidgetTester tester) {
+    final container = tester.widgetList<Container>(find.byType(Container)).firstWhere(
+      (c) {
+        final d = c.decoration;
+        return d is BoxDecoration && d.border is Border;
+      },
+    );
+    final border = (container.decoration! as BoxDecoration).border! as Border;
+    return border.left.color;
+  }
+
+  testWidgets('folha atrasada pinta a borda esquerda de warning',
+      (tester) async {
+    final node = TaskNode(
+      task: task('leaf', 'Folha'),
+      level: 0,
+      isOverdue: true,
+    );
+    await tester.pumpWidget(harness(node));
+
+    expect(leftBorderColor(tester), AppColors.dark.warning);
+  });
+
+  testWidgets('folha no prazo usa a cor de categoria do nível', (tester) async {
+    await tester.pumpWidget(harness(leafNode()));
+
+    expect(leftBorderColor(tester), AppColors.dark.categoryAt(0));
   });
 }

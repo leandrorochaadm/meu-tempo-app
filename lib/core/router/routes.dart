@@ -11,7 +11,6 @@ class Routes {
   /// Detalhe do relatório de uma lista. Recebe `list`, `period` e `offset` como
   /// query params (sobrevive a refresh no navegador); `listName` vem por `extra`.
   static const String reportDetail = '/report/detail';
-  static const String migration = '/migration';
   static const String settings = '/settings';
 
   /// Edição de tarefa — recebe `EditTaskArgs` via `state.extra`.

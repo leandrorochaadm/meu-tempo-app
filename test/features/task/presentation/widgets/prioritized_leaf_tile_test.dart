@@ -22,11 +22,16 @@ void main() {
         isDone: isDone,
       );
 
-  PrioritizedLeaf leaf({bool isDone = false, int spentMinutes = 90}) =>
+  PrioritizedLeaf leaf({
+    bool isDone = false,
+    int spentMinutes = 90,
+    bool isOverdue = false,
+  }) =>
       PrioritizedLeaf(
         task: leafTask(isDone: isDone, spentMinutes: spentMinutes),
         priority: 42,
         ancestryLabel: '',
+        isOverdue: isOverdue,
       );
 
   // Callbacks-espião: registram que foram chamados.
@@ -205,5 +210,36 @@ void main() {
     await tester.pumpWidget(harness(leaf: leaf(isDone: true), isActive: false));
 
     expect(find.byIcon(Icons.check_circle_rounded), findsOneWidget);
+  });
+
+  Color leftBorderColor(WidgetTester tester) =>
+      (cardDecoration(tester).border! as Border).left.color;
+
+  testWidgets('overdue leaf paints the left border in warning',
+      (tester) async {
+    setView(tester);
+    await tester.pumpWidget(
+      harness(leaf: leaf(isOverdue: true), isActive: false),
+    );
+
+    expect(leftBorderColor(tester), AppColors.dark.warning);
+  });
+
+  testWidgets('non-overdue leaf paints the left border in primary',
+      (tester) async {
+    setView(tester);
+    await tester.pumpWidget(harness(leaf: leaf(), isActive: false));
+
+    expect(leftBorderColor(tester), AppColors.dark.primary);
+  });
+
+  testWidgets('active leaf keeps the timer-active border even if overdue',
+      (tester) async {
+    setView(tester);
+    await tester.pumpWidget(
+      harness(leaf: leaf(isOverdue: true), isActive: true),
+    );
+
+    expect(leftBorderColor(tester), AppColors.dark.timerActive);
   });
 }

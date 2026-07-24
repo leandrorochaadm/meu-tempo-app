@@ -60,7 +60,11 @@ class PrioritizedLeafTile extends StatelessWidget {
           borderRadius: context.radius.lgRadius,
           border: Border(
             left: BorderSide(
-              color: isActive ? colors.timerActive : colors.primary,
+              color: isActive
+                  ? colors.timerActive
+                  : leaf.isOverdue
+                      ? colors.warning
+                      : colors.primary,
               width: 3,
             ),
           ),

@@ -9,6 +9,7 @@ class PrioritizedLeaf extends Equatable {
     required this.task,
     required this.priority,
     required this.ancestryLabel,
+    this.isOverdue = false,
   });
 
   final TaskEntity task;
@@ -17,6 +18,9 @@ class PrioritizedLeaf extends Equatable {
   /// Ex.: "Lançar app › Fazer telas" (vazio se a folha for raiz).
   final String ancestryLabel;
 
+  /// Prazo vencido (antes de hoje) e ainda não concluída — sinaliza atraso na UI.
+  final bool isOverdue;
+
   @override
-  List<Object?> get props => [task, priority, ancestryLabel];
+  List<Object?> get props => [task, priority, ancestryLabel, isOverdue];
 }

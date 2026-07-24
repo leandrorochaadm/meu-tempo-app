@@ -11,11 +11,15 @@ class TaskNode extends Equatable {
     required this.task,
     required this.level,
     this.children = const [],
+    this.isOverdue = false,
   });
 
   final TaskEntity task;
   final int level;
   final List<TaskNode> children;
+
+  /// Folha com prazo vencido e não concluída — sinaliza atraso na UI.
+  final bool isOverdue;
 
   bool get isLeaf => children.isEmpty;
 
@@ -54,5 +58,5 @@ class TaskNode extends Equatable {
   }
 
   @override
-  List<Object?> get props => [task, level, children];
+  List<Object?> get props => [task, level, children, isOverdue];
 }

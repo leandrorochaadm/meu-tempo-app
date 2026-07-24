@@ -6,12 +6,13 @@ void main() {
   final today = DateTime(2026, 7, 20);
   const useCase = BuildTaskTreeUseCase();
 
-  TaskEntity t(String id, {String? parentId}) => TaskEntity(
+  TaskEntity t(String id, {String? parentId, DateTime? dueDate}) => TaskEntity(
         id: id,
         title: id,
         listId: 'inbox',
         createdAt: today,
         parentId: parentId,
+        dueDate: dueDate,
         estimatedMinutes: 30,
       );
 
@@ -34,5 +35,23 @@ void main() {
     final roots = useCase([t('a'), t('b')]);
     expect(roots.map((n) => n.task.id), containsAll(['a', 'b']));
     expect(roots.every((n) => n.isLeaf), isTrue);
+  });
+
+  test('marca folha atrasada quando recebe `today`', () {
+    final roots = useCase(
+      [
+        t('atrasada', dueDate: DateTime(2026, 7, 19)),
+        t('no prazo', dueDate: DateTime(2026, 7, 25)),
+      ],
+      today,
+    );
+    final byId = {for (final n in roots) n.task.id: n};
+    expect(byId['atrasada']!.isOverdue, isTrue);
+    expect(byId['no prazo']!.isOverdue, isFalse);
+  });
+
+  test('sem `today` nenhuma folha é marcada como atrasada', () {
+    final roots = useCase([t('atrasada', dueDate: DateTime(2026, 7, 19))]);
+    expect(roots.single.isOverdue, isFalse);
   });
 }

@@ -58,6 +58,20 @@ void main() {
     expect(result.map((l) => l.task.id), ['ok']);
   });
 
+  test('marca isOverdue nas folhas com prazo antes de hoje', () {
+    final result = useCase([
+      leaf('atrasada',
+          minutes: 60, importance: ImportanceEnum.max, dueInDays: -1),
+      leaf('hoje', minutes: 60, importance: ImportanceEnum.max, dueInDays: 0),
+      leaf('futura', minutes: 60, importance: ImportanceEnum.max, dueInDays: 3),
+    ], today);
+
+    final byId = {for (final l in result) l.task.id: l};
+    expect(byId['atrasada']!.isOverdue, isTrue);
+    expect(byId['hoje']!.isOverdue, isFalse);
+    expect(byId['futura']!.isOverdue, isFalse);
+  });
+
   test('monta o subtítulo da hierarquia (mãe › filha)', () {
     final tasks = [
       TaskEntity(

@@ -9,8 +9,6 @@ import '../../features/config/presentation/bloc/settings_bloc.dart';
 import '../../features/config/presentation/pages/settings_page.dart';
 import '../../features/list/presentation/bloc/list_manager_bloc.dart';
 import '../../features/list/presentation/pages/lists_page.dart';
-import '../../features/migration/presentation/bloc/migration_bloc.dart';
-import '../../features/migration/presentation/pages/migration_page.dart';
 import '../../features/report/domain/entities/report_period_enum.dart';
 import '../../features/report/presentation/bloc/report_bloc.dart';
 import '../../features/report/presentation/bloc/report_detail_bloc.dart';
@@ -96,13 +94,6 @@ class AppRouter {
             ),
           );
         },
-      ),
-      GoRoute(
-        path: Routes.migration,
-        builder: (_, _) => BlocProvider(
-          create: (_) => getIt<MigrationBloc>(),
-          child: const MigrationPage(),
-        ),
       ),
       GoRoute(
         path: Routes.settings,

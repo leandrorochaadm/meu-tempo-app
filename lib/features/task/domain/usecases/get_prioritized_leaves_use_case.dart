@@ -5,6 +5,7 @@ import '../entities/prioritized_leaf.dart';
 import '../entities/task_entity.dart';
 import '../entities/urgency_band_enum.dart';
 import '../services/ancestry_label_builder.dart';
+import '../services/overdue_evaluator.dart';
 
 /// Monta a lista **plana das folhas não concluídas** ordenada por prioridade:
 /// `tempoEstimado × (5 − importância) × urgênciaDoPrazo`. Depende de `today`
@@ -23,6 +24,7 @@ class GetPrioritizedLeavesUseCase {
               task: task,
               priority: _priority(task, t0),
               ancestryLabel: AncestryLabelBuilder.of(task, byId),
+              isOverdue: OverdueEvaluator.isOverdue(task, t0),
             ))
         .toList();
 
