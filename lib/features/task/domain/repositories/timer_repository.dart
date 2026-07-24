@@ -14,6 +14,13 @@ abstract class TimerRepository {
   /// Define/atualiza o cronômetro ativo.
   Future<Either<Failure, Unit>> setActive(ActiveTimerEntity timer);
 
+  /// Reivindica (lê **e** limpa, de forma atômica) o cronômetro ativo, retornando
+  /// o que estava rodando — ou `null` se já não havia nenhum. Garante que, entre
+  /// chamadas concorrentes (ex.: vários toques no "Parar"), apenas **uma** vença:
+  /// as demais recebem `null`. É a base da **idempotência** ao parar — só quem
+  /// vence o claim registra o tempo, evitando durações repetidas.
+  Future<Either<Failure, ActiveTimerEntity?>> claimActive();
+
   /// Limpa o cronômetro ativo.
   Future<Either<Failure, Unit>> clear();
 }

@@ -53,6 +53,17 @@ class TimerRepositoryImpl implements TimerRepository {
   }
 
   @override
+  Future<Either<Failure, ActiveTimerEntity?>> claimActive() async {
+    try {
+      final model = await _dataSource.claimActive();
+      return Right(model?.toEntity());
+    } on AppException catch (e, s) {
+      AppLogger.logError('claimActive falhou', error: e, stackTrace: s);
+      return Left(e.toFailure());
+    }
+  }
+
+  @override
   Future<Either<Failure, Unit>> clear() async {
     try {
       await _dataSource.clear();

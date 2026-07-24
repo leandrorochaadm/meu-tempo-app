@@ -38,12 +38,16 @@ class StopTimerUseCase implements UseCase<Unit, StopTimerParams> {
 
   @override
   Future<Either<Failure, Unit>> call(StopTimerParams params) async {
-    final activeResult = await _timerRepository.getActive();
-    final failure = activeResult.getLeft().toNullable();
+    // `claimActive` lê e limpa o cronômetro atomicamente: entre vários toques
+    // no "Parar" concorrentes, só um recebe o timer — os demais recebem `null`
+    // e viram no-op. Isso torna o parar **idempotente**: o tempo é registrado
+    // uma única vez, sem durações repetidas.
+    final claimed = await _timerRepository.claimActive();
+    final failure = claimed.getLeft().toNullable();
     if (failure != null) return Left(failure);
 
-    final active = activeResult.getRight().toNullable();
-    if (active == null) return const Right(unit); // nada rodando
+    final active = claimed.getRight().toNullable();
+    if (active == null) return const Right(unit); // já parado — nada a registrar
 
     final elapsed = active.elapsedMinutes(params.now);
     if (elapsed > 0) {
@@ -62,6 +66,6 @@ class StopTimerUseCase implements UseCase<Unit, StopTimerParams> {
         occurredAt: params.now,
       ));
     }
-    return _timerRepository.clear();
+    return const Right(unit); // o claim já limpou o cronômetro
   }
 }

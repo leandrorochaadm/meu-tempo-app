@@ -10,6 +10,7 @@ abstract class TimerRemoteDataSource {
   Stream<ActiveTimerModel?> watchActive();
   Future<ActiveTimerModel?> getActive();
   Future<void> setActive(ActiveTimerModel timer);
+  Future<ActiveTimerModel?> claimActive();
   Future<void> clear();
 }
 
@@ -58,6 +59,25 @@ class TimerRemoteDataSourceImpl implements TimerRemoteDataSource {
   Future<void> setActive(ActiveTimerModel timer) async {
     try {
       await _doc.set(timer.toJson());
+    } on FirebaseException catch (e) {
+      throw mapFirestoreException(e);
+    }
+  }
+
+  @override
+  Future<ActiveTimerModel?> claimActive() async {
+    try {
+      // Transação: lê e apaga o doc do cronômetro ativo atomicamente. Se dois
+      // "Parar" concorrem, o Firestore serializa — um commit vence e apaga; o
+      // outro reexecuta, encontra o doc já ausente e retorna `null`. Assim, só
+      // um chamador recebe o timer e registra o tempo (idempotência).
+      return await _firestore.runTransaction<ActiveTimerModel?>((txn) async {
+        final snap = await txn.get(_doc);
+        final model = _parse(snap);
+        if (model == null) return null;
+        txn.delete(_doc);
+        return model;
+      });
     } on FirebaseException catch (e) {
       throw mapFirestoreException(e);
     }

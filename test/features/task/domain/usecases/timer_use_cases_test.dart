@@ -51,6 +51,8 @@ void main() {
     when(() => timerRepo.setActive(any()))
         .thenAnswer((_) async => const Right(unit));
     when(() => timerRepo.clear()).thenAnswer((_) async => const Right(unit));
+    when(() => timerRepo.claimActive())
+        .thenAnswer((_) async => const Right(null));
   });
 
   StartTimerUseCase startUseCase() =>
@@ -72,11 +74,11 @@ void main() {
         ),
       );
       expect(result, isA<Left<Failure, Unit>>());
-      verifyNever(() => timerRepo.getActive());
+      verifyNever(() => timerRepo.claimActive());
     });
 
     test('compromisso pode iniciar mesmo com targetIsLeaf false', () async {
-      when(() => timerRepo.getActive())
+      when(() => timerRepo.claimActive())
           .thenAnswer((_) async => const Right(null));
 
       final result = await startUseCase()(
@@ -101,7 +103,7 @@ void main() {
         listId: 'lOld',
         startedAt: now.subtract(const Duration(minutes: 25)),
       );
-      when(() => timerRepo.getActive())
+      when(() => timerRepo.claimActive())
           .thenAnswer((_) async => Right(previous));
 
       await startUseCase()(
@@ -128,7 +130,7 @@ void main() {
         listId: 'lA',
         startedAt: now.subtract(const Duration(minutes: 10)),
       );
-      when(() => timerRepo.getActive())
+      when(() => timerRepo.claimActive())
           .thenAnswer((_) async => Right(previous));
 
       await startUseCase()(
@@ -148,7 +150,7 @@ void main() {
 
   group('StopTimerUseCase', () {
     test('sem cronômetro ativo apenas retorna sucesso', () async {
-      when(() => timerRepo.getActive())
+      when(() => timerRepo.claimActive())
           .thenAnswer((_) async => const Right(null));
 
       final result = await stopUseCase()(StopTimerParams(now: now));
@@ -158,20 +160,47 @@ void main() {
       verifyNever(() => entryRepo.add(any()));
     });
 
-    test('soma o tempo na folha, grava registro e limpa', () async {
+    test('soma o tempo na folha e grava registro (claim já limpa)', () async {
       final active = ActiveTimerEntity(
         targetId: 't1',
         targetType: TimerTargetTypeEnum.task,
         listId: 'l1',
         startedAt: now.subtract(const Duration(minutes: 40)),
       );
-      when(() => timerRepo.getActive()).thenAnswer((_) async => Right(active));
+      when(() => timerRepo.claimActive())
+          .thenAnswer((_) async => Right(active));
 
       await stopUseCase()(StopTimerParams(now: now));
 
       verify(() => taskRepo.addSpentMinutes('t1', 40)).called(1);
       verify(() => entryRepo.add(any())).called(1);
-      verify(() => timerRepo.clear()).called(1);
+      // Não chama clear separado — o claim atômico já limpou o cronômetro.
+      verifyNever(() => timerRepo.clear());
+    });
+
+    test('idempotente: vários "Parar" registram o tempo uma única vez', () async {
+      final active = ActiveTimerEntity(
+        targetId: 't1',
+        targetType: TimerTargetTypeEnum.task,
+        listId: 'l1',
+        startedAt: now.subtract(const Duration(minutes: 40)),
+      );
+      // Simula a corrida: só o primeiro claim vence (recebe o timer); os toques
+      // seguintes encontram o cronômetro já limpo e recebem null.
+      var claims = 0;
+      when(() => timerRepo.claimActive()).thenAnswer((_) async {
+        claims++;
+        return claims == 1 ? Right(active) : const Right(null);
+      });
+
+      final useCase = stopUseCase();
+      await useCase(StopTimerParams(now: now));
+      await useCase(StopTimerParams(now: now));
+      await useCase(StopTimerParams(now: now));
+
+      // Mesmo com 3 toques, o tempo entra só uma vez.
+      verify(() => taskRepo.addSpentMinutes('t1', 40)).called(1);
+      verify(() => entryRepo.add(any())).called(1);
     });
   });
 

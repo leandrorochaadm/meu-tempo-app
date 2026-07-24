@@ -62,11 +62,14 @@ class StartTimerUseCase implements UseCase<Unit, StartTimerParams> {
       return const Left(TimerOnNonLeafFailure());
     }
 
-    final activeResult = await _timerRepository.getActive();
-    final failure = activeResult.getLeft().toNullable();
+    // Reivindica o anterior atomicamente (lê e limpa): entre toques concorrentes
+    // no play, só um recebe o cronômetro anterior e soma seu tempo — evita somar
+    // a mesma sessão anterior mais de uma vez (mesma idempotência do parar).
+    final claimed = await _timerRepository.claimActive();
+    final failure = claimed.getLeft().toNullable();
     if (failure != null) return Left(failure);
 
-    final active = activeResult.getRight().toNullable();
+    final active = claimed.getRight().toNullable();
     if (active != null) {
       // Pausa o anterior, somando o tempo decorrido ao alvo correto.
       final elapsed = active.elapsedMinutes(params.now);
