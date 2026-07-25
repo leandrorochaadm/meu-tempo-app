@@ -82,8 +82,10 @@ rituais e demais medições ficam em **Próximas versões**.
    - _Pronto quando:_ crio a lista "Estudo", ligo uma tarefa a ela e depois consigo renomeá-la; ao tentar excluí-la com tarefas dentro, o app me pergunta se movo as tarefas para outra lista ou excluo todas.
 6. **Listagem por prioridade:** lista **plana só das folhas** (tarefas executáveis), ordenada pela prioridade calculada.
    - **Fórmula:** `prioridade = tempoEstimado × (5 − importância) × urgênciaDoPrazo`. Tarefas mais próximas, mais importantes (1) e mais longas vêm primeiro.
-   - **urgênciaDoPrazo (faixas graduais até 14 dias):**
-     - Atrasada ou vence hoje → **6**
+   - **urgênciaDoPrazo (faixas graduais até 14 dias; atraso cresce sem teto):**
+     - Atrasada → **6 + 1 por dia de atraso, sem teto** (1 dia atrasada = 7, 5 dias = 11,
+       30 dias = 36) — quanto mais atrasada, maior a prioridade
+     - Vence hoje → **6**
      - 1–2 dias → **5**
      - 3–5 dias → **4**
      - 6–9 dias → **3**
@@ -209,8 +211,9 @@ _Já conversados e detalhados; ficam para depois da versão 1 (sem ordem definid
 - **Tempo acumulativo:** o tempo de uma folha soma no total da mãe e da avó.
 - **Prioridade:** `tempoEstimado × (5 − importância) × urgênciaDoPrazo`
   (importância 1 = máxima). A `urgênciaDoPrazo` usa **faixas graduais até 14 dias**:
-  atrasada/hoje = **6**, 1–2 dias = **5**, 3–5 dias = **4**, 6–9 dias = **3**,
-  10–14 dias = **2**, mais de 14 dias = **1**.
+  hoje = **6**, 1–2 dias = **5**, 3–5 dias = **4**, 6–9 dias = **3**,
+  10–14 dias = **2**, mais de 14 dias = **1**. **Atrasada** = **6 + 1 por dia de
+  atraso, sem teto**.
 - **Conclusão de folha:** uma folha marcada como **feita** sai da listagem de
   prioridade e não é mais pendência para a migração.
 - **Conclusão automática da mãe/avó:** quando todas as filhas estão feitas, a
@@ -355,7 +358,8 @@ Decisões que encerraram as pendências anteriores:
 - Cronômetro → **sem limite e sem aviso**; correção manual quando o usuário perceber.
 - **Sem prazo e sem orçamento** (projeto pessoal).
 - **Lista = área** (conceito unificado sob o nome "lista").
-- **urgênciaDoPrazo** → faixas graduais até 14 dias (atrasada/hoje = 6 … +14 dias = 1).
+- **urgênciaDoPrazo** → faixas graduais até 14 dias (hoje = 6 … +14 dias = 1); atrasada
+  = 6 + 1 por dia de atraso, sem teto.
 - **Excluir lista com tarefas** → o app pergunta: **mover as tarefas** para outra
   lista ou **excluir todas**.
 
@@ -376,7 +380,8 @@ Decisões que encerraram as pendências anteriores:
 - **Importância**: peso da tarefa de **1 a 4**, sendo **1 a máxima**.
 - **Prioridade**: ordem de execução calculada por
   `tempoEstimado × (5 − importância) × urgênciaDoPrazo`, sendo a urgência
-  em faixas graduais até 14 dias (atrasada/hoje = 6 … mais de 14 dias = 1).
+  em faixas graduais até 14 dias (hoje = 6 … mais de 14 dias = 1), com atraso somando
+  1 por dia atrasado a partir de 6, sem teto.
 - **Monitorável ("coisa a monitorar")**: qualquer item que o Leandro cria pra
   acompanhar, usando um dos 4 tipos de medição. Água, humor, sono e hábitos são exemplos.
 - **Hábito**: atividade recorrente medida por tempo; conta como feita ao registrar
@@ -472,3 +477,8 @@ Decisões que encerraram as pendências anteriores:
   disputado). "Meu Tempo" venceu: o "Meu" posiciona autonomia pessoal (não
   vigilância) e há domínios livres (`meutempo.app`, variações `.com.br`). Títulos
   dos três documentos atualizados.
+- 2026-07-25 — Ajuste na **urgênciaDoPrazo** (req. 6): antes "atrasada ou vence hoje"
+  compartilhavam o peso 6, então uma tarefa atrasada há 30 dias tinha a mesma urgência
+  de uma que vence hoje. Decisão do Leandro: **quanto mais atrasada, maior a
+  prioridade** — o atraso passa a somar **1 por dia atrasado a partir de 6, sem teto**
+  (1 dia = 7, 30 dias = 36). As faixas de prazo futuro seguem inalteradas.

@@ -167,7 +167,9 @@ flowchart TD
   classDef process fill:#74c0fc,color:#000,stroke:#339af0
 
   A([Início]) --> B[["Recebe folha com data, importância e tempo"]]
-  B --> C{Atrasada ou vence hoje?}
+  B --> Z{Atrasada?}
+  Z -- Sim --> UO[["urgência = 6 + dias de atraso (sem teto)"]]:::process
+  Z -- Não --> C{Vence hoje?}
   C -- Sim --> U6[[urgência = 6]]:::process
   C -- Não --> D{Vence em 1 a 2 dias?}
   D -- Sim --> U5[[urgência = 5]]:::process
@@ -179,6 +181,7 @@ flowchart TD
   G -- Sim --> U2[[urgência = 2]]:::process
   G -- Não --> U1[[urgência = 1]]:::process
 
+  UO --> H
   U6 --> H
   U5 --> H
   U4 --> H

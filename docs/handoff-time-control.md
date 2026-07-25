@@ -100,8 +100,10 @@ não me frustrar com metas impossíveis.
 - **Dado** um conjunto de folhas, **quando** abro a listagem, **então** vejo uma
   **lista plana só das folhas**, ordenada por
   `prioridade = tempoEstimado × (5 − importância) × urgênciaDoPrazo`.
-- **urgênciaDoPrazo** (faixas): atrasada/hoje = 6; 1–2 dias = 5; 3–5 dias = 4;
+- **urgênciaDoPrazo** (faixas): hoje = 6; 1–2 dias = 5; 3–5 dias = 4;
   6–9 dias = 3; 10–14 dias = 2; +14 dias = 1.
+- **urgênciaDoPrazo em atraso**: `6 + diasDeAtraso`, **sem teto** — 1 dia atrasada = 7,
+  5 dias = 11, 30 dias = 36. Quanto mais atrasada, mais no topo da lista.
 - **Dado** cada item da lista, **então** exibe um **subtítulo** com a mãe e a avó
   (ex.: "Lançar app › Fazer telas").
 - **Dado** duas folhas de mesma importância, **quando** ordeno, **então** a de
