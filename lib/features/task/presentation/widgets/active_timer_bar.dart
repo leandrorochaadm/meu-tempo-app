@@ -13,6 +13,7 @@ import '../bloc/active_timer_bloc.dart';
 import '../pages/edit_task_args.dart';
 import '../pages/edit_task_page.dart';
 import 'importance_presentation.dart';
+import 'priority_info_button.dart';
 
 /// Barra "now playing" do cronômetro — fixa no rodapé, visível em todas as telas
 /// enquanto uma **folha de tarefa** está em contagem. Mostra nome, trilha e o
@@ -304,7 +305,8 @@ class _MetaLine extends StatelessWidget {
           ),
         if (importance != null)
           _Meta(importance.label, color: importance.colorOf(context)),
-        _Meta('prio ${details.priority}'),
+        if (details.rank != null) _Meta('#${details.rank}'),
+        PriorityInfoButton(breakdown: details.breakdown),
       ],
     );
   }

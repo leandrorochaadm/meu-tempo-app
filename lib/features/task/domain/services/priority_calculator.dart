@@ -1,4 +1,5 @@
 import '../entities/importance_enum.dart';
+import '../entities/priority_breakdown.dart';
 import '../entities/task_entity.dart';
 import '../entities/urgency_band_enum.dart';
 
@@ -14,16 +15,27 @@ import '../entities/urgency_band_enum.dart';
 class PriorityCalculator {
   const PriorityCalculator._();
 
-  static int of(TaskEntity task, DateTime today) {
+  static int of(TaskEntity task, DateTime today) =>
+      breakdownOf(task, today).total;
+
+  /// Detalhamento com cada fator resolvido — alimenta a explicação do cálculo
+  /// na UI sem que ela precise calcular nada.
+  static PriorityBreakdown breakdownOf(TaskEntity task, DateTime today) {
     final t0 = DateTime(today.year, today.month, today.day);
-    final estimated = task.estimatedMinutes ?? 0;
-    final importance = (task.importance ?? ImportanceEnum.min).value;
-    return estimated * (5 - importance) * _urgencyWeight(task.dueDate, t0);
+    final days = _daysUntilDue(task.dueDate, t0);
+    return PriorityBreakdown(
+      estimatedMinutes: task.estimatedMinutes ?? 0,
+      importance: task.importance ?? ImportanceEnum.min,
+      urgencyWeight: days == null
+          ? UrgencyBandEnum.beyondFourteen.weight
+          : UrgencyBandEnum.weightForDaysUntilDue(days),
+      daysUntilDue: days,
+    );
   }
 
-  static int _urgencyWeight(DateTime? dueDate, DateTime today) {
-    if (dueDate == null) return UrgencyBandEnum.beyondFourteen.weight;
+  static int? _daysUntilDue(DateTime? dueDate, DateTime today) {
+    if (dueDate == null) return null;
     final due = DateTime(dueDate.year, dueDate.month, dueDate.day);
-    return UrgencyBandEnum.weightForDaysUntilDue(due.difference(today).inDays);
+    return due.difference(today).inDays;
   }
 }

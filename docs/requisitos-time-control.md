@@ -91,6 +91,17 @@ rituais e demais medições ficam em **Próximas versões**.
      - 6–9 dias → **3**
      - 10–14 dias → **2**
      - Mais de 14 dias → **1**
+   - A **posição na fila** (`#1`, `#2`, …) — a ordem de execução sugerida — aparece nas
+     três superfícies: nesta listagem, na **visão de hierarquia** (só nas folhas; mãe e
+     avó não entram na fila) e na **barra do cronômetro ativo**. Ela substitui a
+     pontuação bruta, que é um número sem escala legível (ainda mais com o atraso sem
+     teto); a pontuação e seus fatores ficam no botão de info abaixo. Na barra, a posição
+     é a da **fila global** (sem o filtro de lista da tela) e desaparece quando a tarefa
+     saiu da fila (concluída ou virou mãe).
+   - Cada item (e a barra do cronômetro ativo) tem um **botão de "info"** que abre uma
+     janela explicando **como aquela pontuação foi calculada**: tempo estimado,
+     importância, urgência (com o motivo — "atrasada 5 dias", "vence hoje") e a conta
+     final. Serve para a ordenação nunca parecer arbitrária.
    - Cada item exibe um **subtítulo indicando a mãe e a avó** daquela tarefa (ex.: "Lançar app › Fazer telas"), para dar o contexto da hierarquia na lista plana.
    - _Pronto quando:_ uma tarefa importante (1) de 2h que vence hoje pontua `2 × 4 × 6 = 48` e fica acima da mesma tarefa vencendo em 4 dias (`2 × 4 × 4 = 32`); e vejo o subtítulo "Lançar app › Fazer telas" na folha.
 7. **Relatórios das tarefas e da agenda** por dia, semana e mês: tempo por **lista** e **estimado × real**.
@@ -482,3 +493,18 @@ Decisões que encerraram as pendências anteriores:
   de uma que vence hoje. Decisão do Leandro: **quanto mais atrasada, maior a
   prioridade** — o atraso passa a somar **1 por dia atrasado a partir de 6, sem teto**
   (1 dia = 7, 30 dias = 36). As faixas de prazo futuro seguem inalteradas.
+- 2026-07-25 (cont.) — Adicionado ao req. 6 um **botão de "info"** no item da listagem e
+  na barra do cronômetro: abre o **detalhamento do cálculo da prioridade** (tempo,
+  importância, urgência com o motivo e a conta final). Motivação: com o atraso sem teto,
+  a ordenação ficou menos óbvia de ler.
+- 2026-07-25 (cont.) — Na listagem, o item passou a exibir a **posição (`#1`, `#2`, …)**
+  no lugar da **pontuação bruta** ("prio 1680"): o número não tem escala legível e, com
+  o atraso sem teto, cresce em ordens de grandeza. A pontuação e os fatores seguem
+  disponíveis no botão de info. A barra do cronômetro ativo mantém "prio N" (fora da
+  lista, não há posição a mostrar).
+- 2026-07-25 (cont.) — A **barra do cronômetro** também passou a mostrar `#N` no lugar de
+  "prio N". A posição vem da **fila global** (todas as folhas, sem o filtro de lista da
+  tela) e é omitida quando a tarefa não está na fila (concluída ou virou mãe).
+- 2026-07-25 (cont.) — O `#N` passou a aparecer também na **visão de hierarquia** (só nas
+  folhas). Como a hierarquia e a listagem por prioridade partem da mesma coleção
+  filtrada, as duas visões da tela mostram sempre a mesma posição para a mesma tarefa.

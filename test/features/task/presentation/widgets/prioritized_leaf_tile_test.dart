@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:meu_tempo/features/task/domain/entities/importance_enum.dart';
+import 'package:meu_tempo/features/task/domain/entities/priority_breakdown.dart';
 import 'package:meu_tempo/core/theme/app_colors.dart';
 import 'package:meu_tempo/core/theme/app_theme.dart';
 import 'package:meu_tempo/core/ui/task_crud_menu.dart';
@@ -29,8 +31,14 @@ void main() {
   }) =>
       PrioritizedLeaf(
         task: leafTask(isDone: isDone, spentMinutes: spentMinutes),
-        priority: 42,
+        breakdown: const PriorityBreakdown(
+          estimatedMinutes: 42,
+          importance: ImportanceEnum.min,
+          urgencyWeight: 1,
+          daysUntilDue: null,
+        ),
         ancestryLabel: '',
+        rank: 1,
         isOverdue: isOverdue,
       );
 
@@ -86,6 +94,15 @@ void main() {
     await tester.pumpWidget(harness(leaf: leaf(), isActive: false));
 
     expect(find.textContaining('gasto'), findsOneWidget);
+  });
+
+  testWidgets('mostra a posição (#rank) em vez da pontuação bruta',
+      (tester) async {
+    setView(tester);
+    await tester.pumpWidget(harness(leaf: leaf(), isActive: false));
+
+    expect(find.textContaining('#1'), findsOneWidget);
+    expect(find.textContaining('prio'), findsNothing);
   });
 
   testWidgets('shows running badge when active', (tester) async {

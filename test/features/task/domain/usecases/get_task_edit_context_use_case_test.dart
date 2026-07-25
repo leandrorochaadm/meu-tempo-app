@@ -1,11 +1,14 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:meu_tempo/features/task/domain/usecases/get_prioritized_leaves_use_case.dart';
 import 'package:meu_tempo/features/task/domain/entities/task_entity.dart';
 import 'package:meu_tempo/features/task/domain/usecases/build_task_tree_use_case.dart';
 import 'package:meu_tempo/features/task/domain/usecases/get_task_edit_context_use_case.dart';
 
 void main() {
   final today = DateTime(2026, 7, 20);
-  const useCase = GetTaskEditContextUseCase(BuildTaskTreeUseCase());
+  const useCase = GetTaskEditContextUseCase(
+    BuildTaskTreeUseCase(GetPrioritizedLeavesUseCase()),
+  );
 
   TaskEntity t(String id, {String? parentId}) => TaskEntity(
         id: id,

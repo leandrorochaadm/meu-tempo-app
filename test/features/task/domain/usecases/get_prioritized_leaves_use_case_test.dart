@@ -43,6 +43,20 @@ void main() {
     expect(result[1].priority, 1920);
   });
 
+  test('rank numera a posição final, começando em 1', () {
+    final result = useCase([
+      // Fora de ordem na entrada: o rank vem da ordenação, não da entrada.
+      leaf('depois',
+          minutes: 120, importance: ImportanceEnum.max, dueInDays: 4),
+      leaf('hoje', minutes: 120, importance: ImportanceEnum.max, dueInDays: 0),
+      leaf('longe',
+          minutes: 120, importance: ImportanceEnum.max, dueInDays: 30),
+    ], today);
+
+    expect(result.map((l) => l.task.id), ['hoje', 'depois', 'longe']);
+    expect(result.map((l) => l.rank), [1, 2, 3]);
+  });
+
   test('exclui folhas concluídas e não-folhas', () {
     final result = useCase([
       leaf('done',

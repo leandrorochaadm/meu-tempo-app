@@ -173,7 +173,8 @@ class _MetaRow extends StatelessWidget {
         ],
         Text(
           'gasto ${DurationFormatter.hm(node.totalSpentMinutes)}'
-          ' · est. ${DurationFormatter.hm(node.totalEstimatedMinutes)}',
+          ' · est. ${DurationFormatter.hm(node.totalEstimatedMinutes)}'
+          '${node.rank == null ? '' : ' · #${node.rank}'}',
           style: context.text.labelSmall,
         ),
       ],

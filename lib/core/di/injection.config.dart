@@ -190,17 +190,19 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i838.GetTaskReportUseCase>(
       () => const _i838.GetTaskReportUseCase(),
     );
-    gh.lazySingleton<_i27.BuildTaskTreeUseCase>(
-      () => const _i27.BuildTaskTreeUseCase(),
-    );
     gh.lazySingleton<_i1069.FilterTasksByListUseCase>(
       () => const _i1069.FilterTasksByListUseCase(),
     );
-    gh.lazySingleton<_i170.GetActiveTaskDetailsUseCase>(
-      () => const _i170.GetActiveTaskDetailsUseCase(),
-    );
     gh.lazySingleton<_i1067.GetPrioritizedLeavesUseCase>(
       () => const _i1067.GetPrioritizedLeavesUseCase(),
+    );
+    gh.lazySingleton<_i27.BuildTaskTreeUseCase>(
+      () => _i27.BuildTaskTreeUseCase(gh<_i1067.GetPrioritizedLeavesUseCase>()),
+    );
+    gh.lazySingleton<_i170.GetActiveTaskDetailsUseCase>(
+      () => _i170.GetActiveTaskDetailsUseCase(
+        gh<_i1067.GetPrioritizedLeavesUseCase>(),
+      ),
     );
     gh.lazySingleton<_i813.TaskListRemoteDataSource>(
       () => _i813.TaskListRemoteDataSourceImpl(

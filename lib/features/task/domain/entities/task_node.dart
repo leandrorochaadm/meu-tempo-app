@@ -12,11 +12,17 @@ class TaskNode extends Equatable {
     required this.level,
     this.children = const [],
     this.isOverdue = false,
+    this.rank,
   });
 
   final TaskEntity task;
   final int level;
   final List<TaskNode> children;
+
+  /// Posição da folha na fila de prioridade (1 = próxima). `null` na mãe/avó
+  /// (não entram na fila) e nas folhas fora dela (concluídas). Vem resolvida do
+  /// UseCase — a UI só exibe "#1".
+  final int? rank;
 
   /// Folha com prazo vencido e não concluída — sinaliza atraso na UI.
   final bool isOverdue;
@@ -58,5 +64,5 @@ class TaskNode extends Equatable {
   }
 
   @override
-  List<Object?> get props => [task, level, children, isOverdue];
+  List<Object?> get props => [task, level, children, isOverdue, rank];
 }

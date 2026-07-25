@@ -17,18 +17,18 @@ class GetPrioritizedLeavesUseCase {
     final byId = {for (final t in tasks) t.id: t};
     final t0 = DateTime(today.year, today.month, today.day);
 
-    final leaves = tasks
+    // Pontua primeiro, ordena, e só então numera: o `rank` é a posição final na
+    // lista ordenada, resolvido aqui para a UI não precisar calcular índice.
+    final scored = tasks
         .where((t) => !t.hasChildren && !t.isDone)
-        .map((task) => PrioritizedLeaf(
+        .map((task) => (
               task: task,
-              priority: PriorityCalculator.of(task, t0),
-              ancestryLabel: AncestryLabelBuilder.of(task, byId),
-              isOverdue: OverdueEvaluator.isOverdue(task, t0),
+              breakdown: PriorityCalculator.breakdownOf(task, t0),
             ))
         .toList();
 
-    leaves.sort((a, b) {
-      final byPriority = b.priority.compareTo(a.priority);
+    scored.sort((a, b) {
+      final byPriority = b.breakdown.total.compareTo(a.breakdown.total);
       if (byPriority != 0) return byPriority;
       // Desempate: prazo mais próximo primeiro.
       final da = a.task.dueDate;
@@ -39,6 +39,15 @@ class GetPrioritizedLeavesUseCase {
       return da.compareTo(db);
     });
 
-    return leaves;
+    return [
+      for (var i = 0; i < scored.length; i++)
+        PrioritizedLeaf(
+          task: scored[i].task,
+          breakdown: scored[i].breakdown,
+          ancestryLabel: AncestryLabelBuilder.of(scored[i].task, byId),
+          rank: i + 1,
+          isOverdue: OverdueEvaluator.isOverdue(scored[i].task, t0),
+        ),
+    ];
   }
 }

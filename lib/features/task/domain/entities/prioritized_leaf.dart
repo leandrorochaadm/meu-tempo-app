@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 
+import 'priority_breakdown.dart';
 import 'task_entity.dart';
 
 /// Folha na listagem por prioridade, com a pontuação calculada e o subtítulo
@@ -7,13 +8,23 @@ import 'task_entity.dart';
 class PrioritizedLeaf extends Equatable {
   const PrioritizedLeaf({
     required this.task,
-    required this.priority,
+    required this.breakdown,
     required this.ancestryLabel,
+    required this.rank,
     this.isOverdue = false,
   });
 
   final TaskEntity task;
-  final int priority;
+
+  /// Posição na lista ordenada, começando em 1 — a ordem de execução sugerida.
+  /// Vem resolvida do UseCase (que é quem ordena); a UI só exibe "#1".
+  final int rank;
+
+  /// Fatores do cálculo da prioridade, prontos para exibição.
+  final PriorityBreakdown breakdown;
+
+  /// Pontuação final — derivada do [breakdown], nunca recalculada na UI.
+  int get priority => breakdown.total;
 
   /// Ex.: "Lançar app › Fazer telas" (vazio se a folha for raiz).
   final String ancestryLabel;
@@ -22,5 +33,5 @@ class PrioritizedLeaf extends Equatable {
   final bool isOverdue;
 
   @override
-  List<Object?> get props => [task, priority, ancestryLabel, isOverdue];
+  List<Object?> get props => [task, breakdown, ancestryLabel, rank, isOverdue];
 }

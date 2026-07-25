@@ -8,6 +8,7 @@ import '../../../../core/ui/task_timer_actions.dart';
 import '../../../../core/utils/formatters/date_formatter.dart';
 import '../../../../core/utils/formatters/duration_formatter.dart';
 import '../../domain/entities/prioritized_leaf.dart';
+import 'priority_info_button.dart';
 
 /// Item da listagem por prioridade: título, subtítulo (mãe › avó), tempo
 /// gasto/estimado, pontuação, cronômetro em 1 toque e menu de CRUD.
@@ -125,12 +126,13 @@ class PrioritizedLeafTile extends StatelessWidget {
                     'gasto ${DurationFormatter.hm(task.spentMinutes)}'
                     ' · est. ${DurationFormatter.hm(task.estimatedMinutes ?? 0)}'
                     ' · ${DateFormatter.relativeLabel(task.dueDate ?? today, today)}'
-                    ' · prio ${leaf.priority}',
+                    ' · #${leaf.rank}',
                     style: context.text.labelSmall,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
+                PriorityInfoButton(breakdown: leaf.breakdown),
               ],
             ),
             SizedBox(height: context.space.sm),

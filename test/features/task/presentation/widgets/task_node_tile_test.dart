@@ -122,4 +122,26 @@ void main() {
 
     expect(leftBorderColor(tester), AppColors.dark.categoryAt(0));
   });
+
+  group('posição na fila (#rank)', () {
+    testWidgets('folha com posição exibe #N ao lado do tempo', (tester) async {
+      final node = TaskNode(task: task('leaf', 'Folha'), level: 0, rank: 3);
+      await tester.pumpWidget(harness(node));
+
+      expect(find.text('gasto 30min · est. 1h · #3'), findsOneWidget);
+    });
+
+    testWidgets('folha sem posição não exibe #', (tester) async {
+      await tester.pumpWidget(harness(leafNode()));
+
+      expect(find.text('gasto 30min · est. 1h'), findsOneWidget);
+      expect(find.textContaining('#'), findsNothing);
+    });
+
+    testWidgets('mãe não exibe # (não entra na fila)', (tester) async {
+      await tester.pumpWidget(harness(parentNode()));
+
+      expect(find.textContaining('#'), findsNothing);
+    });
+  });
 }

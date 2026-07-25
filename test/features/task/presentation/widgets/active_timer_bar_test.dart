@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:meu_tempo/features/task/domain/entities/priority_breakdown.dart';
 import 'package:meu_tempo/core/router/app_router.dart';
 import 'package:meu_tempo/core/router/routes.dart';
 import 'package:meu_tempo/core/theme/app_theme.dart';
@@ -41,10 +42,16 @@ void main() {
       parentCandidates: const [],
       currentParentLabel: 'Lançar app › App',
     ),
-    details: const ActiveTaskDetails(
+    details: ActiveTaskDetails(
       listName: 'Entrada',
       listColorIndex: 0,
-      priority: 90,
+      breakdown: PriorityBreakdown(
+        estimatedMinutes: 90,
+        importance: ImportanceEnum.min,
+        urgencyWeight: 1,
+        daysUntilDue: null,
+      ),
+      rank: 3,
       isOverdue: false,
     ),
     lists: const [],
@@ -189,8 +196,9 @@ void main() {
     expect(find.text('Lançar app › App'), findsOneWidget);
     // Contador ao vivo hh:mm:ss (>= 0).
     expect(find.textContaining(':'), findsOneWidget);
-    // Três ações: editar, concluir, parar.
-    expect(find.byType(IconButton), findsNWidgets(3));
+    // Três ações (editar, concluir, parar) + o info da prioridade.
+    expect(find.byType(IconButton), findsNWidgets(4));
+    expect(find.byIcon(Icons.info_outline_rounded), findsOneWidget);
   });
 
   testWidgets('mostra todos os metadados da tarefa, quebrando linha se preciso',
@@ -221,10 +229,16 @@ void main() {
         parentCandidates: const [],
         currentParentLabel: 'Lançar app › App',
       ),
-      details: const ActiveTaskDetails(
+      details: ActiveTaskDetails(
         listName: 'Entrada',
         listColorIndex: 0,
-        priority: 1080,
+        breakdown: PriorityBreakdown(
+          estimatedMinutes: 180,
+          importance: ImportanceEnum.min,
+          urgencyWeight: 6,
+          daysUntilDue: 0,
+        ),
+        rank: 1,
         isOverdue: false,
       ),
       lists: const [],
@@ -236,9 +250,57 @@ void main() {
     expect(find.text('est. 1h30'), findsOneWidget);
     expect(find.text('Hoje'), findsOneWidget);
     expect(find.text('Máxima'), findsOneWidget);
-    expect(find.text('prio 1080'), findsOneWidget);
+    // Posição na fila, não a pontuação bruta (que vive no diálogo de info).
+    expect(find.text('#1'), findsOneWidget);
+    expect(find.textContaining('prio'), findsNothing);
     // Nenhum RenderFlex overflow no viewport estreito.
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('omite a posição quando a tarefa não está na fila', (tester) async {
+    when(() => timerBloc.state).thenReturn(ActiveTimerRunning(
+      title: leaf.title,
+      ancestryLabel: 'Lançar app › App',
+      startedAt: DateTime(2026, 7, 22, 10),
+      editContext: TaskEditContext(
+        task: leaf,
+        parentCandidates: const [],
+        currentParentLabel: 'Lançar app › App',
+      ),
+      details: const ActiveTaskDetails(
+        listName: 'Entrada',
+        listColorIndex: 0,
+        breakdown: PriorityBreakdown(
+          estimatedMinutes: 90,
+          importance: ImportanceEnum.min,
+          urgencyWeight: 1,
+          daysUntilDue: null,
+        ),
+        rank: null,
+        isOverdue: false,
+      ),
+      lists: const [],
+    ));
+    await tester.pumpWidget(harness());
+
+    expect(find.textContaining('#'), findsNothing);
+    // O info da prioridade continua disponível.
+    expect(find.byIcon(Icons.info_outline_rounded), findsOneWidget);
+  });
+
+  testWidgets('o info da barra abre o detalhamento do cálculo', (tester) async {
+    when(() => timerBloc.state).thenReturn(running);
+    await tester.pumpWidget(harness());
+
+    await tester.tap(find.byIcon(Icons.info_outline_rounded));
+    // A barra tem contador ao vivo (Timer periódico): `pumpAndSettle` nunca
+    // estabiliza aqui — avançamos só a animação do diálogo.
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(find.text('Como calculamos'), findsOneWidget);
+    // 90 × (5 − 4) × 1 = 90 — os fatores do `running`.
+    expect(find.text('90 × 1 × 1 = 90'), findsOneWidget);
   });
 
   testWidgets('tocar em Parar dispara ActiveTimerStopRequested',

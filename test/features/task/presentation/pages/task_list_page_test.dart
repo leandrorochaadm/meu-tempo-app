@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:meu_tempo/features/task/domain/entities/importance_enum.dart';
+import 'package:meu_tempo/features/task/domain/entities/priority_breakdown.dart';
 import 'package:meu_tempo/core/constants/app_defaults.dart';
 import 'package:meu_tempo/core/theme/app_theme.dart';
 import 'package:meu_tempo/features/auth/domain/entities/user_entity.dart';
@@ -104,8 +106,14 @@ void main() {
       dueDate: DateTime(2026, 7, 21),
       spentMinutes: 45,
     ),
-    priority: 42,
+    breakdown: PriorityBreakdown(
+      estimatedMinutes: 42,
+      importance: ImportanceEnum.min,
+      urgencyWeight: 1,
+      daysUntilDue: null,
+    ),
     ancestryLabel: '',
+    rank: 1,
   );
 
   TaskListLoaded loadedWithLeaf() =>

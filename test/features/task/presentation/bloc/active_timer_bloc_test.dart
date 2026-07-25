@@ -13,6 +13,7 @@ import 'package:meu_tempo/features/task/domain/usecases/build_task_tree_use_case
 import 'package:meu_tempo/features/task/domain/usecases/complete_task_use_case.dart';
 import 'package:meu_tempo/features/task/domain/usecases/edit_task_use_case.dart';
 import 'package:meu_tempo/features/task/domain/usecases/get_active_task_details_use_case.dart';
+import 'package:meu_tempo/features/task/domain/usecases/get_prioritized_leaves_use_case.dart';
 import 'package:meu_tempo/features/task/domain/usecases/get_task_edit_context_use_case.dart';
 import 'package:meu_tempo/features/task/domain/usecases/move_task_use_case.dart';
 import 'package:meu_tempo/features/task/domain/usecases/stop_timer_use_case.dart';
@@ -45,9 +46,12 @@ void main() {
   late _MockMoveTask moveTask;
   late _MockCompleteTask completeTask;
 
-  const getEditContext = GetTaskEditContextUseCase(BuildTaskTreeUseCase());
+  const getEditContext = GetTaskEditContextUseCase(
+    BuildTaskTreeUseCase(GetPrioritizedLeavesUseCase()),
+  );
   // Transformação pura em memória — usa a implementação real, sem mock.
-  const getActiveTaskDetails = GetActiveTaskDetailsUseCase();
+  const getActiveTaskDetails =
+      GetActiveTaskDetailsUseCase(GetPrioritizedLeavesUseCase());
   final today = DateTime(2026, 7, 22);
 
   final leaf = TaskEntity(

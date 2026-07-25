@@ -144,7 +144,12 @@ class ActiveTimerBloc extends Bloc<ActiveTimerEvent, ActiveTimerState> {
       ancestryLabel: editContext.currentParentLabel,
       startedAt: active.startedAt,
       editContext: editContext,
-      details: _getActiveTaskDetails(editContext.task, _lists, DateTime.now()),
+      details: _getActiveTaskDetails(
+        editContext.task,
+        _lists,
+        _tasks,
+        DateTime.now(),
+      ),
       lists: _lists,
     ));
   }

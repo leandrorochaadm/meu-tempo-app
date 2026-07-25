@@ -6,6 +6,7 @@ import 'package:meu_tempo/core/usecase/usecase.dart';
 import 'package:meu_tempo/features/list/domain/entities/task_list_entity.dart';
 import 'package:meu_tempo/features/list/domain/usecases/ensure_inbox_exists_use_case.dart';
 import 'package:meu_tempo/features/list/domain/usecases/watch_lists_use_case.dart';
+import 'package:meu_tempo/features/task/domain/entities/importance_enum.dart';
 import 'package:meu_tempo/features/task/domain/entities/task_entity.dart';
 import 'package:meu_tempo/features/task/domain/entities/active_timer_entity.dart';
 import 'package:meu_tempo/features/task/domain/entities/timer_target_type_enum.dart';
@@ -110,7 +111,7 @@ void main() {
   late _MockRestore restoreTasks;
   late _MockGetFilter getFilter;
   late _MockSaveFilter saveFilter;
-  const buildTree = BuildTaskTreeUseCase();
+  const buildTree = BuildTaskTreeUseCase(GetPrioritizedLeavesUseCase());
   const filterByList = FilterTasksByListUseCase();
 
   const inbox = TaskListEntity(id: 'inbox', name: 'Entrada', isDefault: true);
@@ -238,6 +239,46 @@ void main() {
     targetType: TimerTargetTypeEnum.task,
     listId: 'inbox',
     startedAt: startedAt,
+  );
+
+  blocTest<TaskListBloc, TaskListState>(
+    'a árvore e a fila chegam ao State com a mesma posição (#rank)',
+    build: () {
+      final urgente = TaskEntity(
+        id: 'urgente',
+        title: 'Urgente',
+        listId: 'inbox',
+        createdAt: DateTime(2026, 7, 20),
+        dueDate: DateTime.now(),
+        estimatedMinutes: 600,
+        importance: ImportanceEnum.max,
+      );
+      final calma = TaskEntity(
+        id: 'calma',
+        title: 'Calma',
+        listId: 'inbox',
+        createdAt: DateTime(2026, 7, 20),
+        dueDate: DateTime.now().add(const Duration(days: 20)),
+        estimatedMinutes: 15,
+        importance: ImportanceEnum.min,
+      );
+      when(() => watchTasks(any()))
+          .thenAnswer((_) => Stream.value(Right([calma, urgente])));
+      return build();
+    },
+    act: (bloc) => bloc.add(const TaskListStarted()),
+    verify: (bloc) {
+      final state = bloc.state as TaskListLoaded;
+      final rankByIdNaArvore = {
+        for (final n in state.roots) n.task.id: n.rank,
+      };
+      final rankByIdNaFila = {
+        for (final l in state.prioritized) l.task.id: l.rank,
+      };
+
+      expect(rankByIdNaArvore, {'urgente': 1, 'calma': 2});
+      expect(rankByIdNaFila, rankByIdNaArvore);
+    },
   );
 
   blocTest<TaskListBloc, TaskListState>(
