@@ -13,7 +13,30 @@ abstract class TaskRemoteDataSource {
   /// `isDone + createdAt` (ver `firestore.indexes.json`).
   Stream<List<TaskModel>> watchTasks({required bool includeDone});
   Future<TaskModel> create(TaskModel task);
-  Future<void> setHasChildren(String taskId, bool value);
+
+  /// Cria a filha **e** marca o pai como não-folha num único `WriteBatch` —
+  /// nunca deixa o pai com `hasChildren` desatualizado (ver `firebase.md`).
+  Future<TaskModel> createChild(TaskModel child, {required String parentId});
+
+  /// Grava a **subárvore movida** e ajusta o `hasChildren` dos pais envolvidos
+  /// no mesmo `WriteBatch`. [newParentId] recebe `true`; [emptiedParentId] (pai
+  /// antigo que ficou sem filhas) recebe `false`.
+  Future<void> moveTask(
+    List<TaskModel> subtree, {
+    String? newParentId,
+    String? emptiedParentId,
+  });
+
+  /// Remove a subárvore inteira e, no mesmo `WriteBatch`, marca
+  /// [emptiedParentId] como folha quando o pai ficou sem filhas.
+  Future<void> deleteSubtree(
+    List<String> taskIds, {
+    String? emptiedParentId,
+  });
+
+  /// Recria a subárvore (ids originais) e remarca [parentId] como não-folha no
+  /// mesmo `WriteBatch` — desfazer de uma exclusão em cascata.
+  Future<void> restoreSubtree(List<TaskModel> tasks, {String? parentId});
   Future<void> addSpentMinutes(String taskId, int delta);
   Future<List<TaskModel>> getTasks();
   Future<void> setDone(String taskId, bool value);
@@ -69,9 +92,91 @@ class TaskRemoteDataSourceImpl implements TaskRemoteDataSource {
   }
 
   @override
-  Future<void> setHasChildren(String taskId, bool value) async {
+  Future<TaskModel> createChild(
+    TaskModel child, {
+    required String parentId,
+  }) async {
     try {
-      await _collection.doc(taskId).update({TaskFields.hasChildren: value});
+      final ref = _collection.doc(); // id gerado localmente, sem ida ao servidor
+      final batch = _firestore.batch()
+        ..set(ref, child.toJson())
+        ..update(_collection.doc(parentId), {TaskFields.hasChildren: true});
+      await batch.commit();
+      final doc = await ref.get();
+      return TaskModel.fromDoc(doc.id, doc.data()!);
+    } on FirebaseException catch (e) {
+      throw mapFirestoreException(e);
+    }
+  }
+
+  @override
+  Future<void> moveTask(
+    List<TaskModel> subtree, {
+    String? newParentId,
+    String? emptiedParentId,
+  }) async {
+    try {
+      final batch = _firestore.batch();
+      for (final task in subtree) {
+        batch.set(_collection.doc(task.id), task.toJson());
+      }
+      if (newParentId != null) {
+        batch.update(
+          _collection.doc(newParentId),
+          {TaskFields.hasChildren: true},
+        );
+      }
+      if (emptiedParentId != null) {
+        batch.update(
+          _collection.doc(emptiedParentId),
+          {TaskFields.hasChildren: false},
+        );
+      }
+      await batch.commit();
+    } on FirebaseException catch (e) {
+      throw mapFirestoreException(e);
+    }
+  }
+
+  @override
+  Future<void> deleteSubtree(
+    List<String> taskIds, {
+    String? emptiedParentId,
+  }) async {
+    try {
+      final batch = _firestore.batch();
+      for (final id in taskIds) {
+        batch.delete(_collection.doc(id));
+      }
+      if (emptiedParentId != null) {
+        batch.update(
+          _collection.doc(emptiedParentId),
+          {TaskFields.hasChildren: false},
+        );
+      }
+      await batch.commit();
+    } on FirebaseException catch (e) {
+      throw mapFirestoreException(e);
+    }
+  }
+
+  @override
+  Future<void> restoreSubtree(
+    List<TaskModel> tasks, {
+    String? parentId,
+  }) async {
+    try {
+      final batch = _firestore.batch();
+      for (final task in tasks) {
+        batch.set(_collection.doc(task.id), task.toJson());
+      }
+      if (parentId != null) {
+        batch.update(
+          _collection.doc(parentId),
+          {TaskFields.hasChildren: true},
+        );
+      }
+      await batch.commit();
     } on FirebaseException catch (e) {
       throw mapFirestoreException(e);
     }

@@ -508,3 +508,14 @@ Decisões que encerraram as pendências anteriores:
 - 2026-07-25 (cont.) — O `#N` passou a aparecer também na **visão de hierarquia** (só nas
   folhas). Como a hierarquia e a listagem por prioridade partem da mesma coleção
   filtrada, as duas visões da tela mostram sempre a mesma posição para a mesma tarefa.
+- 2026-07-25 (cont.) — **Escritas de hierarquia agora são atômicas.** O campo
+  `hasChildren` (que diz se a tarefa tem filhas, base de "é folha") era mantido por 5
+  `update` avulsos no Firestore, sem transação com a escrita principal: se o segundo
+  falhasse, uma mãe ficava marcada como folha e voltava a aparecer na fila de prioridade
+  com cronômetro e tempo próprio. As 4 operações que mexem na hierarquia — criar
+  subtarefa, mover, excluir em cascata e desfazer a exclusão — passaram a usar
+  **WriteBatch**: ou todas as escritas entram, ou nenhuma. Avaliada e descartada a
+  alternativa de **remover** o campo e derivar "é folha" da relação `parentId`: ela
+  exigiria reverter o filtro de concluídas no backend (a coleção no cliente é parcial, e
+  uma mãe cuja única filha está concluída seria lida como folha). Plano detalhado dessa
+  alternativa preservado em `temp/plan/plano-remover-flag-haschildren-2026-07-25.md`.

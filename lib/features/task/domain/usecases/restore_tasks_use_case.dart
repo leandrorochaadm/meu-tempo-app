@@ -30,17 +30,12 @@ class RestoreTasksUseCase implements UseCase<Unit, RestoreTasksParams> {
   Future<Either<Failure, Unit>> call(RestoreTasksParams params) async {
     if (params.tasks.isEmpty) return const Right(unit);
 
-    for (final node in params.tasks) {
-      final res = await _repository.update(node);
-      final f = res.getLeft().toNullable();
-      if (f != null) return Left(f);
-    }
-
-    // A raiz da subárvore é o primeiro elemento; reativa o pai externo se houver.
-    final parentId = params.tasks.first.parentId;
-    if (parentId != null) {
-      return _repository.setHasChildren(parentId, true);
-    }
-    return const Right(unit);
+    // Recriar a subárvore e reativar o pai externo é uma escrita **atômica**:
+    // um desfazer parcial deixaria a hierarquia pela metade. A raiz da subárvore
+    // é o primeiro elemento (`DeleteTaskUseCase` devolve raiz primeiro).
+    return _repository.restoreSubtree(
+      params.tasks,
+      parentId: params.tasks.first.parentId,
+    );
   }
 }

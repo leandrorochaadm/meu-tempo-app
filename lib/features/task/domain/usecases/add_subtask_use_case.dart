@@ -56,14 +56,9 @@ class AddSubtaskUseCase implements UseCase<TaskEntity, AddSubtaskParams> {
       dueDate: params.today,
     );
 
-    final created = await _repository.create(child);
-    return created.fold(
-      (failure) async => Left<Failure, TaskEntity>(failure),
-      (task) async {
-        // Marca o pai como não-folha; se falhar, ainda devolve a filha criada.
-        await _repository.setHasChildren(params.parentId, true);
-        return Right<Failure, TaskEntity>(task);
-      },
-    );
+    // Criar a filha e marcar o pai como não-folha é uma escrita **atômica**:
+    // se o `hasChildren` do pai falhasse à parte, ele ficaria mentindo (folha
+    // com filhas) e voltaria a aparecer na fila de prioridade.
+    return _repository.createChild(child, parentId: params.parentId);
   }
 }

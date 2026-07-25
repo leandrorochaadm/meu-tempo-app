@@ -85,21 +85,24 @@ class MoveTaskUseCase implements UseCase<Unit, MoveTaskParams> {
       spentMinutes: task.spentMinutes,
     );
 
-    final upd = await _repository.update(moved);
-    final f = upd.getLeft().toNullable();
-    if (f != null) return Left(f);
+    final subtree = <TaskEntity>[moved];
 
-    if (params.newParentId != null) {
-      await _repository.setHasChildren(params.newParentId!, true);
-    }
+    // O pai antigo só deixa de ser mãe se esta era a última filha dele.
+    String? emptiedParentId;
     if (oldParentId != null && oldParentId != params.newParentId) {
       final stillHas = (childrenOf[oldParentId] ?? const [])
           .where((c) => c.id != params.taskId)
           .isNotEmpty;
-      if (!stillHas) await _repository.setHasChildren(oldParentId, false);
+      if (!stillHas) emptiedParentId = oldParentId;
     }
 
-    return const Right(unit);
+    // Mover a subárvore e ajustar o `hasChildren` dos dois pais é uma escrita
+    // **atômica**: uma falha parcial deixaria um pai mentindo sobre ter filhas.
+    return _repository.moveTask(
+      subtree,
+      newParentId: params.newParentId,
+      emptiedParentId: emptiedParentId,
+    );
   }
 
   bool _isDescendant(

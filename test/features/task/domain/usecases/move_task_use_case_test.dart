@@ -19,16 +19,39 @@ void main() {
 
   setUp(() {
     repo = _MockTaskRepo();
-    when(() => repo.update(any())).thenAnswer((_) async => const Right(unit));
-    when(() => repo.setHasChildren(any(), any()))
-        .thenAnswer((_) async => const Right(unit));
+    when(() => repo.moveTask(
+          any(),
+          newParentId: any(named: 'newParentId'),
+          emptiedParentId: any(named: 'emptiedParentId'),
+        )).thenAnswer((_) async => const Right(unit));
   });
 
-  TaskEntity t(String id, {String? parentId, bool hasChildren = false}) =>
+  /// Captura a chamada atômica: tarefa gravada, novo pai e pai liberado.
+  /// `verify` consome as interações, então chame **uma vez** por teste.
+  ({List<TaskEntity> subtree, String? newParent, String? emptiedParent})
+      captureMove() {
+    final captured = verify(() => repo.moveTask(
+          captureAny(),
+          newParentId: captureAny(named: 'newParentId'),
+          emptiedParentId: captureAny(named: 'emptiedParentId'),
+        )).captured;
+    return (
+      subtree: captured[0] as List<TaskEntity>,
+      newParent: captured[1] as String?,
+      emptiedParent: captured[2] as String?,
+    );
+  }
+
+  TaskEntity t(
+    String id, {
+    String? parentId,
+    bool hasChildren = false,
+    String listId = 'inbox',
+  }) =>
       TaskEntity(
         id: id,
         title: id,
-        listId: 'inbox',
+        listId: listId,
         createdAt: today,
         parentId: parentId,
         hasChildren: hasChildren,
@@ -69,7 +92,8 @@ void main() {
         (f) => expect(f, isA<MaxLevelExceededFailure>()));
   });
 
-  test('move válido reatribui pai e ajusta hasChildren', () async {
+  test('move válido grava tarefa e os dois pais numa escrita atômica',
+      () async {
     when(() => repo.getTasks()).thenAnswer((_) async => Right([
           t('destino'),
           t('mae', hasChildren: true),
@@ -81,8 +105,146 @@ void main() {
     );
 
     expect(r.isRight(), isTrue);
-    verify(() => repo.update(any())).called(1);
-    verify(() => repo.setHasChildren('destino', true)).called(1);
-    verify(() => repo.setHasChildren('mae', false)).called(1);
+    verify(() => repo.moveTask(
+          any(),
+          newParentId: any(named: 'newParentId'),
+          emptiedParentId: any(named: 'emptiedParentId'),
+        )).called(1);
+    // Nenhuma escrita solta fora do batch.
+    verifyNever(() => repo.update(any()));
+  });
+
+  test('informa o novo pai e libera o antigo que ficou vazio', () async {
+    when(() => repo.getTasks()).thenAnswer((_) async => Right([
+          t('destino'),
+          t('mae', hasChildren: true),
+          t('filha', parentId: 'mae'),
+        ]));
+
+    await MoveTaskUseCase(repo)(
+      const MoveTaskParams(taskId: 'filha', newParentId: 'destino'),
+    );
+
+    final call = captureMove();
+    expect(call.newParent, 'destino');
+    expect(call.emptiedParent, 'mae');
+  });
+
+  test('não libera o pai antigo quando ainda restam outras filhas', () async {
+    when(() => repo.getTasks()).thenAnswer((_) async => Right([
+          t('destino'),
+          t('mae', hasChildren: true),
+          t('f1', parentId: 'mae'),
+          t('f2', parentId: 'mae'),
+        ]));
+
+    await MoveTaskUseCase(repo)(
+      const MoveTaskParams(taskId: 'f1', newParentId: 'destino'),
+    );
+
+    expect(captureMove().emptiedParent, isNull);
+  });
+
+  test('mover para raiz (newParentId null) libera o pai antigo', () async {
+    when(() => repo.getTasks()).thenAnswer((_) async => Right([
+          t('mae', hasChildren: true),
+          t('filha', parentId: 'mae'),
+        ]));
+
+    final r = await MoveTaskUseCase(repo)(
+      const MoveTaskParams(taskId: 'filha'),
+    );
+
+    expect(r.isRight(), isTrue);
+    final call = captureMove();
+    expect(call.newParent, isNull);
+    expect(call.emptiedParent, 'mae');
+    expect(call.subtree.single.parentId, isNull);
+  });
+
+  test('mover uma raiz para dentro de outra não libera pai nenhum', () async {
+    when(() => repo.getTasks())
+        .thenAnswer((_) async => Right([t('destino'), t('solta')]));
+
+    await MoveTaskUseCase(repo)(
+      const MoveTaskParams(taskId: 'solta', newParentId: 'destino'),
+    );
+
+    final call = captureMove();
+    expect(call.newParent, 'destino');
+    expect(call.emptiedParent, isNull);
+  });
+
+  test('preserva os campos da tarefa ao mover (só o parentId muda)', () async {
+    final filha = TaskEntity(
+      id: 'filha',
+      title: 'Fazer telas',
+      listId: 'inbox',
+      createdAt: today,
+      parentId: 'mae',
+      estimatedMinutes: 45,
+      dueDate: today,
+      spentMinutes: 20,
+      isDone: true,
+    );
+    when(() => repo.getTasks()).thenAnswer((_) async => Right([
+          t('destino'),
+          t('mae', hasChildren: true),
+          filha,
+        ]));
+
+    await MoveTaskUseCase(repo)(
+      const MoveTaskParams(taskId: 'filha', newParentId: 'destino'),
+    );
+
+    final moved = captureMove().subtree.first;
+    expect(moved.parentId, 'destino');
+    expect(moved.title, 'Fazer telas');
+    expect(moved.estimatedMinutes, 45);
+    expect(moved.spentMinutes, 20);
+    expect(moved.isDone, isTrue);
+  });
+
+  test('tarefa inexistente retorna TaskNotFoundFailure sem escrever', () async {
+    when(() => repo.getTasks()).thenAnswer((_) async => Right([t('a')]));
+
+    final r = await MoveTaskUseCase(repo)(
+      const MoveTaskParams(taskId: 'sumiu', newParentId: 'a'),
+    );
+
+    r.getLeft().fold(() => fail('esperava Left'),
+        (f) => expect(f, isA<TaskNotFoundFailure>()));
+    verifyNever(() => repo.moveTask(
+          any(),
+          newParentId: any(named: 'newParentId'),
+          emptiedParentId: any(named: 'emptiedParentId'),
+        ));
+  });
+
+  test('novo pai inexistente retorna TaskNotFoundFailure', () async {
+    when(() => repo.getTasks()).thenAnswer((_) async => Right([t('a')]));
+
+    final r = await MoveTaskUseCase(repo)(
+      const MoveTaskParams(taskId: 'a', newParentId: 'fantasma'),
+    );
+
+    r.getLeft().fold(() => fail('esperava Left'),
+        (f) => expect(f, isA<TaskNotFoundFailure>()));
+  });
+
+  test('propaga o Failure da escrita atômica', () async {
+    when(() => repo.getTasks())
+        .thenAnswer((_) async => Right([t('destino'), t('solta')]));
+    when(() => repo.moveTask(
+          any(),
+          newParentId: any(named: 'newParentId'),
+          emptiedParentId: any(named: 'emptiedParentId'),
+        )).thenAnswer((_) async => const Left(NetworkFailure()));
+
+    final r = await MoveTaskUseCase(repo)(
+      const MoveTaskParams(taskId: 'solta', newParentId: 'destino'),
+    );
+
+    expect(r.getLeft().toNullable(), isA<NetworkFailure>());
   });
 }

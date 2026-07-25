@@ -55,22 +55,24 @@ class DeleteTaskUseCase
       }
     }
 
-    for (final id in toDelete) {
-      final res = await _repository.delete(id);
-      final f = res.getLeft().toNullable();
-      if (f != null) return Left(f);
-    }
-
-    // Se o pai ficou sem outras filhas, marca hasChildren = false.
+    // Se o pai ficou sem outras filhas, ele volta a ser folha.
+    String? emptiedParentId;
     final parentId = target?.parentId;
     if (parentId != null) {
       final remaining = (childrenOf[parentId] ?? const [])
           .where((c) => c.id != params.taskId)
           .isNotEmpty;
-      if (!remaining) {
-        await _repository.setHasChildren(parentId, false);
-      }
+      if (!remaining) emptiedParentId = parentId;
     }
+
+    // Excluir a subárvore e liberar o pai é uma escrita **atômica**: sem isso,
+    // uma falha no meio da cascata deixaria netas órfãs ou o pai mentindo.
+    final res = await _repository.deleteSubtree(
+      toDelete,
+      emptiedParentId: emptiedParentId,
+    );
+    final f = res.getLeft().toNullable();
+    if (f != null) return Left(f);
 
     // Subárvore removida (raiz primeiro), para o undo recriar preservando ids.
     final removed = [for (final id in toDelete) byId[id]!];

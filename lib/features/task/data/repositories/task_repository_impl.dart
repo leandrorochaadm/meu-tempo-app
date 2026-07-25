@@ -46,15 +46,71 @@ class TaskRepositoryImpl implements TaskRepository {
   }
 
   @override
-  Future<Either<Failure, Unit>> setHasChildren(
-    String taskId,
-    bool value,
-  ) async {
+  Future<Either<Failure, TaskEntity>> createChild(
+    TaskEntity child, {
+    required String parentId,
+  }) async {
     try {
-      await _dataSource.setHasChildren(taskId, value);
+      final model = await _dataSource.createChild(
+        TaskModel.fromEntity(child),
+        parentId: parentId,
+      );
+      return Right(model.toEntity());
+    } on AppException catch (e, s) {
+      AppLogger.logError('createChild falhou', error: e, stackTrace: s);
+      return Left(e.toFailure());
+    }
+  }
+
+  @override
+  Future<Either<Failure, Unit>> moveTask(
+    List<TaskEntity> subtree, {
+    String? newParentId,
+    String? emptiedParentId,
+  }) async {
+    try {
+      await _dataSource.moveTask(
+        subtree.map(TaskModel.fromEntity).toList(),
+        newParentId: newParentId,
+        emptiedParentId: emptiedParentId,
+      );
       return const Right(unit);
     } on AppException catch (e, s) {
-      AppLogger.logError('setHasChildren falhou', error: e, stackTrace: s);
+      AppLogger.logError('moveTask falhou', error: e, stackTrace: s);
+      return Left(e.toFailure());
+    }
+  }
+
+  @override
+  Future<Either<Failure, Unit>> deleteSubtree(
+    List<String> taskIds, {
+    String? emptiedParentId,
+  }) async {
+    try {
+      await _dataSource.deleteSubtree(
+        taskIds,
+        emptiedParentId: emptiedParentId,
+      );
+      return const Right(unit);
+    } on AppException catch (e, s) {
+      AppLogger.logError('deleteSubtree falhou', error: e, stackTrace: s);
+      return Left(e.toFailure());
+    }
+  }
+
+  @override
+  Future<Either<Failure, Unit>> restoreSubtree(
+    List<TaskEntity> tasks, {
+    String? parentId,
+  }) async {
+    try {
+      await _dataSource.restoreSubtree(
+        tasks.map(TaskModel.fromEntity).toList(),
+        parentId: parentId,
+      );
+      return const Right(unit);
+    } on AppException catch (e, s) {
+      AppLogger.logError('restoreSubtree falhou', error: e, stackTrace: s);
       return Left(e.toFailure());
     }
   }
