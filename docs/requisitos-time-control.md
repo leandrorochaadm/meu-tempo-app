@@ -78,8 +78,16 @@ rituais e demais medições ficam em **Próximas versões**.
 4. **Cabe no dia:** ao planejar, o app avisa se a soma das durações estimadas (tarefas **+ compromissos**) passa do tempo disponível. O tempo disponível é um valor de **horas fixas que o Leandro define** uma vez.
    - _Pronto quando:_ defino "8h disponíveis por dia"; ao planejar 9h entre tarefas e compromissos, o app me avisa que passou.
 5. **Listas:** criar, editar e apagar listas (ex.: pessoal, profissional, estudo) e ligar cada tarefa a uma lista. Já existe por padrão uma lista fixa **"Entrada"** (destino das tarefas criadas rápido).
+   - **A lista pertence à árvore, não à tarefa:** mãe, filha e neta estão **sempre** na
+     mesma lista. Só a **tarefa mãe** (raiz) escolhe a lista; filha e neta **herdam** a
+     dela. Na prática: a tela de edição de filha/neta **não mostra** o seletor de lista;
+     trocar a lista de uma mãe **arrasta** toda a subárvore; e mover uma tarefa para
+     dentro de outra mãe faz ela (e seus descendentes) **adotarem** a lista da nova mãe.
    - **Excluir lista com tarefas:** o app **pergunta** o que fazer com as tarefas — **mover para outra lista** (que o usuário escolhe) ou **excluir todas**.
    - _Pronto quando:_ crio a lista "Estudo", ligo uma tarefa a ela e depois consigo renomeá-la; ao tentar excluí-la com tarefas dentro, o app me pergunta se movo as tarefas para outra lista ou excluo todas.
+   - _Pronto quando (lista da árvore):_ abro uma tarefa neta para editar e **não** vejo
+     opção de lista; mudo a lista da mãe "Lançar app" de Profissional para Estudo e as
+     filhas/netas vão com ela.
 6. **Listagem por prioridade:** lista **plana só das folhas** (tarefas executáveis), ordenada pela prioridade calculada.
    - **Fórmula:** `prioridade = tempoEstimado × (5 − importância) × urgênciaDoPrazo`. Tarefas mais próximas, mais importantes (1) e mais longas vêm primeiro.
    - **urgênciaDoPrazo (faixas graduais até 14 dias; atraso cresce sem teto):**
@@ -526,3 +534,12 @@ Decisões que encerraram as pendências anteriores:
   vem do dado da própria tarefa (`hasChildren`, mantido atomicamente), que sobrevive a
   qualquer filtro. Efeito colateral positivo: acabou a divergência entre as duas
   definições de "é folha" que existiam no sistema.
+- 2026-07-25 (cont.) — **Decisão de produto: a lista pertence à árvore.** Antes, uma folha
+  podia ser editada para uma lista diferente da mãe, o que dividia uma árvore entre duas
+  listas e fazia o filtro por lista truncar a hierarquia (a mãe aparecia sem as filhas e,
+  por isso, com totais zerados). Agora só a tarefa mãe (raiz) escolhe a lista: o seletor
+  **desapareceu** da edição de filha/neta; trocar a lista da mãe arrasta a subárvore
+  inteira; mover uma tarefa para outra mãe faz a subárvore adotar a lista dela; e salvar
+  uma tarefa legada divergente a realinha automaticamente com a mãe. Todas essas escritas
+  são atômicas (`WriteBatch`), incluindo o "mover tarefas ao excluir uma lista" — que
+  antes reescrevia tarefa por tarefa e podia partir a árvore entre duas listas.

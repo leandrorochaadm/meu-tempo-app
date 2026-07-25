@@ -58,10 +58,16 @@ class DeleteListUseCase implements UseCase<Unit, DeleteListParams> {
         .where((t) => t.listId == params.listId)
         .toList();
 
-    for (final task in tasks) {
+    // Escrita **atômica**: como a lista pertence à árvore, mover (ou excluir)
+    // metade das tarefas deixaria a árvore partida entre duas listas.
+    if (tasks.isNotEmpty) {
       final res = params.moveToListId != null
-          ? await _taskRepository.update(_withList(task, params.moveToListId!))
-          : await _taskRepository.delete(task.id);
+          ? await _taskRepository.updateAll([
+              for (final task in tasks) _withList(task, params.moveToListId!),
+            ])
+          : await _taskRepository.deleteSubtree(
+              [for (final task in tasks) task.id],
+            );
       final f = res.getLeft().toNullable();
       if (f != null) return Left(f);
     }

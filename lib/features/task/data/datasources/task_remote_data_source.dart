@@ -18,14 +18,19 @@ abstract class TaskRemoteDataSource {
   /// nunca deixa o pai com `hasChildren` desatualizado (ver `firebase.md`).
   Future<TaskModel> createChild(TaskModel child, {required String parentId});
 
-  /// Grava a **subárvore movida** e ajusta o `hasChildren` dos pais envolvidos
-  /// no mesmo `WriteBatch`. [newParentId] recebe `true`; [emptiedParentId] (pai
-  /// antigo que ficou sem filhas) recebe `false`.
+  /// Grava a **subárvore movida** (a tarefa e seus descendentes, que herdam a
+  /// lista do novo pai) e ajusta o `hasChildren` dos pais envolvidos no mesmo
+  /// `WriteBatch`. [newParentId] recebe `true`; [emptiedParentId] (pai antigo
+  /// que ficou sem filhas) recebe `false`.
   Future<void> moveTask(
     List<TaskModel> subtree, {
     String? newParentId,
     String? emptiedParentId,
   });
+
+  /// Grava várias tarefas num único `WriteBatch` — usado quando editar uma
+  /// tarefa mãe precisa propagar a lista para as filhas/netas.
+  Future<void> updateAll(List<TaskModel> tasks);
 
   /// Remove a subárvore inteira e, no mesmo `WriteBatch`, marca
   /// [emptiedParentId] como folha quando o pai ficou sem filhas.
@@ -104,6 +109,19 @@ class TaskRemoteDataSourceImpl implements TaskRemoteDataSource {
       await batch.commit();
       final doc = await ref.get();
       return TaskModel.fromDoc(doc.id, doc.data()!);
+    } on FirebaseException catch (e) {
+      throw mapFirestoreException(e);
+    }
+  }
+
+  @override
+  Future<void> updateAll(List<TaskModel> tasks) async {
+    try {
+      final batch = _firestore.batch();
+      for (final task in tasks) {
+        batch.set(_collection.doc(task.id), task.toJson());
+      }
+      await batch.commit();
     } on FirebaseException catch (e) {
       throw mapFirestoreException(e);
     }

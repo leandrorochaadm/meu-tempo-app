@@ -22,8 +22,8 @@ abstract class TaskRepository {
     required String parentId,
   });
 
-  /// Move a **subárvore** (a tarefa e seus descendentes) e ajusta o
-  /// `hasChildren` dos pais envolvidos **atomicamente**.
+  /// Move a **subárvore** (a tarefa e seus descendentes, que herdam a lista do
+  /// novo pai) e ajusta o `hasChildren` dos pais envolvidos **atomicamente**.
   /// [newParentId] passa a ter filhas; [emptiedParentId] é o pai antigo que
   /// ficou sem nenhuma (`null` quando não se aplica).
   Future<Either<Failure, Unit>> moveTask(
@@ -31,6 +31,10 @@ abstract class TaskRepository {
     String? newParentId,
     String? emptiedParentId,
   });
+
+  /// Grava várias tarefas **atomicamente** — usado quando editar uma tarefa mãe
+  /// propaga a lista para filhas/netas (a lista pertence à árvore).
+  Future<Either<Failure, Unit>> updateAll(List<TaskEntity> tasks);
 
   /// Exclui a subárvore (ela e todas as descendentes) e marca
   /// [emptiedParentId] como folha **atomicamente**.

@@ -71,10 +71,17 @@ class MoveTaskUseCase implements UseCase<Unit, MoveTaskParams> {
 
     final oldParentId = task.parentId;
 
+    // Regra: **a lista pertence à árvore**. Ao ganhar uma nova mãe, a tarefa e
+    // toda a sua subárvore passam para a lista dela. Movendo para raiz
+    // (`newParentId == null`), a lista atual é mantida.
+    final newParent =
+        params.newParentId == null ? null : byId[params.newParentId];
+    final newListId = newParent?.listId ?? task.listId;
+
     final moved = TaskEntity(
       id: task.id,
       title: task.title,
-      listId: task.listId,
+      listId: newListId,
       createdAt: task.createdAt,
       parentId: params.newParentId,
       estimatedMinutes: task.estimatedMinutes,
@@ -85,7 +92,30 @@ class MoveTaskUseCase implements UseCase<Unit, MoveTaskParams> {
       spentMinutes: task.spentMinutes,
     );
 
+    // Descendentes acompanham a lista da nova mãe (o `parentId` deles não muda).
     final subtree = <TaskEntity>[moved];
+    if (newListId != task.listId) {
+      void collect(String parentId) {
+        for (final c in childrenOf[parentId] ?? const <TaskEntity>[]) {
+          subtree.add(TaskEntity(
+            id: c.id,
+            title: c.title,
+            listId: newListId,
+            createdAt: c.createdAt,
+            parentId: c.parentId,
+            estimatedMinutes: c.estimatedMinutes,
+            dueDate: c.dueDate,
+            importance: c.importance,
+            isDone: c.isDone,
+            hasChildren: c.hasChildren,
+            spentMinutes: c.spentMinutes,
+          ));
+          collect(c.id);
+        }
+      }
+
+      collect(task.id);
+    }
 
     // O pai antigo só deixa de ser mãe se esta era a última filha dele.
     String? emptiedParentId;
@@ -97,7 +127,8 @@ class MoveTaskUseCase implements UseCase<Unit, MoveTaskParams> {
     }
 
     // Mover a subárvore e ajustar o `hasChildren` dos dois pais é uma escrita
-    // **atômica**: uma falha parcial deixaria um pai mentindo sobre ter filhas.
+    // **atômica**: uma falha parcial deixaria um pai mentindo sobre ter filhas,
+    // ou metade da árvore numa lista e metade em outra.
     return _repository.moveTask(
       subtree,
       newParentId: params.newParentId,

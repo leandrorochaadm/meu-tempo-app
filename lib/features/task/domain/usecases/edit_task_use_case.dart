@@ -49,16 +49,17 @@ class EditTaskUseCase implements UseCase<Unit, EditTaskParams> {
     if (failure != null) return Left(failure);
     final tasks = result.getRight().toNullable()!;
 
-    TaskEntity? task;
-    for (final t in tasks) {
-      if (t.id == params.taskId) {
-        task = t;
-        break;
-      }
-    }
+    final byId = {for (final t in tasks) t.id: t};
+    final task = byId[params.taskId];
     if (task == null) return const Left(TaskNotFoundFailure());
 
-    final newListId = params.listId ?? task.listId;
+    // Regra: **a lista pertence à árvore**. Só a tarefa mãe (raiz) escolhe a
+    // lista; filha e neta herdam a da mãe, ignorando o que vier em `params`.
+    // Normaliza também dado legado divergente: salvar a tarefa a realinha.
+    final parent = task.parentId == null ? null : byId[task.parentId];
+    final newListId = parent != null
+        ? parent.listId
+        : (params.listId ?? task.listId);
 
     final edited = TaskEntity(
       id: task.id,
@@ -74,17 +75,18 @@ class EditTaskUseCase implements UseCase<Unit, EditTaskParams> {
       spentMinutes: task.spentMinutes,
     );
 
-    final upd = await _repository.update(edited);
-    final updFailure = upd.getLeft().toNullable();
-    if (updFailure != null) return Left(updFailure);
+    // Regra: trocar a lista de uma mãe/avó propaga para todas as filhas/netas
+    // (a lista é da árvore). Só varre quando é mãe (tem filhas) e a lista
+    // mudou — evita reescrever a subárvore a cada edição de folha.
+    final propagate = task.hasChildren && task.listId != newListId;
+    if (!propagate) return _repository.update(edited);
 
-    // Regra: trocar a lista de uma mãe/avó propaga para todas as filhas/netas.
-    // Só varre quando é mãe (tem filhas) e a lista realmente mudou — evita N
-    // escritas inúteis a cada edição de folha.
-    if (task.hasChildren && task.listId != newListId) {
-      final descendants = _descendantsOf(task.id, tasks);
-      for (final d in descendants) {
-        final moved = TaskEntity(
+    // A tarefa e a subárvore vão num **único commit**: uma falha no meio
+    // deixaria parte da árvore numa lista e parte em outra.
+    return _repository.updateAll([
+      edited,
+      for (final d in _descendantsOf(task.id, tasks))
+        TaskEntity(
           id: d.id,
           title: d.title,
           listId: newListId,
@@ -96,14 +98,8 @@ class EditTaskUseCase implements UseCase<Unit, EditTaskParams> {
           isDone: d.isDone,
           hasChildren: d.hasChildren,
           spentMinutes: d.spentMinutes,
-        );
-        final res = await _repository.update(moved);
-        final f = res.getLeft().toNullable();
-        if (f != null) return Left(f);
-      }
-    }
-
-    return const Right(unit);
+        ),
+    ]);
   }
 
   /// Todos os descendentes (filhas e netas) de [rootId], via `parentId`.

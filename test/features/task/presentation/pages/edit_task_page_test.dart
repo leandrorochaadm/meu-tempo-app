@@ -30,6 +30,18 @@ void main() {
         isDone: isDone,
       );
 
+  /// Folha **com mãe**: a lista dela é herdada, não escolhida.
+  TaskEntity child() => TaskEntity(
+        id: 'c1',
+        title: 'Tela de login',
+        listId: 'work',
+        createdAt: today,
+        parentId: 'm0',
+        estimatedMinutes: 30,
+        importance: ImportanceEnum.min,
+        dueDate: today,
+      );
+
   TaskEntity mother() => TaskEntity(
         id: 'm0',
         title: 'Projeto',
@@ -101,6 +113,58 @@ void main() {
       expect(find.text('Importância'), findsNothing);
       expect(find.text('Concluída'), findsNothing);
       expect(find.text('Ajustar tempo gasto'), findsNothing);
+    });
+
+    testWidgets('filha não mostra o seletor de lista (herda da mãe)',
+        (tester) async {
+      setView(tester);
+      await pushPage(tester, args(child(), parentLabel: 'Projeto'));
+
+      expect(find.text('Lista'), findsNothing);
+      // O resto da folha continua editável.
+      expect(find.text('Tarefa mãe'), findsOneWidget);
+      expect(find.text('Tempo estimado'), findsOneWidget);
+      expect(find.text('Importância'), findsOneWidget);
+      expect(find.text('Prazo'), findsOneWidget);
+    });
+
+    testWidgets('filha não exibe chip de lista nenhum', (tester) async {
+      setView(tester);
+      await pushPage(tester, args(child(), parentLabel: 'Projeto'));
+
+      // Os nomes das listas não aparecem como opção.
+      expect(find.text('Entrada'), findsNothing);
+      expect(find.text('Trabalho'), findsNothing);
+    });
+
+    testWidgets('salvar filha devolve a lista herdada, intacta', (tester) async {
+      setView(tester);
+      EditTaskResult? captured;
+      await tester.pumpWidget(MaterialApp(
+        theme: AppTheme.dark,
+        home: Scaffold(
+          body: Builder(
+            builder: (ctx) => ElevatedButton(
+              onPressed: () async => captured = await Navigator.of(ctx)
+                  .push<EditTaskResult>(MaterialPageRoute(
+                builder: (_) => EditTaskPage(
+                  args: args(child(), parentLabel: 'Projeto'),
+                  today: today,
+                ),
+              )),
+              child: const Text('abrir'),
+            ),
+          ),
+        ),
+      ));
+      await tester.tap(find.text('abrir'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Salvar'));
+      await tester.pumpAndSettle();
+
+      // Sem seletor na tela, a lista sai como entrou (a mãe manda).
+      expect(captured!.listId, 'work');
     });
 
     testWidgets('mostra o breadcrumb da mãe atual', (tester) async {

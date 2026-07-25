@@ -82,6 +82,17 @@ class TaskRepositoryImpl implements TaskRepository {
   }
 
   @override
+  Future<Either<Failure, Unit>> updateAll(List<TaskEntity> tasks) async {
+    try {
+      await _dataSource.updateAll(tasks.map(TaskModel.fromEntity).toList());
+      return const Right(unit);
+    } on AppException catch (e, s) {
+      AppLogger.logError('updateAll falhou', error: e, stackTrace: s);
+      return Left(e.toFailure());
+    }
+  }
+
+  @override
   Future<Either<Failure, Unit>> deleteSubtree(
     List<String> taskIds, {
     String? emptiedParentId,

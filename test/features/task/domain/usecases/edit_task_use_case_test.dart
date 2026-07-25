@@ -20,6 +20,7 @@ void main() {
   setUp(() {
     repo = _MockTaskRepo();
     when(() => repo.update(any())).thenAnswer((_) async => const Right(unit));
+    when(() => repo.updateAll(any())).thenAnswer((_) async => const Right(unit));
     when(() => repo.getTasks()).thenAnswer((_) async => Right([
           TaskEntity(
             id: 't1',
@@ -90,18 +91,22 @@ void main() {
           ]));
     }
 
-    test('trocar a lista da mãe propaga para filha e neta', () async {
+    test('trocar a lista da mãe propaga para filha e neta num só commit',
+        () async {
       seedTree();
       await EditTaskUseCase(repo)(
         const EditTaskParams(taskId: 'm1', title: 'Mãe', listId: 'work'),
       );
 
-      final captured = verify(() => repo.update(captureAny())).captured
-          .cast<TaskEntity>();
-      // mãe + 2 descendentes = 3 escritas, todas na nova lista.
+      final captured = verify(() => repo.updateAll(captureAny()))
+          .captured
+          .single as List<TaskEntity>;
+      // mãe + 2 descendentes na MESMA escrita atômica, todas na nova lista.
       expect(captured.length, 3);
       expect(captured.every((t) => t.listId == 'work'), isTrue);
       expect(captured.map((t) => t.id), containsAll(['m1', 'f1', 'n1']));
+      // Nada de escrita solta por descendente.
+      verifyNever(() => repo.update(any()));
     });
 
     test('não propaga quando a lista não muda', () async {
@@ -111,14 +116,113 @@ void main() {
       );
       // Só a própria mãe é reescrita (sem varrer descendentes).
       verify(() => repo.update(any())).called(1);
+      verifyNever(() => repo.updateAll(any()));
+    });
+  });
+
+  group('a lista pertence à árvore', () {
+    // Árvore: mãe (m1) em 'work' → filha (f1) → neta (n1), todas em 'work'.
+    void seedTree() {
+      when(() => repo.getTasks()).thenAnswer((_) async => Right([
+            TaskEntity(
+              id: 'm1',
+              title: 'Mãe',
+              listId: 'work',
+              createdAt: today,
+              hasChildren: true,
+            ),
+            TaskEntity(
+              id: 'f1',
+              title: 'Filha',
+              listId: 'work',
+              createdAt: today,
+              parentId: 'm1',
+              hasChildren: true,
+            ),
+            TaskEntity(
+              id: 'n1',
+              title: 'Neta',
+              listId: 'work',
+              createdAt: today,
+              parentId: 'f1',
+              estimatedMinutes: 30,
+            ),
+          ]));
+    }
+
+    TaskEntity written() =>
+        verify(() => repo.update(captureAny())).captured.single as TaskEntity;
+
+    test('filha ignora a lista pedida e herda a da mãe', () async {
+      seedTree();
+
+      await EditTaskUseCase(repo)(
+        const EditTaskParams(taskId: 'f1', title: 'Filha', listId: 'inbox'),
+      );
+
+      expect(written().listId, 'work');
     });
 
-    test('folha nunca dispara varredura de descendentes', () async {
+    test('neta ignora a lista pedida e herda a da mãe (filha)', () async {
       seedTree();
+
       await EditTaskUseCase(repo)(
-        const EditTaskParams(taskId: 'n1', title: 'Neta', listId: 'work'),
+        const EditTaskParams(taskId: 'n1', title: 'Neta', listId: 'inbox'),
       );
+
+      expect(written().listId, 'work');
+    });
+
+    test('folha com pai nunca dispara propagação de subárvore', () async {
+      seedTree();
+
+      await EditTaskUseCase(repo)(
+        const EditTaskParams(taskId: 'n1', title: 'Neta', listId: 'inbox'),
+      );
+
       verify(() => repo.update(any())).called(1);
+      verifyNever(() => repo.updateAll(any()));
+    });
+
+    test('tarefa mãe (raiz) segue escolhendo a lista', () async {
+      seedTree();
+
+      await EditTaskUseCase(repo)(
+        const EditTaskParams(taskId: 'm1', title: 'Mãe', listId: 'inbox'),
+      );
+
+      final captured = verify(() => repo.updateAll(captureAny()))
+          .captured
+          .single as List<TaskEntity>;
+      expect(captured.every((t) => t.listId == 'inbox'), isTrue);
+    });
+
+    test('salvar filha legada divergente a realinha com a mãe', () async {
+      // Dado legado: filha ficou em 'inbox' enquanto a mãe está em 'work'.
+      when(() => repo.getTasks()).thenAnswer((_) async => Right([
+            TaskEntity(
+              id: 'm1',
+              title: 'Mãe',
+              listId: 'work',
+              createdAt: today,
+              hasChildren: true,
+            ),
+            TaskEntity(
+              id: 'f1',
+              title: 'Filha',
+              listId: 'inbox',
+              createdAt: today,
+              parentId: 'm1',
+              estimatedMinutes: 30,
+            ),
+          ]));
+
+      // Sem pedir troca de lista nenhuma (`listId: null`).
+      await EditTaskUseCase(repo)(
+        const EditTaskParams(taskId: 'f1', title: 'Filha'),
+      );
+
+      expect(written().listId, 'work');
     });
   });
 }

@@ -68,6 +68,11 @@ class _EditTaskPageState extends State<EditTaskPage> {
 
   bool get _isLeaf => !_task.hasChildren;
 
+  /// A **lista pertence à árvore**: só a tarefa mãe (raiz) escolhe. Filha e neta
+  /// herdam a lista da mãe, então o seletor não aparece para elas — trocar de
+  /// lista se faz movendo a tarefa (ou editando a mãe).
+  bool get _canPickList => _task.parentId == null;
+
   @override
   void dispose() {
     _title.dispose();
@@ -126,20 +131,22 @@ class _EditTaskPageState extends State<EditTaskPage> {
               decoration: const InputDecoration(labelText: 'Título'),
             ),
             SizedBox(height: context.space.xl),
-            Text('Lista', style: context.text.labelLarge),
-            SizedBox(height: context.space.sm),
-            Wrap(
-              spacing: context.space.sm,
-              children: [
-                for (final list in widget.args.lists)
-                  ChoiceChip(
-                    label: Text(list.name),
-                    selected: _listId == list.id,
-                    onSelected: (_) => setState(() => _listId = list.id),
-                  ),
-              ],
-            ),
-            SizedBox(height: context.space.xl),
+            if (_canPickList) ...[
+              Text('Lista', style: context.text.labelLarge),
+              SizedBox(height: context.space.sm),
+              Wrap(
+                spacing: context.space.sm,
+                children: [
+                  for (final list in widget.args.lists)
+                    ChoiceChip(
+                      label: Text(list.name),
+                      selected: _listId == list.id,
+                      onSelected: (_) => setState(() => _listId = list.id),
+                    ),
+                ],
+              ),
+              SizedBox(height: context.space.xl),
+            ],
             Text('Tarefa mãe', style: context.text.labelLarge),
             SizedBox(height: context.space.sm),
             OutlinedButton.icon(

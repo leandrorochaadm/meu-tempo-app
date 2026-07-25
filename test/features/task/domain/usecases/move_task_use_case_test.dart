@@ -247,4 +247,82 @@ void main() {
 
     expect(r.getLeft().toNullable(), isA<NetworkFailure>());
   });
+
+  group('a lista pertence à árvore', () {
+    test('a tarefa movida herda a lista da nova mãe', () async {
+      when(() => repo.getTasks()).thenAnswer((_) async => Right([
+            t('destino', listId: 'work'),
+            t('solta', listId: 'inbox'),
+          ]));
+
+      await MoveTaskUseCase(repo)(
+        const MoveTaskParams(taskId: 'solta', newParentId: 'destino'),
+      );
+
+      expect(captureMove().subtree.single.listId, 'work');
+    });
+
+    test('os descendentes acompanham a lista da nova mãe', () async {
+      when(() => repo.getTasks()).thenAnswer((_) async => Right([
+            t('destino', listId: 'work'),
+            t('mae', hasChildren: true, listId: 'inbox'),
+            t('filha', parentId: 'mae', hasChildren: true, listId: 'inbox'),
+            t('neta', parentId: 'filha', listId: 'inbox'),
+          ]));
+
+      await MoveTaskUseCase(repo)(
+        const MoveTaskParams(taskId: 'filha', newParentId: 'destino'),
+      );
+
+      final subtree = captureMove().subtree;
+      expect(subtree.map((t) => t.id), containsAll(['filha', 'neta']));
+      expect(subtree.every((t) => t.listId == 'work'), isTrue);
+    });
+
+    test('a subárvore inteira vai no mesmo commit', () async {
+      when(() => repo.getTasks()).thenAnswer((_) async => Right([
+            t('destino', listId: 'work'),
+            t('mae', hasChildren: true, listId: 'inbox'),
+            t('filha', parentId: 'mae', listId: 'inbox'),
+          ]));
+
+      await MoveTaskUseCase(repo)(
+        const MoveTaskParams(taskId: 'mae', newParentId: 'destino'),
+      );
+
+      verify(() => repo.moveTask(
+            any(),
+            newParentId: any(named: 'newParentId'),
+            emptiedParentId: any(named: 'emptiedParentId'),
+          )).called(1);
+      verifyNever(() => repo.updateAll(any()));
+      verifyNever(() => repo.update(any()));
+    });
+
+    test('mover dentro da mesma lista não reescreve os descendentes', () async {
+      when(() => repo.getTasks()).thenAnswer((_) async => Right([
+            t('destino', listId: 'inbox'),
+            t('mae', hasChildren: true, listId: 'inbox'),
+            t('filha', parentId: 'mae', listId: 'inbox'),
+          ]));
+
+      await MoveTaskUseCase(repo)(
+        const MoveTaskParams(taskId: 'mae', newParentId: 'destino'),
+      );
+
+      // Só a própria tarefa — a lista não mudou, nada a propagar.
+      expect(captureMove().subtree.map((t) => t.id), ['mae']);
+    });
+
+    test('mover para raiz mantém a lista atual da tarefa', () async {
+      when(() => repo.getTasks()).thenAnswer((_) async => Right([
+            t('mae', hasChildren: true, listId: 'work'),
+            t('filha', parentId: 'mae', listId: 'work'),
+          ]));
+
+      await MoveTaskUseCase(repo)(const MoveTaskParams(taskId: 'filha'));
+
+      expect(captureMove().subtree.single.listId, 'work');
+    });
+  });
 }
