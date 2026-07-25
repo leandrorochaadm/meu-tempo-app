@@ -126,6 +126,8 @@ import 'package:meu_tempo/features/task/domain/usecases/edit_task_use_case.dart'
     as _i43;
 import 'package:meu_tempo/features/task/domain/usecases/filter_tasks_by_list_use_case.dart'
     as _i1069;
+import 'package:meu_tempo/features/task/domain/usecases/get_active_task_details_use_case.dart'
+    as _i170;
 import 'package:meu_tempo/features/task/domain/usecases/get_prioritized_leaves_use_case.dart'
     as _i1067;
 import 'package:meu_tempo/features/task/domain/usecases/get_task_edit_context_use_case.dart'
@@ -193,6 +195,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i1069.FilterTasksByListUseCase>(
       () => const _i1069.FilterTasksByListUseCase(),
+    );
+    gh.lazySingleton<_i170.GetActiveTaskDetailsUseCase>(
+      () => const _i170.GetActiveTaskDetailsUseCase(),
     );
     gh.lazySingleton<_i1067.GetPrioritizedLeavesUseCase>(
       () => const _i1067.GetPrioritizedLeavesUseCase(),
@@ -418,6 +423,19 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i838.GetTaskReportUseCase>(),
       ),
     );
+    gh.factory<_i282.ActiveTimerBloc>(
+      () => _i282.ActiveTimerBloc(
+        gh<_i397.WatchActiveTimerUseCase>(),
+        gh<_i1035.WatchTasksUseCase>(),
+        gh<_i689.WatchListsUseCase>(),
+        gh<_i726.StopTimerUseCase>(),
+        gh<_i843.GetTaskEditContextUseCase>(),
+        gh<_i170.GetActiveTaskDetailsUseCase>(),
+        gh<_i43.EditTaskUseCase>(),
+        gh<_i213.MoveTaskUseCase>(),
+        gh<_i623.CompleteTaskUseCase>(),
+      ),
+    );
     gh.factory<_i318.ReportBloc>(
       () => _i318.ReportBloc(
         gh<_i1035.WatchTasksUseCase>(),
@@ -445,18 +463,6 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i830.SettingsBloc(
         gh<_i559.WatchConfigUseCase>(),
         gh<_i949.SetAvailableMinutesUseCase>(),
-      ),
-    );
-    gh.factory<_i282.ActiveTimerBloc>(
-      () => _i282.ActiveTimerBloc(
-        gh<_i397.WatchActiveTimerUseCase>(),
-        gh<_i1035.WatchTasksUseCase>(),
-        gh<_i689.WatchListsUseCase>(),
-        gh<_i726.StopTimerUseCase>(),
-        gh<_i843.GetTaskEditContextUseCase>(),
-        gh<_i43.EditTaskUseCase>(),
-        gh<_i213.MoveTaskUseCase>(),
-        gh<_i623.CompleteTaskUseCase>(),
       ),
     );
     gh.lazySingleton<_i159.SeedFirstAccessUseCase>(

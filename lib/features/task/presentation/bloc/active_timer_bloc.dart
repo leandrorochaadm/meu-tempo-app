@@ -9,6 +9,7 @@ import '../../../../core/error/failures.dart';
 import '../../../../core/usecase/usecase.dart';
 import '../../../list/domain/entities/task_list_entity.dart';
 import '../../../list/domain/usecases/watch_lists_use_case.dart';
+import '../../domain/entities/active_task_details.dart';
 import '../../domain/entities/active_timer_entity.dart';
 import '../../domain/entities/task_edit_context.dart';
 import '../../domain/entities/task_entity.dart';
@@ -16,6 +17,7 @@ import '../../domain/entities/timer_target_type_enum.dart';
 import '../../domain/task_failures.dart';
 import '../../domain/usecases/complete_task_use_case.dart';
 import '../../domain/usecases/edit_task_use_case.dart';
+import '../../domain/usecases/get_active_task_details_use_case.dart';
 import '../../domain/usecases/get_task_edit_context_use_case.dart';
 import '../../domain/usecases/move_task_use_case.dart';
 import '../../domain/usecases/stop_timer_use_case.dart';
@@ -40,6 +42,7 @@ class ActiveTimerBloc extends Bloc<ActiveTimerEvent, ActiveTimerState> {
     this._watchLists,
     this._stopTimer,
     this._getEditContext,
+    this._getActiveTaskDetails,
     this._editTask,
     this._moveTask,
     this._completeTask,
@@ -59,6 +62,7 @@ class ActiveTimerBloc extends Bloc<ActiveTimerEvent, ActiveTimerState> {
   final WatchListsUseCase _watchLists;
   final StopTimerUseCase _stopTimer;
   final GetTaskEditContextUseCase _getEditContext;
+  final GetActiveTaskDetailsUseCase _getActiveTaskDetails;
   final EditTaskUseCase _editTask;
   final MoveTaskUseCase _moveTask;
   final CompleteTaskUseCase _completeTask;
@@ -140,6 +144,7 @@ class ActiveTimerBloc extends Bloc<ActiveTimerEvent, ActiveTimerState> {
       ancestryLabel: editContext.currentParentLabel,
       startedAt: active.startedAt,
       editContext: editContext,
+      details: _getActiveTaskDetails(editContext.task, _lists, DateTime.now()),
       lists: _lists,
     ));
   }

@@ -6,11 +6,13 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/router/routes.dart';
 import '../../../../core/theme/theme_context_extensions.dart';
+import '../../../../core/utils/formatters/date_formatter.dart';
 import '../../../../core/utils/formatters/duration_formatter.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../bloc/active_timer_bloc.dart';
 import '../pages/edit_task_args.dart';
 import '../pages/edit_task_page.dart';
+import 'importance_presentation.dart';
 
 /// Barra "now playing" do cronômetro — fixa no rodapé, visível em todas as telas
 /// enquanto uma **folha de tarefa** está em contagem. Mostra nome, trilha e o
@@ -215,11 +217,23 @@ class _BarState extends State<_Bar> {
                       ?.copyWith(color: colors.textSecondary),
                 ),
               ],
+              SizedBox(height: context.space.xs),
+              _MetaLine(state: state),
               SizedBox(height: context.space.sm),
               Row(
                 children: [
-                  _LiveElapsed(startedAt: state.startedAt),
-                  const Spacer(),
+                  // Em tela muito estreita o contador encolhe (scaleDown) em vez
+                  // de empurrar os botões para fora da barra.
+                  Expanded(
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: _LiveElapsed(startedAt: state.startedAt),
+                      ),
+                    ),
+                  ),
                   IconButton(
                     onPressed: _busy ? null : _edit,
                     tooltip: 'Editar',
@@ -243,6 +257,111 @@ class _BarState extends State<_Bar> {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Metadados da folha em contagem: chip colorido da lista, tempo gasto/estimado,
+/// prazo, importância e pontuação de prioridade.
+///
+/// Usa [Wrap]: cabendo, tudo fica numa linha só; em tela estreita (ou com textos
+/// longos) os itens **quebram para a linha seguinte** em vez de cortar com
+/// ellipsis — nenhuma informação some. Tudo já chega resolvido do domínio
+/// (`details`); aqui só há formatação de exibição.
+class _MetaLine extends StatelessWidget {
+  const _MetaLine({required this.state});
+
+  final ActiveTimerRunning state;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final task = state.task;
+    final details = state.details;
+    final dueDate = task.dueDate;
+    final importance = task.importance;
+
+    return Wrap(
+      spacing: context.space.sm,
+      runSpacing: context.space.xs,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        if (details.listName.isNotEmpty)
+          _ListChip(
+            name: details.listName,
+            color: colors.categoryAt(details.listColorIndex),
+          ),
+        _Meta(
+          'gasto ${DurationFormatter.hm(task.spentMinutes)}',
+          color: colors.textSecondary,
+        ),
+        _Meta('est. ${DurationFormatter.hm(task.estimatedMinutes ?? 0)}'),
+        if (dueDate != null)
+          _Meta(
+            DateFormatter.relativeLabel(dueDate, DateTime.now()),
+            color: details.isOverdue ? colors.warning : null,
+          ),
+        if (importance != null)
+          _Meta(importance.label, color: importance.colorOf(context)),
+        _Meta('prio ${details.priority}'),
+      ],
+    );
+  }
+}
+
+/// Item dos metadados, em pílula sutil sobre a superfície elevada. O fundo
+/// substitui o separador "·": ao quebrar linha, um separador ficaria órfão no
+/// início da linha seguinte, enquanto a pílula continua delimitando o item.
+class _Meta extends StatelessWidget {
+  const _Meta(this.text, {this.color});
+
+  final String text;
+  final Color? color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: context.space.sm,
+        vertical: context.space.xs,
+      ),
+      decoration: BoxDecoration(
+        color: context.colors.surfaceHigh,
+        borderRadius: context.radius.pillRadius,
+      ),
+      child: Text(
+        text,
+        style: context.text.labelSmall
+            ?.copyWith(color: color ?? context.colors.textSecondary),
+      ),
+    );
+  }
+}
+
+/// Chip compacto com a cor categórica da lista da tarefa.
+class _ListChip extends StatelessWidget {
+  const _ListChip({required this.name, required this.color});
+
+  final String name;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: context.space.sm,
+        vertical: context.space.xs,
+      ),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.15),
+        borderRadius: context.radius.pillRadius,
+        border: Border.all(color: color.withValues(alpha: 0.4)),
+      ),
+      child: Text(
+        name,
+        maxLines: 1,
+        style: context.text.labelSmall?.copyWith(color: color),
       ),
     );
   }

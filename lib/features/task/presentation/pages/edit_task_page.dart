@@ -5,6 +5,7 @@ import '../../../../core/router/routes.dart';
 import '../../../../core/theme/theme_context_extensions.dart';
 import '../../../../core/ui/app_primary_button.dart';
 import '../../domain/entities/importance_enum.dart';
+import '../widgets/importance_presentation.dart';
 import '../widgets/task_parent_picker.dart';
 import 'edit_task_args.dart';
 
@@ -112,12 +113,6 @@ class _EditTaskPageState extends State<EditTaskPage> {
 
   @override
   Widget build(BuildContext context) {
-    final labels = {
-      ImportanceEnum.max: 'Máxima',
-      ImportanceEnum.high: 'Alta',
-      ImportanceEnum.low: 'Baixa',
-      ImportanceEnum.min: 'Mínima',
-    };
     return Scaffold(
       appBar: AppBar(title: const Text('Editar tarefa')),
       body: SafeArea(
@@ -177,7 +172,7 @@ class _EditTaskPageState extends State<EditTaskPage> {
                 children: [
                   for (final imp in ImportanceEnum.values)
                     ChoiceChip(
-                      label: Text(labels[imp]!),
+                      label: Text(imp.label),
                       selected: _importance == imp,
                       onSelected: (_) => setState(() => _importance = imp),
                     ),

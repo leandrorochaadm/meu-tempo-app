@@ -21,6 +21,7 @@ class ActiveTimerRunning extends ActiveTimerState {
     required this.ancestryLabel,
     required this.startedAt,
     required this.editContext,
+    required this.details,
     required this.lists,
   });
 
@@ -36,13 +37,22 @@ class ActiveTimerRunning extends ActiveTimerState {
   /// Contexto pronto para abrir a edição (candidatos a mãe + breadcrumb).
   final TaskEditContext editContext;
 
+  /// Metadados resolvidos no domínio (lista, prioridade, atraso) — a barra os
+  /// exibe sem calcular nada.
+  final ActiveTaskDetails details;
+
+  /// A folha em contagem — origem dos campos exibidos (estimado, prazo,
+  /// importância, tempo gasto).
+  TaskEntity get task => editContext.task;
+
   /// Listas do usuário — necessárias para montar os argumentos da edição.
   final List<TaskListEntity> lists;
 
   String get taskId => editContext.task.id;
 
   @override
-  List<Object?> get props => [title, ancestryLabel, startedAt, editContext, lists];
+  List<Object?> get props =>
+      [title, ancestryLabel, startedAt, editContext, details, lists];
 }
 
 /// Efeito colateral transitório: uma ação (parar/concluir/editar) falhou. Serve

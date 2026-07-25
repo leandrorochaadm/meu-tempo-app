@@ -9,6 +9,8 @@ import 'package:meu_tempo/core/theme/app_theme.dart';
 import 'package:meu_tempo/features/task/presentation/pages/edit_task_page.dart';
 import 'package:meu_tempo/features/auth/domain/entities/user_entity.dart';
 import 'package:meu_tempo/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:meu_tempo/features/task/domain/entities/active_task_details.dart';
+import 'package:meu_tempo/features/task/domain/entities/importance_enum.dart';
 import 'package:meu_tempo/features/task/domain/entities/task_edit_context.dart';
 import 'package:meu_tempo/features/task/domain/entities/task_entity.dart';
 import 'package:meu_tempo/features/task/presentation/bloc/active_timer_bloc.dart';
@@ -38,6 +40,12 @@ void main() {
       task: leaf,
       parentCandidates: const [],
       currentParentLabel: 'Lançar app › App',
+    ),
+    details: const ActiveTaskDetails(
+      listName: 'Entrada',
+      listColorIndex: 0,
+      priority: 90,
+      isOverdue: false,
     ),
     lists: const [],
   );
@@ -183,6 +191,54 @@ void main() {
     expect(find.textContaining(':'), findsOneWidget);
     // Três ações: editar, concluir, parar.
     expect(find.byType(IconButton), findsNWidgets(3));
+  });
+
+  testWidgets('mostra todos os metadados da tarefa, quebrando linha se preciso',
+      (tester) async {
+    // Viewport estreito: os metadados devem quebrar para a linha seguinte sem
+    // sumir nem estourar overflow.
+    tester.view.physicalSize = const Size(320, 640);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final detailedLeaf = TaskEntity(
+      id: 't1',
+      title: 'Fazer telas de login',
+      listId: 'inbox',
+      createdAt: DateTime(2026, 7, 22),
+      estimatedMinutes: 90,
+      dueDate: DateTime.now(),
+      importance: ImportanceEnum.max,
+      spentMinutes: 45,
+    );
+    when(() => timerBloc.state).thenReturn(ActiveTimerRunning(
+      title: detailedLeaf.title,
+      ancestryLabel: 'Lançar app › App',
+      startedAt: DateTime(2026, 7, 22, 10),
+      editContext: TaskEditContext(
+        task: detailedLeaf,
+        parentCandidates: const [],
+        currentParentLabel: 'Lançar app › App',
+      ),
+      details: const ActiveTaskDetails(
+        listName: 'Entrada',
+        listColorIndex: 0,
+        priority: 1080,
+        isOverdue: false,
+      ),
+      lists: const [],
+    ));
+    await tester.pumpWidget(harness());
+
+    expect(find.text('Entrada'), findsOneWidget); // chip da lista
+    expect(find.text('gasto 45min'), findsOneWidget);
+    expect(find.text('est. 1h30'), findsOneWidget);
+    expect(find.text('Hoje'), findsOneWidget);
+    expect(find.text('Máxima'), findsOneWidget);
+    expect(find.text('prio 1080'), findsOneWidget);
+    // Nenhum RenderFlex overflow no viewport estreito.
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('tocar em Parar dispara ActiveTimerStopRequested',
