@@ -129,4 +129,25 @@ void main() {
       expect(roots.single.rank, isNull);
     });
   });
+
+  group('coleção filtrada (filha ausente da projeção)', () {
+    test('mãe sem filhas visíveis não é tratada como folha', () {
+      // Cenário do filtro por lista: a mãe está na lista selecionada, a filha
+      // (de outra lista) foi removida da coleção antes de montar a árvore.
+      final roots = useCase([t('mae', hasChildren: true)], today);
+
+      final mae = roots.single;
+      expect(mae.children, isEmpty); // a filha não veio na projeção
+      expect(mae.isLeaf, isFalse); // mas ela não é folha
+    });
+
+    test('mãe sem filhas visíveis fica fora da fila de prioridade', () {
+      final roots = useCase(
+        [t('mae', hasChildren: true, dueDate: today)],
+        today,
+      );
+
+      expect(roots.single.rank, isNull);
+    });
+  });
 }

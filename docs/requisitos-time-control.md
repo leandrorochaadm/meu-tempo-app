@@ -519,3 +519,10 @@ Decisões que encerraram as pendências anteriores:
   exigiria reverter o filtro de concluídas no backend (a coleção no cliente é parcial, e
   uma mãe cuja única filha está concluída seria lida como folha). Plano detalhado dessa
   alternativa preservado em `temp/plan/plano-remover-flag-haschildren-2026-07-25.md`.
+- 2026-07-25 (cont.) — Corrigido defeito na **visão de hierarquia com filtro de lista**:
+  `TaskNode.isLeaf` derivava de `children.isEmpty`, calculado sobre a coleção **já
+  filtrada**. Uma mãe cuja filha estava em outra lista chegava sem filhas e era tratada
+  como folha — ganhando cronômetro, tempo próprio e conclusão por arrasto. Agora `isLeaf`
+  vem do dado da própria tarefa (`hasChildren`, mantido atomicamente), que sobrevive a
+  qualquer filtro. Efeito colateral positivo: acabou a divergência entre as duas
+  definições de "é folha" que existiam no sistema.

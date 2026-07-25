@@ -22,11 +22,31 @@ void main() {
   // Folha = nó sem filhas.
   TaskNode leafNode() => TaskNode(task: task('leaf', 'Folha'), level: 0);
 
-  // Mãe = nó com uma filha (não é folha → sem conclusão).
+  // Mãe = tarefa com `hasChildren` (como o banco grava) e uma filha na árvore.
+  // Não é folha → sem conclusão por swipe, sem cronômetro.
   TaskNode parentNode() => TaskNode(
-        task: task('parent', 'Mãe'),
+        task: TaskEntity(
+          id: 'parent',
+          title: 'Mãe',
+          listId: 'l1',
+          createdAt: today,
+          hasChildren: true,
+        ),
         level: 0,
         children: [TaskNode(task: task('child', 'Filha'), level: 1)],
+      );
+
+  // Mãe cuja única filha está em OUTRA lista: o filtro por lista a remove da
+  // coleção, então o nó chega sem `children`. Ela continua não sendo folha.
+  TaskNode parentWithFilteredChild() => TaskNode(
+        task: TaskEntity(
+          id: 'parent',
+          title: 'Mãe',
+          listId: 'l1',
+          createdAt: today,
+          hasChildren: true,
+        ),
+        level: 0,
       );
 
   late bool doneTapped;
@@ -142,6 +162,38 @@ void main() {
       await tester.pumpWidget(harness(parentNode()));
 
       expect(find.textContaining('#'), findsNothing);
+    });
+  });
+
+  group('mãe cuja filha foi removida pelo filtro de lista', () {
+    testWidgets('não conclui por swipe (continua não sendo folha)',
+        (tester) async {
+      await tester.pumpWidget(harness(parentWithFilteredChild()));
+
+      await tester.drag(find.text('Mãe'), const Offset(500, 0));
+      await tester.pumpAndSettle();
+
+      expect(doneTapped, isFalse);
+    });
+
+    testWidgets('não oferece cronômetro nem registro de tempo', (tester) async {
+      await tester.pumpWidget(harness(parentWithFilteredChild()));
+
+      // Ações de tempo existem só na folha (gate `node.isLeaf` no tile).
+      expect(find.byIcon(Icons.play_arrow_rounded), findsNothing);
+      expect(find.text('+15'), findsNothing);
+    });
+
+    testWidgets('segue editável e excluível', (tester) async {
+      await tester.pumpWidget(harness(parentWithFilteredChild()));
+
+      await tester.drag(find.text('Mãe'), const Offset(-500, 0));
+      await tester.pumpAndSettle();
+      expect(editTapped, isTrue);
+
+      await tester.longPress(find.text('Mãe'));
+      await tester.pumpAndSettle();
+      expect(deleteTapped, isTrue);
     });
   });
 }

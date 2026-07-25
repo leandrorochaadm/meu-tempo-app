@@ -27,7 +27,14 @@ class TaskNode extends Equatable {
   /// Folha com prazo vencido e não concluída — sinaliza atraso na UI.
   final bool isOverdue;
 
-  bool get isLeaf => children.isEmpty;
+  /// Folha = tarefa sem filhas, segundo o **próprio dado da tarefa**
+  /// (`hasChildren`, mantido atomicamente pela camada data).
+  ///
+  /// Não usar `children.isEmpty`: a árvore é montada sobre a coleção **já
+  /// filtrada** (por lista), então uma mãe cuja filha está em outra lista chega
+  /// aqui sem `children` e seria classificada como folha — ganhando cronômetro,
+  /// tempo próprio e conclusão por swipe que só folha pode ter.
+  bool get isLeaf => task.isLeaf;
 
   /// Máximo de níveis atingido (neta não aceita filhas).
   bool get isMaxLevel => level >= 2;

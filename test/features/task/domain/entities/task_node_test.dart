@@ -15,6 +15,16 @@ void main() {
         isDone: done,
       );
 
+  /// Tarefa que tem filhas — como o banco a grava (`hasChildren: true`, mantido
+  /// atomicamente ao criar/mover/excluir subtarefa).
+  TaskEntity parent(String id) => TaskEntity(
+        id: id,
+        title: id,
+        listId: 'inbox',
+        createdAt: today,
+        hasChildren: true,
+      );
+
   test('folha: tempo é o próprio, progresso reflete conclusão', () {
     final node = TaskNode(task: leaf('a', minutes: 45), level: 2);
     expect(node.isLeaf, isTrue);
@@ -25,7 +35,7 @@ void main() {
 
   test('mãe: tempo e progresso derivam das folhas', () {
     final mae = TaskNode(
-      task: leaf('mae'),
+      task: parent('mae'),
       level: 0,
       children: [
         TaskNode(task: leaf('f1', minutes: 60, done: true), level: 1),
@@ -43,5 +53,18 @@ void main() {
   test('isMaxLevel só é true no nível de neta (2)', () {
     expect(TaskNode(task: leaf('a'), level: 1).isMaxLevel, isFalse);
     expect(TaskNode(task: leaf('a'), level: 2).isMaxLevel, isTrue);
+  });
+
+  test('isLeaf vem da tarefa, não da árvore projetada', () {
+    // Mãe cuja filha foi removida pela projeção (filtro por lista): chega sem
+    // `children`, mas continua não sendo folha.
+    final semFilhasVisiveis = TaskNode(task: parent('mae'), level: 0);
+
+    expect(semFilhasVisiveis.children, isEmpty);
+    expect(semFilhasVisiveis.isLeaf, isFalse);
+  });
+
+  test('folha real é folha mesmo sem children', () {
+    expect(TaskNode(task: leaf('a'), level: 2).isLeaf, isTrue);
   });
 }
