@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 
+import '../../../../core/constants/app_defaults.dart';
 import 'task_entity.dart';
 
 /// Nó da árvore de tarefas (mãe → filha → neta). Objeto de domínio puro cujas
@@ -37,7 +38,7 @@ class TaskNode extends Equatable {
   bool get isLeaf => task.isLeaf;
 
   /// Máximo de níveis atingido (neta não aceita filhas).
-  bool get isMaxLevel => level >= 2;
+  bool get isMaxLevel => level >= AppDefaults.maxTaskLevel;
 
   /// Tempo estimado: na folha, o próprio; na mãe/avó, a soma das folhas.
   int get totalEstimatedMinutes {

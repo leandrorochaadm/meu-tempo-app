@@ -20,6 +20,9 @@ class TaskListLoaded extends TaskListState {
     this.lists = const [],
     this.selectedListId,
     this.hideDone = true,
+    this.quickAddTarget,
+    this.offeredParent,
+    this.creationListId,
   });
 
   /// Árvore de tarefas (raízes = mães), com agregação pronta nos [TaskNode].
@@ -44,16 +47,29 @@ class TaskListLoaded extends TaskListState {
   /// Se as tarefas concluídas estão ocultas (padrão `true`). Reflete o chip.
   final bool hideDone;
 
+  /// Alvo ativo da barra de criação (`null` = criar tarefa mãe).
+  final QuickAddTargetEntity? quickAddTarget;
+
+  /// Última criada, oferecida como mãe do próximo lançamento (`null` = sem
+  /// oferta, inclusive quando a última é neta e não aceita filha).
+  final QuickAddTargetEntity? offeredParent;
+
+  /// Lista onde a próxima tarefa raiz nasce — já resolvida no domínio.
+  final String? creationListId;
+
   @override
   List<Object?> get props => [
-        roots,
-        prioritized,
-        activeTaskId,
-        activeTimerStartedAt,
-        lists,
-        selectedListId,
-        hideDone,
-      ];
+    roots,
+    prioritized,
+    activeTaskId,
+    activeTimerStartedAt,
+    lists,
+    selectedListId,
+    hideDone,
+    quickAddTarget,
+    offeredParent,
+    creationListId,
+  ];
 }
 
 class TaskListEmpty extends TaskListState {

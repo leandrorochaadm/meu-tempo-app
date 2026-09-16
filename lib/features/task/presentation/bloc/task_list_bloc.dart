@@ -13,6 +13,7 @@ import '../../../list/domain/usecases/watch_lists_use_case.dart';
 import '../../domain/entities/active_timer_entity.dart';
 import '../../domain/entities/importance_enum.dart';
 import '../../domain/entities/prioritized_leaf.dart';
+import '../../domain/entities/quick_add_target_entity.dart';
 import '../../domain/entities/task_entity.dart';
 import '../../domain/entities/task_node.dart';
 import '../../domain/entities/timer_target_type_enum.dart';
@@ -20,11 +21,13 @@ import '../../domain/task_failures.dart';
 import '../../domain/usecases/add_subtask_use_case.dart';
 import '../../domain/usecases/build_task_tree_use_case.dart';
 import '../../domain/usecases/complete_task_use_case.dart';
+import '../../domain/usecases/create_task_and_start_timer_use_case.dart';
 import '../../domain/usecases/create_task_use_case.dart';
 import '../../domain/usecases/delete_task_use_case.dart';
 import '../../domain/usecases/edit_task_use_case.dart';
 import '../../domain/usecases/filter_tasks_by_list_use_case.dart';
 import '../../domain/entities/task_edit_context.dart';
+import '../../domain/usecases/get_default_creation_list_use_case.dart';
 import '../../domain/usecases/get_prioritized_leaves_use_case.dart';
 import '../../domain/usecases/get_task_edit_context_use_case.dart';
 import '../../domain/usecases/get_task_list_filter_use_case.dart';
@@ -67,6 +70,8 @@ class TaskListBloc extends Bloc<TaskListEvent, TaskListState> {
     this._getTaskListFilter,
     this._saveTaskListFilter,
     this._getEditContext,
+    this._createAndStart,
+    this._getDefaultCreationList,
   ) : super(const TaskListLoading()) {
     on<TaskListStarted>(_onStarted);
     on<TaskListUpdated>(_onUpdated);
@@ -75,7 +80,9 @@ class TaskListBloc extends Bloc<TaskListEvent, TaskListState> {
     on<HideDoneToggled>(_onHideDoneToggled);
     on<ActiveTimerUpdated>(_onTimerUpdated);
     on<TaskCreated>(_onCreated);
-    on<SubtaskRequested>(_onSubtaskRequested);
+    on<TaskCreatedAndStarted>(_onCreatedAndStarted);
+    on<QuickAddTargetChanged>(_onQuickAddTargetChanged);
+    on<CreationListChanged>(_onCreationListChanged);
     on<TimerStartRequested>(_onTimerStart);
     on<TimerStopRequested>(_onTimerStop);
     on<ManualTimeRequested>(_onManualTime);
@@ -107,6 +114,8 @@ class TaskListBloc extends Bloc<TaskListEvent, TaskListState> {
   final GetTaskListFilterUseCase _getTaskListFilter;
   final SaveTaskListFilterUseCase _saveTaskListFilter;
   final GetTaskEditContextUseCase _getEditContext;
+  final CreateTaskAndStartTimerUseCase _createAndStart;
+  final GetDefaultCreationListUseCase _getDefaultCreationList;
 
   StreamSubscription<Either<Failure, List<TaskEntity>>>? _tasksSub;
   StreamSubscription<Either<Failure, ActiveTimerEntity?>>? _timerSub;
@@ -128,6 +137,15 @@ class TaskListBloc extends Bloc<TaskListEvent, TaskListState> {
   /// Última subárvore excluída, guardada para o "Desfazer" (H13).
   List<TaskEntity> _lastDeleted = const [];
 
+  /// Alvo ativo da barra de criação (`null` = próxima tarefa nasce como mãe).
+  QuickAddTargetEntity? _quickAddTarget;
+
+  /// Última tarefa criada pela barra, oferecida como mãe do próximo lançamento.
+  QuickAddTargetEntity? _lastCreated;
+
+  /// Lista fixada explicitamente na barra de criação. Expira ao trocar o filtro.
+  String? _chosenListId;
+
   Future<void> _onStarted(
     TaskListStarted event,
     Emitter<TaskListState> emit,
@@ -146,10 +164,9 @@ class TaskListBloc extends Bloc<TaskListEvent, TaskListState> {
     _selectedListId = savedFilter.getRight().toNullable();
 
     // Primeiro acesso: semeia uma tarefa-exemplo (idempotente).
-    await _seedFirstAccess(SeedFirstAccessParams(
-      today: DateTime.now(),
-      inboxListId: _inboxListId!,
-    ));
+    await _seedFirstAccess(
+      SeedFirstAccessParams(today: DateTime.now(), inboxListId: _inboxListId!),
+    );
 
     await _subscribeTasks();
 
@@ -160,8 +177,9 @@ class TaskListBloc extends Bloc<TaskListEvent, TaskListState> {
     });
 
     await _listsSub?.cancel();
-    _listsSub = _watchLists(const NoParams())
-        .listen((result) => add(TaskListListsUpdated(result)));
+    _listsSub = _watchLists(
+      const NoParams(),
+    ).listen((result) => add(TaskListListsUpdated(result)));
   }
 
   void _onListsUpdated(TaskListListsUpdated e, Emitter<TaskListState> emit) {
@@ -183,8 +201,9 @@ class TaskListBloc extends Bloc<TaskListEvent, TaskListState> {
   /// (`_hideDone`), a query já vem sem as concluídas — menos leitura no backend.
   Future<void> _subscribeTasks() async {
     await _tasksSub?.cancel();
-    _tasksSub = _watchTasks(WatchTasksParams(includeDone: !_hideDone))
-        .listen((result) => add(TaskListUpdated(result)));
+    _tasksSub = _watchTasks(
+      WatchTasksParams(includeDone: !_hideDone),
+    ).listen((result) => add(TaskListUpdated(result)));
   }
 
   Future<void> _onHideDoneToggled(
@@ -202,18 +221,26 @@ class TaskListBloc extends Bloc<TaskListEvent, TaskListState> {
     Emitter<TaskListState> emit,
   ) async {
     _selectedListId = event.listId;
+    // Trocar o filtro é sinal de contexto novo: a lista fixada na barra expira,
+    // senão as tarefas continuariam nascendo na escolha antiga.
+    _chosenListId = null;
     await _saveTaskListFilter(SaveTaskListFilterParams(event.listId));
     _emitLoaded(emit);
   }
 
   void _onUpdated(TaskListUpdated event, Emitter<TaskListState> emit) {
-    event.result.match(
-      (failure) => emit(TaskListError(_mapFailure(failure))),
-      (tasks) {
-        _latestTasks = tasks;
-        _emitLoaded(emit);
-      },
-    );
+    event.result.match((failure) => emit(TaskListError(_mapFailure(failure))), (
+      tasks,
+    ) {
+      _latestTasks = tasks;
+      // Alvo/oferta que apontam para tarefa sumida do stream (excluída aqui ou
+      // em outra sessão) deixam de valer — lookup simples, não é regra.
+      bool stillThere(QuickAddTargetEntity? t) =>
+          t == null || tasks.any((task) => task.id == t.taskId);
+      if (!stillThere(_quickAddTarget)) _quickAddTarget = null;
+      if (!stillThere(_lastCreated)) _lastCreated = null;
+      _emitLoaded(emit);
+    });
   }
 
   void _onTimerUpdated(ActiveTimerUpdated event, Emitter<TaskListState> emit) {
@@ -235,47 +262,120 @@ class TaskListBloc extends Bloc<TaskListEvent, TaskListState> {
     // já vêm filtradas do backend (`includeDone`), não há filtro aqui.
     final filtered = _filterTasksByList(_latestTasks, _selectedListId);
     final now = DateTime.now();
-    emit(TaskListLoaded(
-      _buildTree(filtered, now),
-      prioritized: _getPrioritized(filtered, now),
-      activeTaskId: _activeTaskId,
-      activeTimerStartedAt: _activeStartedAt,
-      lists: _lists,
-      selectedListId: _selectedListId,
-      hideDone: _hideDone,
-    ));
+    final last = _lastCreated;
+    emit(
+      TaskListLoaded(
+        _buildTree(filtered, now),
+        prioritized: _getPrioritized(filtered, now),
+        activeTaskId: _activeTaskId,
+        activeTimerStartedAt: _activeStartedAt,
+        lists: _lists,
+        selectedListId: _selectedListId,
+        hideDone: _hideDone,
+        quickAddTarget: _quickAddTarget,
+        offeredParent: (last != null && last.acceptsChild) ? last : null,
+        creationListId: _creationListId(),
+      ),
+    );
   }
+
+  /// Lista onde a próxima tarefa raiz nasce — resolvida no domínio.
+  String? _creationListId() => _getDefaultCreationList(
+    _latestTasks,
+    availableListIds: [for (final l in _lists) l.id],
+    chosenListId: _chosenListId,
+    filterListId: _selectedListId,
+    inboxListId: _inboxListId,
+  );
 
   Future<void> _onCreated(
     TaskCreated event,
     Emitter<TaskListState> emit,
   ) async {
-    final listId = event.listId ?? _inboxListId;
-    if (listId == null) return;
-    final result = await _createTask(
-      CreateTaskParams(
-        title: event.title,
-        listId: listId,
-        today: DateTime.now(),
-      ),
-    );
-    _handleWrite(result, emit);
+    final target = _quickAddTarget;
+    final Either<Failure, TaskEntity> result;
+    if (target != null) {
+      // Filha/neta: id, lista e nível vêm juntos do alvo (a filha herda a lista).
+      result = await _addSubtask(
+        AddSubtaskParams(
+          parentId: target.taskId,
+          parentLevel: target.level,
+          listId: target.listId,
+          title: event.title,
+          today: DateTime.now(),
+        ),
+      );
+    } else {
+      final listId = _creationListId();
+      if (listId == null) return;
+      result = await _createTask(
+        CreateTaskParams(
+          title: event.title,
+          listId: listId,
+          today: DateTime.now(),
+        ),
+      );
+    }
+    _handleCreation(result, target, emit);
   }
 
-  Future<void> _onSubtaskRequested(
-    SubtaskRequested event,
+  Future<void> _onCreatedAndStarted(
+    TaskCreatedAndStarted event,
     Emitter<TaskListState> emit,
   ) async {
-    final result = await _addSubtask(
-      AddSubtaskParams(
-        parentId: event.parentId,
-        parentLevel: event.parentLevel,
-        listId: event.listId,
+    final target = _quickAddTarget;
+    final listId = _creationListId();
+    // Com alvo a lista vem dele; sem alvo e sem destino não há onde criar.
+    if (target == null && listId == null) return;
+    final result = await _createAndStart(
+      CreateTaskAndStartTimerParams(
         title: event.title,
-        today: DateTime.now(),
+        listId: listId ?? target!.listId,
+        now: DateTime.now(),
+        parent: target,
       ),
     );
-    _handleWrite(result, emit);
+    _handleCreation(result, target, emit);
+  }
+
+  /// Erro vira estado de erro; sucesso guarda a criada como oferta de mãe do
+  /// próximo lançamento (o nível dela é o do alvo + 1, ou 0 quando é raiz).
+  void _handleCreation(
+    Either<Failure, TaskEntity> result,
+    QuickAddTargetEntity? target,
+    Emitter<TaskListState> emit,
+  ) {
+    result.match(
+      (failure) {
+        emit(TaskListError(_mapFailure(failure)));
+        _emitLoaded(emit);
+      },
+      (task) {
+        _lastCreated = QuickAddTargetEntity(
+          taskId: task.id,
+          title: task.title,
+          listId: task.listId,
+          level: target == null ? 0 : target.level + 1,
+        );
+        _emitLoaded(emit);
+      },
+    );
+  }
+
+  void _onQuickAddTargetChanged(
+    QuickAddTargetChanged event,
+    Emitter<TaskListState> emit,
+  ) {
+    _quickAddTarget = event.target;
+    _emitLoaded(emit);
+  }
+
+  void _onCreationListChanged(
+    CreationListChanged event,
+    Emitter<TaskListState> emit,
+  ) {
+    _chosenListId = event.listId;
+    _emitLoaded(emit);
   }
 
   Future<void> _onTimerStart(
@@ -347,10 +447,10 @@ class TaskListBloc extends Bloc<TaskListEvent, TaskListState> {
     Emitter<TaskListState> emit,
   ) async {
     final result = await _deleteTask(DeleteTaskParams(taskId: event.taskId));
-    result.match(
-      (failure) => emit(TaskListError(_mapFailure(failure))),
-      (removed) => _lastDeleted = removed,
-    );
+    result.match((failure) {
+      emit(TaskListError(_mapFailure(failure)));
+      _emitLoaded(emit);
+    }, (removed) => _lastDeleted = removed);
   }
 
   Future<void> _onDeletionUndone(
@@ -381,6 +481,7 @@ class TaskListBloc extends Bloc<TaskListEvent, TaskListState> {
     final failure = result.getLeft().toNullable();
     if (failure != null) {
       emit(TaskListError(_mapFailure(failure)));
+      _emitLoaded(emit);
       return;
     }
     // Orquestra as demais intenções (regra de cada uma mora no seu UseCase).
@@ -405,21 +506,30 @@ class TaskListBloc extends Bloc<TaskListEvent, TaskListState> {
 
   /// Erros de escrita viram estado de erro (a UI mostra snackbar); sucesso
   /// reflete pelos streams.
+  ///
+  /// O erro é **evento de UI, não estado de tela**: logo depois reemitimos o
+  /// `Loaded`, senão a árvore sumiria da tela a cada falha de escrita (nada
+  /// reemite `Loaded` sozinho quando a falha não gera novo snapshot).
   void _handleWrite<T>(Either<Failure, T> result, Emitter<TaskListState> e) {
-    result.match((failure) => e(TaskListError(_mapFailure(failure))), (_) {});
+    result.match((failure) {
+      e(TaskListError(_mapFailure(failure)));
+      _emitLoaded(e);
+    }, (_) {});
   }
 
   String _mapFailure(Failure failure) => switch (failure) {
-        EmptyTitleFailure() => 'Digite um título para a tarefa.',
-        MaxLevelExceededFailure() => 'Máximo de 3 níveis (mãe, filha, neta).',
-        TimerOnNonLeafFailure() =>
-          'Cronômetro só em tarefas sem filhas (folhas).',
-        InvalidDurationFailure() => 'Informe uma duração válida.',
-        InvalidMoveFailure() => 'Não dá para mover a tarefa para lá.',
-        TaskNotFoundFailure() => 'Tarefa não encontrada.',
-        NetworkFailure() => 'Sem conexão. Verifique a internet.',
-        _ => 'Algo deu errado. Tente novamente.',
-      };
+    EmptyTitleFailure() => 'Digite um título para a tarefa.',
+    MaxLevelExceededFailure() => 'Máximo de 3 níveis (mãe, filha, neta).',
+    TimerOnNonLeafFailure() => 'Cronômetro só em tarefas sem filhas (folhas).',
+    // A tarefa existe (já aparece na lista) — só o cronômetro não começou.
+    TimerNotStartedFailure() =>
+      'Tarefa criada, mas não deu para começar o cronômetro.',
+    InvalidDurationFailure() => 'Informe uma duração válida.',
+    InvalidMoveFailure() => 'Não dá para mover a tarefa para lá.',
+    TaskNotFoundFailure() => 'Tarefa não encontrada.',
+    NetworkFailure() => 'Sem conexão. Verifique a internet.',
+    _ => 'Algo deu errado. Tente novamente.',
+  };
 
   @override
   Future<void> close() {

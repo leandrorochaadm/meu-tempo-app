@@ -11,6 +11,7 @@ import '../../../../core/ui/task_timer_actions.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../list/domain/entities/task_list_entity.dart';
 import '../../domain/entities/prioritized_leaf.dart';
+import '../../domain/entities/quick_add_target_entity.dart';
 import '../../domain/entities/task_entity.dart';
 import '../../domain/entities/task_node.dart';
 import '../bloc/task_list_bloc.dart';
@@ -34,8 +35,6 @@ class TaskListPage extends StatefulWidget {
 class _TaskListPageState extends State<TaskListPage> {
   bool _quickAddVisible = false;
   bool _priorityView = true;
-  TaskNode? _subtaskParent;
-  String? _selectedListId;
 
   @override
   void initState() {
@@ -43,29 +42,30 @@ class _TaskListPageState extends State<TaskListPage> {
     context.read<TaskListBloc>().add(const TaskListStarted());
   }
 
+  /// Aponta a barra para dentro da tarefa (mesma fonte de verdade do chip).
   void _startSubtask(TaskNode parent) {
-    setState(() {
-      _subtaskParent = parent;
-      _quickAddVisible = true;
-    });
+    context.read<TaskListBloc>().add(
+      QuickAddTargetChanged(
+        QuickAddTargetEntity(
+          taskId: parent.task.id,
+          title: parent.task.title,
+          listId: parent.task.listId,
+          level: parent.level,
+        ),
+      ),
+    );
+    setState(() => _quickAddVisible = true);
   }
 
-  void _submit(String title) {
-    final bloc = context.read<TaskListBloc>();
-    final parent = _subtaskParent;
-    if (parent != null) {
-      bloc.add(
-        SubtaskRequested(
-          parentId: parent.task.id,
-          parentLevel: parent.level,
-          listId: parent.task.listId,
-          title: title,
-        ),
-      );
-    } else {
-      bloc.add(TaskCreated(title, listId: _selectedListId));
-    }
-  }
+  /// O Bloc decide se é raiz ou filha/neta (ele tem o alvo) e em que lista cai.
+  void _submit(String title) =>
+      context.read<TaskListBloc>().add(TaskCreated(title));
+
+  void _submitAndStart(String title) =>
+      context.read<TaskListBloc>().add(TaskCreatedAndStarted(title));
+
+  void _changeTarget(QuickAddTargetEntity? target) =>
+      context.read<TaskListBloc>().add(QuickAddTargetChanged(target));
 
   void _toggleTimer(TaskNode node, bool start) {
     context.read<TaskListBloc>().add(
@@ -197,8 +197,9 @@ class _TaskListPageState extends State<TaskListPage> {
     final editContext = bloc.editContextFor(taskId);
     if (editContext == null) return;
 
-    final candidates =
-        editContext.parentCandidates.map(ParentCandidate.fromEntity).toList();
+    final candidates = editContext.parentCandidates
+        .map(ParentCandidate.fromEntity)
+        .toList();
 
     final chosen = await showTaskParentPicker(context, candidates);
     if (chosen == null) return;
@@ -236,15 +237,12 @@ class _TaskListPageState extends State<TaskListPage> {
 
   @override
   Widget build(BuildContext context) {
-    final parent = _subtaskParent;
-    // Listas do usuário (só para o seletor da criação rápida de tarefa raiz).
-    final lists = context.select<TaskListBloc, List<TaskListEntity>>((b) {
+    // Tudo da barra de criação vem pronto do Bloc (alvo, oferta e destino).
+    final quickAdd = context.select<TaskListBloc, TaskListLoaded?>((b) {
       final s = b.state;
-      return s is TaskListLoaded ? s.lists : const [];
+      return s is TaskListLoaded ? s : null;
     });
-    _selectedListId ??= lists.where((l) => l.isDefault).isNotEmpty
-        ? lists.firstWhere((l) => l.isDefault).id
-        : (lists.isNotEmpty ? lists.first.id : null);
+    final lists = quickAdd?.lists ?? const <TaskListEntity>[];
     return Scaffold(
       appBar: AppBar(
         title: const Text('Meu Tempo'),
@@ -275,14 +273,15 @@ class _TaskListPageState extends State<TaskListPage> {
           children: [
             if (_quickAddVisible)
               QuickAddTaskWidget(
-                hint: parent == null
-                    ? 'Nova tarefa…'
-                    : 'Subtarefa de "${parent.task.title}"…',
                 onSubmit: _submit,
-                // Seletor de lista só na criação de tarefa raiz.
-                lists: parent == null ? lists : const [],
-                selectedListId: _selectedListId,
-                onListSelected: (id) => setState(() => _selectedListId = id),
+                onSubmitAndStart: _submitAndStart,
+                target: quickAdd?.quickAddTarget,
+                offeredParent: quickAdd?.offeredParent,
+                onTargetChanged: _changeTarget,
+                lists: lists,
+                selectedListId: quickAdd?.creationListId,
+                onListSelected: (id) =>
+                    context.read<TaskListBloc>().add(CreationListChanged(id)),
               ),
             Expanded(
               child: BlocConsumer<TaskListBloc, TaskListState>(
@@ -342,27 +341,26 @@ class _TaskListPageState extends State<TaskListPage> {
                             ),
                           ),
                           Expanded(
-                            child:
-                                (roots.isEmpty && prioritized.isEmpty)
+                            child: (roots.isEmpty && prioritized.isEmpty)
                                 // Lista filtrada tem prioridade na mensagem; se não
                                 // há filtro de lista mas as concluídas estão ocultas,
                                 // explica o filtro de concluídas.
                                 ? (selectedListId != null
-                                    ? const AppEmptyState(
-                                        icon: Icons.filter_list_off_rounded,
-                                        title: 'Nenhuma tarefa nesta lista',
-                                        message:
-                                            'Crie uma tarefa acima ou '
-                                            'troque de lista no filtro.',
-                                      )
-                                    : const AppEmptyState(
-                                        icon: Icons.done_all_rounded,
-                                        title: 'Nada pendente por aqui',
-                                        message:
-                                            'As tarefas concluídas estão '
-                                            'ocultas. Toque em "Mostrar '
-                                            'concluídas" para vê-las.',
-                                      ))
+                                      ? const AppEmptyState(
+                                          icon: Icons.filter_list_off_rounded,
+                                          title: 'Nenhuma tarefa nesta lista',
+                                          message:
+                                              'Crie uma tarefa acima ou '
+                                              'troque de lista no filtro.',
+                                        )
+                                      : const AppEmptyState(
+                                          icon: Icons.done_all_rounded,
+                                          title: 'Nada pendente por aqui',
+                                          message:
+                                              'As tarefas concluídas estão '
+                                              'ocultas. Toque em "Mostrar '
+                                              'concluídas" para vê-las.',
+                                        ))
                                 : _priorityView
                                 ? _PriorityList(
                                     leaves: prioritized,
@@ -397,10 +395,14 @@ class _TaskListPageState extends State<TaskListPage> {
                           ),
                         ],
                       ),
-                    TaskListError() => const AppEmptyState(
-                      icon: Icons.checklist_rounded,
-                      title: 'Sua lista está vazia',
-                      message: 'Toque em + para criar sua primeira tarefa.',
+                    // Só sobra na tela o erro que impede carregar (falha no
+                    // início ou no stream). Erro de escrita não chega aqui: o
+                    // Bloc reemite o Loaded no mesmo handler, então o frame
+                    // pintado já é a listagem de volta — e o snackbar avisa.
+                    TaskListError(:final message) => AppEmptyState(
+                      icon: Icons.cloud_off_rounded,
+                      title: 'Não deu para carregar',
+                      message: message,
                     ),
                   };
                 },
@@ -410,10 +412,10 @@ class _TaskListPageState extends State<TaskListPage> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => setState(() {
-          _quickAddVisible = !_quickAddVisible;
-          _subtaskParent = null;
-        }),
+        onPressed: () {
+          _changeTarget(null);
+          setState(() => _quickAddVisible = !_quickAddVisible);
+        },
         child: Icon(_quickAddVisible ? Icons.close_rounded : Icons.add_rounded),
       ),
     );

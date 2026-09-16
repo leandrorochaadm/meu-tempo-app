@@ -49,14 +49,44 @@ class HideDoneToggled extends TaskListEvent {
   List<Object?> get props => [hide];
 }
 
-/// Criação rápida: título + lista escolhida (`null` = "Entrada").
+/// Criação rápida: só o título. Onde a tarefa nasce (raiz ou filha/neta do
+/// alvo, e em que lista) é decidido no Bloc a partir do alvo e do destino já
+/// resolvidos — a tela não escolhe nada.
 class TaskCreated extends TaskListEvent {
-  const TaskCreated(this.title, {this.listId});
+  const TaskCreated(this.title);
   final String title;
-  final String? listId;
 
   @override
-  List<Object?> get props => [title, listId];
+  List<Object?> get props => [title];
+}
+
+/// Criação rápida com cronômetro: cria a tarefa (raiz ou filha/neta do alvo) e
+/// **já começa a contar o tempo nela**.
+class TaskCreatedAndStarted extends TaskListEvent {
+  const TaskCreatedAndStarted(this.title);
+  final String title;
+
+  @override
+  List<Object?> get props => [title];
+}
+
+/// Escolhe onde o próximo lançamento da barra cai: `null` = tarefa mãe (raiz),
+/// ou a última criada como mãe da próxima (filha/neta em sequência).
+class QuickAddTargetChanged extends TaskListEvent {
+  const QuickAddTargetChanged(this.target);
+  final QuickAddTargetEntity? target;
+
+  @override
+  List<Object?> get props => [target];
+}
+
+/// Fixa a lista escolhida na barra de criação (não mexe no filtro da tela).
+class CreationListChanged extends TaskListEvent {
+  const CreationListChanged(this.listId);
+  final String listId;
+
+  @override
+  List<Object?> get props => [listId];
 }
 
 /// Emitido internamente quando o cronômetro ativo muda. Carrega o id da folha
@@ -154,17 +184,17 @@ class EditRequested extends TaskListEvent {
 
   @override
   List<Object?> get props => [
-        taskId,
-        title,
-        estimatedMinutes,
-        dueDate,
-        importance,
-        listId,
-        newParentId,
-        parentChanged,
-        isDone,
-        doneChanged,
-      ];
+    taskId,
+    title,
+    estimatedMinutes,
+    dueDate,
+    importance,
+    listId,
+    newParentId,
+    parentChanged,
+    isDone,
+    doneChanged,
+  ];
 }
 
 /// Move uma tarefa na hierarquia (novo pai ou raiz).
@@ -175,22 +205,4 @@ class MoveRequested extends TaskListEvent {
 
   @override
   List<Object?> get props => [taskId, newParentId];
-}
-
-/// Adiciona uma subtarefa (filha/neta) a um nó existente.
-class SubtaskRequested extends TaskListEvent {
-  const SubtaskRequested({
-    required this.parentId,
-    required this.parentLevel,
-    required this.listId,
-    required this.title,
-  });
-
-  final String parentId;
-  final int parentLevel;
-  final String listId;
-  final String title;
-
-  @override
-  List<Object?> get props => [parentId, parentLevel, listId, title];
 }

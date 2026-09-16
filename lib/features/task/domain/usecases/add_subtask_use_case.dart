@@ -2,6 +2,7 @@ import 'package:equatable/equatable.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:injectable/injectable.dart';
 
+import '../../../../core/constants/app_defaults.dart';
 import '../../../../core/error/failures.dart';
 import '../../../../core/usecase/usecase.dart';
 import '../entities/task_entity.dart';
@@ -43,7 +44,7 @@ class AddSubtaskUseCase implements UseCase<TaskEntity, AddSubtaskParams> {
     if (title.isEmpty) return const Left(EmptyTitleFailure());
 
     // mãe(0) → filha(1) → neta(2). Filha de neta (nível 3) é proibida.
-    if (params.parentLevel + 1 > 2) {
+    if (params.parentLevel + 1 > AppDefaults.maxTaskLevel) {
       return const Left(MaxLevelExceededFailure());
     }
 

@@ -67,4 +67,65 @@ void main() {
   test('folha real é folha mesmo sem children', () {
     expect(TaskNode(task: leaf('a'), level: 2).isLeaf, isTrue);
   });
+
+  test('tempo real: folha usa o próprio, mãe/avó somam as folhas', () {
+    final f1 = TaskEntity(
+      id: 'f1',
+      title: 'f1',
+      listId: 'inbox',
+      createdAt: today,
+      spentMinutes: 25,
+    );
+    final f2 = TaskEntity(
+      id: 'f2',
+      title: 'f2',
+      listId: 'inbox',
+      createdAt: today,
+      spentMinutes: 10,
+    );
+
+    expect(TaskNode(task: f1, level: 2).totalSpentMinutes, 25);
+
+    // Avó → filha → netas: a soma atravessa os níveis.
+    final avo = TaskNode(
+      task: parent('avo'),
+      level: 0,
+      children: [
+        TaskNode(
+          task: parent('filha'),
+          level: 1,
+          children: [
+            TaskNode(task: f1, level: 2),
+            TaskNode(task: f2, level: 2),
+          ],
+        ),
+      ],
+    );
+
+    expect(avo.totalSpentMinutes, 35);
+    expect(avo.totalEstimatedMinutes, 0); // folhas sem estimativa → 0
+    expect(avo.leafCount, 2);
+    expect(avo.doneLeafCount, 0);
+  });
+
+  test('mãe sem folhas visíveis: progresso 0 sem divisão por zero', () {
+    final vazia = TaskNode(task: parent('mae'), level: 0);
+
+    expect(vazia.leafCount, 0);
+    expect(vazia.progress, 0);
+  });
+
+  test('compara por valor (Equatable), inclusive rank e isOverdue', () {
+    final base = TaskNode(task: leaf('a'), level: 1, rank: 1);
+
+    expect(base, equals(TaskNode(task: leaf('a'), level: 1, rank: 1)));
+    expect(base, isNot(equals(TaskNode(task: leaf('a'), level: 1, rank: 2))));
+    expect(
+      base,
+      isNot(equals(
+        TaskNode(task: leaf('a'), level: 1, rank: 1, isOverdue: true),
+      )),
+    );
+    expect(base.props, hasLength(5));
+  });
 }

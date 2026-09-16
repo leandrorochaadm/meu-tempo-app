@@ -10,4 +10,8 @@ class AppDefaults {
 
   /// Tempo que o snackbar de "Desfazer" (concluir/excluir) fica visível.
   static const Duration undoSnackbarDuration = Duration(seconds: 10);
+
+  /// Nível mais profundo da hierarquia: mãe(0) → filha(1) → **neta(2)**.
+  /// Neta não aceita filhas.
+  static const int maxTaskLevel = 2;
 }
