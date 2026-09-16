@@ -32,7 +32,8 @@ void main() {
     expect(find.text('1h'), findsOneWidget); // tempo estimado formatado
     expect(find.text('Máxima (5 − 1 = 4)'), findsOneWidget);
     expect(find.text('6 (vence hoje)'), findsOneWidget);
-    expect(find.text('60 × 4 × 6 = 1440'), findsOneWidget);
+    expect(find.text('Média (3)'), findsOneWidget); // 60 min = faixa média
+    expect(find.text('3 × 4 × 6 = 72'), findsOneWidget);
   });
 
   testWidgets('explica o atraso em dias na urgência', (tester) async {
@@ -47,7 +48,7 @@ void main() {
     );
 
     expect(find.text('11 (atrasada 5 dias)'), findsOneWidget);
-    expect(find.text('30 × 1 × 11 = 330'), findsOneWidget);
+    expect(find.text('2 × 1 × 11 = 22'), findsOneWidget);
   });
 
   testWidgets('atraso de 1 dia usa singular', (tester) async {

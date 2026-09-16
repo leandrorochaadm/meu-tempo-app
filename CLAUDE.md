@@ -117,8 +117,11 @@ ou DataSource direto.
 - **Folha** = tarefa sem filhas: única com cronômetro, tempo, data e importância
   próprios, e única que aparece na listagem por prioridade.
 - Tempo da mãe/avó é **sempre derivado** (soma das folhas), nunca editável direto.
-- **Prioridade** = `tempoEstimado × (5 − importância) × urgênciaDoPrazo`
-  (importância 1 = máxima). Recalcular na abertura da lista (depende da data atual).
+- **Prioridade** = `faixaDeEsforço × (5 − importância) × urgênciaDoPrazo`
+  (importância 1 = máxima). A `faixaDeEsforço` é o tempo estimado traduzido em peso
+  1–5 (`EffortBandEnum`: até 15 min, 16–30 min, 31–60 min, 1–3 h, +3 h) — em minutos
+  crus o tempo dominava os outros fatores. Recalcular na abertura da lista (depende da
+  data atual).
 - **Só 1 cronômetro ativo** por usuário (vale para folhas e compromissos): dar start
   em outro pausa o anterior automaticamente.
 

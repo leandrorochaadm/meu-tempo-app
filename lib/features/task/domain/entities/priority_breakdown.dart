@@ -1,11 +1,12 @@
 import 'package:equatable/equatable.dart';
 
+import 'effort_band_enum.dart';
 import 'importance_enum.dart';
 
 /// Detalhamento do cálculo da prioridade de uma folha, com cada fator já
 /// resolvido — a UI só exibe, nunca recalcula (ver `architecture.md`).
 ///
-/// Fórmula: `tempoEstimado × (5 − importância) × urgênciaDoPrazo`.
+/// Fórmula: `faixaDeEsforço × (5 − importância) × urgênciaDoPrazo`.
 class PriorityBreakdown extends Equatable {
   const PriorityBreakdown({
     required this.estimatedMinutes,
@@ -26,8 +27,13 @@ class PriorityBreakdown extends Equatable {
   /// Multiplicador da importância: `5 − valor` (importância 1 = fator 4).
   int get importanceFactor => 5 - importance.value;
 
+  /// Faixa de esforço do tempo estimado — é ela que entra na fórmula, não os
+  /// minutos crus (ver [EffortBandEnum]).
+  EffortBandEnum get effortBand =>
+      EffortBandEnum.fromEstimatedMinutes(estimatedMinutes);
+
   /// Pontuação final de prioridade.
-  int get total => estimatedMinutes * importanceFactor * urgencyWeight;
+  int get total => effortBand.weight * importanceFactor * urgencyWeight;
 
   /// Dias de atraso (0 quando no prazo ou sem prazo).
   int get overdueDays {

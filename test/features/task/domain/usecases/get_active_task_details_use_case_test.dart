@@ -63,20 +63,20 @@ void main() {
     expect(details.listColorIndex, 0);
   });
 
-  test('prioridade segue tempoEstimado × (5 − importância) × urgência', () {
-    // 60 min × (5 − 1) × urgência do prazo de hoje.
+  test('prioridade segue faixaDeEsforço × (5 − importância) × urgência', () {
+    // 60 min = faixa média (3) × (5 − 1) × urgência 6 (vence hoje).
     final task = leaf(dueDate: today);
     final details = useCase(task, lists, [task], today);
 
-    expect(details.priority, greaterThan(0));
-    expect(details.priority % (60 * 4), 0);
+    expect(details.priority, 3 * 4 * 6);
   });
 
-  test('sem estimativa a prioridade é zero', () {
+  test('sem estimativa cai na faixa de esforço mais rápida', () {
+    // Faixa rápida (1) × (5 − 1) × sem prazo (1) — não zera mais a prioridade.
     final task = leaf(estimatedMinutes: null);
     final details = useCase(task, lists, [task], today);
 
-    expect(details.priority, 0);
+    expect(details.priority, 1 * 4 * 1);
   });
 
   test('marca atraso quando o prazo é anterior a hoje', () {
@@ -102,7 +102,7 @@ void main() {
     });
 
     test('reflete a posição entre as outras folhas', () {
-      // 't1': 60 × 4 × 6 = 1440 (vence hoje). 'grande': 600 × 4 × 6 = 14400.
+      // 't1': média (3) × 4 × 6 = 72. 'grande': muito longa (5) × 4 × 6 = 120.
       final task = leaf(dueDate: today);
       final all = [
         task,
@@ -116,14 +116,14 @@ void main() {
     });
 
     test('sobe de posição quando o atraso aumenta', () {
+      // No prazo, a folha longa vem na frente: 5 × 4 × 6 = 120 contra 3 × 4 × 6 = 72.
+      final noPrazo = leaf(dueDate: today);
+      final all = [noPrazo, other('grande', minutes: 600, dueInDays: 0)];
+      expect(useCase(noPrazo, lists, all, today).rank, 2);
+
+      // Com 30 dias de atraso a urgência vai a 36 e ela assume a frente (432).
       final atrasada = leaf(dueDate: today.subtract(const Duration(days: 30)));
-      final all = [atrasada, other('grande', minutes: 600, dueInDays: 0)];
-
-      // 60 × 4 × 36 = 8640 — ainda atrás de 'grande' (14400).
-      expect(useCase(atrasada, lists, all, today).rank, 2);
-
-      // Com 'grande' menor, a atrasada assume a frente.
-      final all2 = [atrasada, other('grande', minutes: 30, dueInDays: 0)];
+      final all2 = [atrasada, other('grande', minutes: 600, dueInDays: 0)];
       expect(useCase(atrasada, lists, all2, today).rank, 1);
     });
 

@@ -299,8 +299,8 @@ void main() {
     await tester.pump(const Duration(milliseconds: 300));
 
     expect(find.text('Como calculamos'), findsOneWidget);
-    // 90 × (5 − 4) × 1 = 90 — os fatores do `running`.
-    expect(find.text('90 × 1 × 1 = 90'), findsOneWidget);
+    // 90 min = faixa longa (4) × (5 − 4) × 1 — os fatores do `running`.
+    expect(find.text('4 × 1 × 1 = 4'), findsOneWidget);
   });
 
   testWidgets('tocar em Parar dispara ActiveTimerStopRequested',

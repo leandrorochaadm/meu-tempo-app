@@ -89,7 +89,18 @@ rituais e demais medições ficam em **Próximas versões**.
      opção de lista; mudo a lista da mãe "Lançar app" de Profissional para Estudo e as
      filhas/netas vão com ela.
 6. **Listagem por prioridade:** lista **plana só das folhas** (tarefas executáveis), ordenada pela prioridade calculada.
-   - **Fórmula:** `prioridade = tempoEstimado × (5 − importância) × urgênciaDoPrazo`. Tarefas mais próximas, mais importantes (1) e mais longas vêm primeiro.
+   - **Fórmula:** `prioridade = faixaDeEsforço × (5 − importância) × urgênciaDoPrazo`. Tarefas mais próximas, mais importantes (1) e mais longas vêm primeiro.
+   - **faixaDeEsforço (o tempo estimado entra pela faixa, não em minutos crus):**
+     - Até 15 min → **1** · 16–30 min → **2** · 31–60 min → **3** · 1–3 h → **4** ·
+       mais de 3 h → **5**
+     - Os **30 min** (padrão da criação rápida) têm faixa própria: é o corte mais
+       comum na prática, e junto com 1 h achataria a diferença entre a tarefa padrão
+       e uma de uma hora.
+     - Motivo: em minutos o tempo varia ~100× (5 min a 8 h) contra 4× da importância e
+       6× da urgência, e acabava decidindo sozinho a ordem — uma tarefa de 8 h sem
+       importância nem prazo ficava acima de uma de 15 min máxima vencendo hoje. Com a
+       faixa os três fatores ficam na mesma escala e "mais longa vem primeiro" continua
+       valendo como critério, sem atropelar prazo e importância.
    - **urgênciaDoPrazo (faixas graduais até 14 dias; atraso cresce sem teto):**
      - Atrasada → **6 + 1 por dia de atraso, sem teto** (1 dia atrasada = 7, 5 dias = 11,
        30 dias = 36) — quanto mais atrasada, maior a prioridade
@@ -228,11 +239,18 @@ _Já conversados e detalhados; ficam para depois da versão 1 (sem ordem definid
 - **Um cronômetro por vez:** dar start em outra tarefa/compromisso **pausa
   automaticamente** o que estava ativo.
 - **Tempo acumulativo:** o tempo de uma folha soma no total da mãe e da avó.
-- **Prioridade:** `tempoEstimado × (5 − importância) × urgênciaDoPrazo`
-  (importância 1 = máxima). A `urgênciaDoPrazo` usa **faixas graduais até 14 dias**:
+- **Prioridade:** `faixaDeEsforço × (5 − importância) × urgênciaDoPrazo`
+  (importância 1 = máxima). A `faixaDeEsforço` traduz o tempo estimado em peso:
+  até 15 min = **1**, 16–30 min = **2**, 31–60 min = **3**, 1–3 h = **4**,
+  mais de 3 h = **5**.
+  A `urgênciaDoPrazo` usa **faixas graduais até 14 dias**:
   hoje = **6**, 1–2 dias = **5**, 3–5 dias = **4**, 6–9 dias = **3**,
   10–14 dias = **2**, mais de 14 dias = **1**. **Atrasada** = **6 + 1 por dia de
   atraso, sem teto**.
+- **Empate na prioridade:** com pesos pequenos o empate é comum, então a ordem é
+  resolvida por completo: prazo mais próximo (sem prazo por último) → maior tempo
+  estimado dentro da faixa → tarefa mais antiga → `id`. A fila nunca muda de ordem
+  entre recargas com os mesmos dados.
 - **Conclusão de folha:** uma folha marcada como **feita** sai da listagem de
   prioridade e não é mais pendência para a migração.
 - **Conclusão automática da mãe/avó:** quando todas as filhas estão feitas, a
@@ -398,7 +416,7 @@ Decisões que encerraram as pendências anteriores:
   vivem na agenda, não na listagem por prioridade.)
 - **Importância**: peso da tarefa de **1 a 4**, sendo **1 a máxima**.
 - **Prioridade**: ordem de execução calculada por
-  `tempoEstimado × (5 − importância) × urgênciaDoPrazo`, sendo a urgência
+  `faixaDeEsforço × (5 − importância) × urgênciaDoPrazo`, sendo a urgência
   em faixas graduais até 14 dias (hoje = 6 … mais de 14 dias = 1), com atraso somando
   1 por dia atrasado a partir de 6, sem teto.
 - **Monitorável ("coisa a monitorar")**: qualquer item que o Leandro cria pra
@@ -452,7 +470,7 @@ Decisões que encerraram as pendências anteriores:
 - 2026-07-19 (cont.) — Detalhamento do **gerenciador de tarefas** (v1): hierarquia
   em 3 níveis (mãe→filha→neta), campos e cronômetro só nas folhas, 1 cronômetro
   por vez com pausa automática, tempo acumulativo, listagem plana das folhas por
-  prioridade (`tempoEstimado × (5−importância) × urgênciaDoPrazo`) com subtítulo
+  prioridade (`faixaDeEsforço × (5−importância) × urgênciaDoPrazo`) com subtítulo
   da mãe/avó, e **"lista" unificando "área"**. Fórmula de prioridade fechada:
   urgênciaDoPrazo em **faixas graduais até 14 dias** (atrasada/hoje = 6 … +14 dias = 1).
   **Nenhum ponto em aberto restante.**

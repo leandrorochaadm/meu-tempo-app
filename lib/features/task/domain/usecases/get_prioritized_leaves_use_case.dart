@@ -7,7 +7,7 @@ import '../services/overdue_evaluator.dart';
 import '../services/priority_calculator.dart';
 
 /// Monta a lista **plana das folhas não concluídas** ordenada por prioridade:
-/// `tempoEstimado × (5 − importância) × urgênciaDoPrazo`. Depende de `today`
+/// `faixaDeEsforço × (5 − importância) × urgênciaDoPrazo`. Depende de `today`
 /// (recebido como parâmetro), por isso vive no UseCase — não na Entity.
 @lazySingleton
 class GetPrioritizedLeavesUseCase {
@@ -27,16 +27,37 @@ class GetPrioritizedLeavesUseCase {
             ))
         .toList();
 
+    // Com o esforço em faixas (peso 1–4), o `total` assume poucos valores
+    // distintos e o empate é a regra, não a exceção: o desempate precisa ser
+    // total e determinístico, senão a ordem muda entre recargas.
     scored.sort((a, b) {
       final byPriority = b.breakdown.total.compareTo(a.breakdown.total);
       if (byPriority != 0) return byPriority;
-      // Desempate: prazo mais próximo primeiro.
-      final da = a.task.dueDate;
-      final db = b.task.dueDate;
-      if (da == null && db == null) return 0;
-      if (da == null) return 1;
-      if (db == null) return -1;
-      return da.compareTo(db);
+
+      // 1º: prazo mais próximo primeiro (sem prazo vai para o fim). Compara
+      // `daysUntilDue`, que o domínio já normalizou para o dia — o `dueDate`
+      // cru carrega a hora da criação rápida e desempataria por minuto.
+      final da = a.breakdown.daysUntilDue;
+      final db = b.breakdown.daysUntilDue;
+      if (da != null && db != null) {
+        final byDue = da.compareTo(db);
+        if (byDue != 0) return byDue;
+      } else if (da == null && db != null) {
+        return 1;
+      } else if (da != null && db == null) {
+        return -1;
+      }
+
+      // 2º: dentro da mesma faixa de esforço, a estimativa maior primeiro —
+      // preserva "mais longa vem antes" que a faixa arredondou.
+      final byEstimate = b.breakdown.estimatedMinutes
+          .compareTo(a.breakdown.estimatedMinutes);
+      if (byEstimate != 0) return byEstimate;
+
+      // 3º: mais antiga primeiro; `id` fecha para a ordem ser sempre a mesma.
+      final byCreatedAt = a.task.createdAt.compareTo(b.task.createdAt);
+      if (byCreatedAt != 0) return byCreatedAt;
+      return a.task.id.compareTo(b.task.id);
     });
 
     return [

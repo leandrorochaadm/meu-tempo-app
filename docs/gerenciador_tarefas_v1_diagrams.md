@@ -18,7 +18,7 @@ fluxogramas dos casos de uso com lógica de decisão._
 | `CEN-02` | Registrar tempo | "Cronômetro (só folha/compromisso) e manual; 1 ativo por vez com pausa automática; tempo acumula na mãe/avó" |
 | `CEN-03` | Migração de pendências | "No dia seguinte, o app mostra as tarefas não feitas para migrar ou descartar" |
 | `CEN-04` | Cabe no dia | "Avisar se a soma das durações estimadas (tarefas + compromissos) passa das horas disponíveis" |
-| `CEN-06` | Listagem por prioridade | "Lista plana só das folhas, ordenada por tempoEstimado × (5 − importância) × urgênciaDoPrazo" |
+| `CEN-06` | Listagem por prioridade | "Lista plana só das folhas, ordenada por faixaDeEsforço × (5 − importância) × urgênciaDoPrazo" |
 | `CEN-10` | Conclusão e progresso | "Concluir folha; mãe conclui sozinha quando todas as filhas terminam; barra de progresso" |
 | `CEN-11` | Editar, excluir e mover | "Editar campos; excluir em cascata com confirmação; mover na hierarquia reatribui o tempo" |
 | `CEN-12` | Criação rápida (sem fricção) | "Criar só com o título; nasce com valores padrão e já entra na listagem" |

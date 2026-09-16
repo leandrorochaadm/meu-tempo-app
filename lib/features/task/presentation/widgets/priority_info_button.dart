@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/theme_context_extensions.dart';
 import '../../../../core/utils/formatters/duration_formatter.dart';
 import '../../domain/entities/priority_breakdown.dart';
+import 'effort_band_presentation.dart';
 import 'importance_presentation.dart';
 
 /// Ícone de "info" que abre a explicação do cálculo da prioridade.
@@ -50,6 +51,11 @@ class _PriorityBreakdownDialog extends StatelessWidget {
             value: DurationFormatter.hm(breakdown.estimatedMinutes),
           ),
           _FactorRow(
+            label: 'Esforço',
+            value: '${breakdown.effortBand.label}'
+                ' (${breakdown.effortBand.weight})',
+          ),
+          _FactorRow(
             label: 'Importância',
             value: '${breakdown.importance.label}'
                 ' (5 − ${breakdown.importance.value}'
@@ -66,7 +72,7 @@ class _PriorityBreakdownDialog extends StatelessWidget {
             child: Divider(height: 1, color: colors.border),
           ),
           Text(
-            '${breakdown.estimatedMinutes}'
+            '${breakdown.effortBand.weight}'
             ' × ${breakdown.importanceFactor}'
             ' × ${breakdown.urgencyWeight}'
             ' = ${breakdown.total}',
@@ -75,8 +81,10 @@ class _PriorityBreakdownDialog extends StatelessWidget {
           SizedBox(height: context.space.md),
           Text(
             'Tarefas mais longas, mais importantes e com prazo mais apertado '
-            'pontuam mais alto e sobem na lista. Em atraso, a urgência sobe 1 '
-            'por dia — quanto mais atrasada, maior a prioridade.',
+            'pontuam mais alto e sobem na lista. O tempo entra pela faixa de '
+            'esforço (rápida a longa), para não pesar mais que prazo e '
+            'importância. Em atraso, a urgência sobe 1 por dia — quanto mais '
+            'atrasada, maior a prioridade.',
             style: context.text.labelSmall,
           ),
         ],

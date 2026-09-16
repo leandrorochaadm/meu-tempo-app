@@ -99,7 +99,9 @@ não me frustrar com metas impossíveis.
 **Critérios de aceitação:**
 - **Dado** um conjunto de folhas, **quando** abro a listagem, **então** vejo uma
   **lista plana só das folhas**, ordenada por
-  `prioridade = tempoEstimado × (5 − importância) × urgênciaDoPrazo`.
+  `prioridade = faixaDeEsforço × (5 − importância) × urgênciaDoPrazo`.
+- **faixaDeEsforço** (tempo estimado em peso): até 15 min = 1; 16–30 min = 2;
+  31–60 min = 3; 1–3 h = 4; +3 h = 5.
 - **urgênciaDoPrazo** (faixas): hoje = 6; 1–2 dias = 5; 3–5 dias = 4;
   6–9 dias = 3; 10–14 dias = 2; +14 dias = 1.
 - **urgênciaDoPrazo em atraso**: `6 + diasDeAtraso`, **sem teto** — 1 dia atrasada = 7,
@@ -300,7 +302,9 @@ relevante e sem picos. Carga baixa — dimensionamento não é preocupação par
   aparece na listagem por prioridade e única com tempo/data/importância próprios.
   (Compromissos também têm cronômetro, mas ficam na agenda, não na listagem.)
 - **Importância**: peso de 1 a 4, sendo **1 a máxima**.
-- **Prioridade**: `tempoEstimado × (5 − importância) × urgênciaDoPrazo`.
+- **Prioridade**: `faixaDeEsforço × (5 − importância) × urgênciaDoPrazo`.
+- **Faixa de esforço**: o tempo estimado traduzido em peso 1–5, para não pesar
+  mais que prazo e importância. Os 30 min da criação rápida têm faixa própria.
 - **Migração**: reavaliar uma tarefa não feita e decidir migrar ou descartar.
 - **Duração estimada**: tempo que o usuário acha que a tarefa levará (comparado com o real).
 - **Compromisso**: evento agendado (data + hora de início + duração; fim = início +

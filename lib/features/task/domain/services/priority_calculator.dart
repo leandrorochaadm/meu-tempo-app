@@ -1,10 +1,14 @@
+import '../entities/effort_band_enum.dart';
 import '../entities/importance_enum.dart';
 import '../entities/priority_breakdown.dart';
 import '../entities/task_entity.dart';
 import '../entities/urgency_band_enum.dart';
 
 /// Fórmula de prioridade da folha:
-/// `tempoEstimado × (5 − importância) × urgênciaDoPrazo`.
+/// `faixaDeEsforço × (5 − importância) × urgênciaDoPrazo`.
+///
+/// O tempo estimado entra pela **faixa** ([EffortBandEnum], peso 1–4) e não em
+/// minutos crus, para ficar na mesma escala da importância e da urgência.
 ///
 /// A urgência usa faixas até 14 dias e, em atraso, cresce 1 por dia atrasado sem
 /// teto (ver [UrgencyBandEnum.weightForDaysUntilDue]).

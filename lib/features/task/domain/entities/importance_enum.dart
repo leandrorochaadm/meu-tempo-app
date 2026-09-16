@@ -1,7 +1,7 @@
 import 'package:json_annotation/json_annotation.dart';
 
 /// Importância da folha (1 = máxima … 4 = mínima). O `value` numérico é usado
-/// na fórmula de prioridade `tempoEstimado × (5 − value) × urgência`.
+/// na fórmula de prioridade `faixaDeEsforço × (5 − value) × urgência`.
 ///
 /// Serializado por `.name` (nunca `.index`) — estável ao reordenar.
 @JsonEnum()

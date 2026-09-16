@@ -27,7 +27,7 @@ class ActiveTaskDetails extends Equatable {
   /// Fatores do cálculo da prioridade, prontos para exibição.
   final PriorityBreakdown breakdown;
 
-  /// `tempoEstimado × (5 − importância) × urgênciaDoPrazo` — derivada do
+  /// `faixaDeEsforço × (5 − importância) × urgênciaDoPrazo` — derivada do
   /// [breakdown], nunca recalculada na UI.
   int get priority => breakdown.total;
 
