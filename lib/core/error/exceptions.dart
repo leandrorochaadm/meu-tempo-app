@@ -66,6 +66,7 @@ AppException mapFirestoreException(FirebaseException e) => switch (e.code) {
 AppException mapFirebaseAuthException(FirebaseAuthException e) => switch (e.code) {
       'popup-closed-by-user' ||
       'cancelled-popup-request' ||
+      'popup-blocked' ||
       'user-cancelled' =>
         const SignInCancelledException(),
       'network-request-failed' => const NetworkException(),

@@ -22,7 +22,7 @@ class DefaultFirebaseOptions {
     appId: '1:588975528122:web:dbc3c6d2b8f4a782250a83',
     messagingSenderId: '588975528122',
     projectId: 'meu-tempo-dev',
-    authDomain: 'meu-tempo-dev.firebaseapp.com',
+    authDomain: 'meu-tempo-dev.web.app',
     storageBucket: 'meu-tempo-dev.firebasestorage.app',
   );
 
