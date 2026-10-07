@@ -1,7 +1,7 @@
 # Requisitos — Meu Tempo
 
 _Controle de tempo pessoal — Bullet Journal digital com cronômetro por tarefa._
-_Levantado em 2026-07-19 · Última atualização em 2026-07-20_
+_Levantado em 2026-07-19 · Última atualização em 2026-10-07_
 _Entrevistado: Leandro (usuário e dono da ideia)_
 
 ## Problema e objetivos
@@ -47,10 +47,12 @@ que o papel não faz — medir e relatar o tempo gasto em cada tarefa.
 
 | Quem | O que faz | Decide/aprova algo? |
 |------|-----------|---------------------|
-| Usuário (2 pessoas) | Cada um usa o app para acompanhar o próprio dia; cada um tem seu **login** e seu **diário separado** | Sim — cada um é dono dos próprios dados |
+| Usuários (várias pessoas) | Cada um usa o app para acompanhar o próprio dia; cada um tem seu **login** e seu **diário separado** | Sim — cada um é dono dos próprios dados |
 
-**Observação:** o app terá **2 usuários independentes** (ex.: Leandro e outra
-pessoa). Cada um vê **apenas os seus dados** — não há compartilhamento entre eles.
+**Observação:** o app terá **vários usuários independentes** (ex.: Leandro e
+outras pessoas), sem número fixo. **Qualquer pessoa** com conta Google pode se
+cadastrar. Cada um vê **apenas os seus dados** — não há
+compartilhamento entre eles.
 
 ## Requisitos
 
@@ -152,7 +154,7 @@ rituais e demais medições ficam em **Próximas versões**.
      - _Pronto quando:_ na lista "Profissional" da semana, toco na mãe "Projeto Alfa"
        (gasto 2h · est. 1h · +1h), ela expande mostrando "Montar proposta gasto 2h · est.
        1h · +1h"; troco a ordenação para "estouro" e a mãe com maior estouro sobe ao topo.
-8. **Login** próprio por usuário, com **dados separados** entre os 2 usuários.
+8. **Login** próprio por usuário, com **dados separados** entre os usuários.
    - _Pronto quando:_ entro com minha conta e vejo só os meus dados.
 9. **Backup na nuvem** (recuperar o histórico ao trocar de celular).
    - _Pronto quando:_ entro com minha conta em outro celular e vejo o mesmo histórico de antes.
@@ -160,7 +162,8 @@ rituais e demais medições ficam em **Próximas versões**.
     - **Concluir folha:** marcar uma folha como **feita**; ela sai da listagem de prioridade e deixa de ser pendência para a migração.
     - **Mãe conclui sozinha:** quando **todas as filhas** de uma mãe/avó estão feitas, ela é concluída **automaticamente**.
     - **Barra de progresso** na mãe/avó, mostrando o quanto do projeto já foi concluído (proporção de folhas feitas).
-    - _Pronto quando:_ marco as 5 folhas de uma mãe como feitas e a mãe fica concluída sozinha, com a barra em 100%; ao concluir 3 de 5, a barra mostra 60%.
+    - **Reabrir:** uma folha ou um compromisso concluído pode ser **reaberto** dentro do app, a qualquer momento. Ao reabrir uma filha, a **mãe e a avó** que tinham concluído sozinhas **reabrem junto**.
+    - _Pronto quando:_ marco as 5 folhas de uma mãe como feitas e a mãe fica concluída sozinha, com a barra em 100%; ao concluir 3 de 5, a barra mostra 60%. Concluo a última filha de uma mãe, que conclui sozinha; reabro essa filha e ela volta para a listagem por prioridade, a mãe volta a ficar aberta e a barra cai.
 11. **Editar, excluir e mover tarefas.**
     - Editar qualquer campo (prazo, importância, **lista**, tempo estimado, título) — inclusive **mover a tarefa de uma lista para outra**.
     - Excluir uma tarefa (e definir o que acontece com as filhas — ver "Quando dá errado").
@@ -184,7 +187,8 @@ rituais e demais medições ficam em **Próximas versões**.
     - O compromisso **ocupa o "cabe no dia"** (sua duração desconta das horas disponíveis, junto com as tarefas).
     - O compromisso **tem cronômetro / registro de tempo** e entra na comparação **estimado × real**, como as folhas.
     - O compromisso **pertence a uma lista** (ou cai na "Entrada") e entra no **relatório por lista**; na tela é mostrado com um **ícone diferente** do de tarefa.
-    - _Pronto quando:_ crio "Reunião hoje 15h, 1h" na lista "Profissional", ela aparece na agenda às 15h com ícone de compromisso, desconta 1h do dia, e o tempo dela soma no relatório da lista "Profissional".
+    - O compromisso **pode ser concluído** (e reaberto, ver req. 10); na agenda ele **continua igual, com um sinal de "feito"** ao lado.
+    - _Pronto quando:_ crio "Reunião hoje 15h, 1h" na lista "Profissional", ela aparece na agenda às 15h com ícone de compromisso, desconta 1h do dia, e o tempo dela soma no relatório da lista "Profissional"; ao concluí-la, aparece o sinal de "feito" na agenda, e ao reabri-la o sinal some.
 
 ### Próximas versões
 
@@ -213,19 +217,20 @@ _Já conversados e detalhados; ficam para depois da versão 1 (sem ordem definid
 
 ### Desejável
 
-1. Relatório cruzando **humor/energia × como o tempo foi gasto** (ex.: "nos dias com mais rede social, energia mais baixa").
-2. Anotações livres (notas do Bullet Journal), captura rápida de ideias e eventos sem tarefa.
+1. **Aviso de tempo estourado:** quando o cronômetro passar do **tempo estimado**, o app avisa e repete o aviso **a cada 1 hora** até o usuário pausar ou parar. Tarefa sem tempo estimado e compromisso **não** recebem aviso. No navegador, o aviso só aparece com o app aberto. (Origem: `entrevista-tela-bloqueio.md`.)
+2. Relatório cruzando **humor/energia × como o tempo foi gasto** (ex.: "nos dias com mais rede social, energia mais baixa").
+3. Anotações livres (notas do Bullet Journal), captura rápida de ideias e eventos sem tarefa.
 
 ### Futuro
 
-1. Uso no computador com sincronização entre aparelhos.
+1. Uso no computador.
 2. Compartilhamento entre usuários (diário conjunto).
 
 ## Não faz parte (por enquanto)
 
 - **Não mede o uso de tela sozinho** — o app não rastreia automaticamente o tempo
   de rede social/celular; o Leandro registra manualmente.
-- **Sem compartilhamento entre os 2 usuários** — cada um vê só os próprios dados.
+- **Sem compartilhamento entre os usuários** — cada um vê só os próprios dados.
 - **Sem versão de computador** — só celular nesta versão.
 - **Sem controle de finanças/dinheiro.**
 
@@ -255,6 +260,11 @@ _Já conversados e detalhados; ficam para depois da versão 1 (sem ordem definid
   prioridade e não é mais pendência para a migração.
 - **Conclusão automática da mãe/avó:** quando todas as filhas estão feitas, a
   mãe (e a avó) é concluída sozinha.
+- **Conclusão de compromisso:** o compromisso também pode ser concluído; na agenda,
+  ganha um sinal de "feito".
+- **Reabrir:** folha ou compromisso concluído pode ser reaberto dentro do app, a
+  qualquer momento. Reabrir uma filha reabre junto a mãe e a avó que tinham
+  concluído sozinhas.
 - **Progresso da mãe/avó:** proporção de folhas concluídas (usada na barra de progresso).
 - **Mover na hierarquia:** ao mover uma tarefa de mãe, o tempo acumulado passa a
   contar na nova mãe/avó.
@@ -264,7 +274,8 @@ _Já conversados e detalhados; ficam para depois da versão 1 (sem ordem definid
   para outra lista ou **excluir todas**.
 - **Valores padrão da criação rápida:** importância **4**, entrega **hoje**,
   tempo estimado **30 min**, lista **"Entrada"** (lista fixa que já existe por padrão).
-- **Desfazer:** concluir, excluir e migrar podem ser **desfeitos** logo após a ação.
+- **Desfazer:** concluir, excluir e migrar podem ser **desfeitos** logo após a ação
+  (depois disso, o concluído ainda pode ser **reaberto**).
 - **Migração de tarefas:** quando uma tarefa (folha **não concluída**) não é feita
   no dia, no dia seguinte o app mostra as pendências e o Leandro decide uma a uma —
   **levar pra frente** (migrar) ou **descartar**.
@@ -274,9 +285,10 @@ _Já conversados e detalhados; ficam para depois da versão 1 (sem ordem definid
 - **Hábito feito por tempo:** ao registrar qualquer tempo numa atividade que é
   hábito, ele conta como feito no dia e a sequência de dias aumenta.
 - **Dados por usuário:** cada usuário só enxerga os próprios dados.
-- **Cronômetro sem limite:** o cronômetro não tem limite de horas e o app **não
-  avisa** sobre tempos longos. Se o Leandro esquecer ligado, ele **edita o tempo
-  manualmente** quando perceber.
+- **Cronômetro sem limite:** o cronômetro não tem limite de horas. Quando passar do
+  **tempo estimado**, o app **avisa a cada 1 hora** (desejável). Tarefa sem
+  estimado e compromisso não recebem aviso. Se o usuário esquecer ligado, ele
+  **edita o tempo manualmente** quando perceber.
 - **Registro retroativo:** lançamentos (tempo, água, humor, energia, hábitos)
   podem ser feitos depois, informando o horário real do acontecimento.
 - **Corrente mantida por registro retroativo:** registrar um dia que faltou
@@ -289,8 +301,9 @@ _Já conversados e detalhados; ficam para depois da versão 1 (sem ordem definid
 
 ## Quando dá errado
 
-- **Cronômetro esquecido ligado** (contou tempo demais) → o app **não avisa**;
-  o Leandro **edita o tempo manualmente** quando perceber.
+- **Cronômetro esquecido ligado** (contou tempo demais) → se a tarefa tem tempo
+  estimado, o app **avisa a cada 1 hora** depois que ele passa (desejável); em
+  qualquer caso, o usuário **edita o tempo manualmente** quando perceber.
 - **Passou um dia sem registrar um hábito** → o Leandro pode **voltar e registrar
   o dia que faltou**; se de fato fez, a corrente é mantida.
 - **Esqueceu de anotar água/humor/energia na hora** → pode **registrar depois
@@ -374,9 +387,15 @@ Cada uma usa um dos **tipos de medição**:
 
 ## Limites
 
-- **Uso só no celular** — a 1ª versão não terá versão de computador nem uso
-  simultâneo em vários aparelhos. (A recuperação do histórico num celular novo,
+- **Uso só no celular** — a 1ª versão não terá versão de computador. O mesmo
+  usuário **pode usar vários aparelhos ao mesmo tempo** (ex.: iPhone e Android),
+  com os dados sempre iguais nos dois. (A recuperação do histórico num celular novo,
   via backup na nuvem, está incluída — ver adiante.)
+- **Navegador e aplicativo instalado** — o Meu Tempo continua podendo ser aberto
+  pelo navegador e passa a ter também um aplicativo instalado no iPhone e no
+  Android (sem passar pelas lojas). O aplicativo instalado veio do pedido de mostrar
+  o cronômetro na tela bloqueada, que só ele permite (ver
+  `entrevista-tela-bloqueio.md`).
 - **Sempre online** — o app funciona conectado à internet (não terá modo offline).
 - **Lembretes/avisos** de: beber água, registrar humor/energia, e
   tarefas/compromissos agendados.
@@ -392,7 +411,8 @@ _Nenhum ponto em aberto — todos os temas foram fechados._
 
 Decisões que encerraram as pendências anteriores:
 - Tamanhos de copo → **CRUD do usuário** (não são fixos).
-- Cronômetro → **sem limite e sem aviso**; correção manual quando o usuário perceber.
+- Cronômetro → **sem limite**; correção manual quando o usuário perceber. _(Revisto
+  em 2026-10-07: passa a avisar quando estoura o estimado — desejável.)_
 - **Sem prazo e sem orçamento** (projeto pessoal).
 - **Lista = área** (conceito unificado sob o nome "lista").
 - **urgênciaDoPrazo** → faixas graduais até 14 dias (hoje = 6 … +14 dias = 1); atrasada
@@ -429,6 +449,7 @@ Decisões que encerraram as pendências anteriores:
 - **Compromisso**: evento agendado com data, **hora de início** e **duração**
   (fim = início + duração); pertence a uma **lista**, aparece na agenda do dia
   (com ícone próprio), ocupa o "cabe no dia" e tem cronômetro/registro de tempo.
+  Pode ser **concluído** (sinal de "feito" na agenda) e reaberto.
 - **Meta**: alvo de uma "coisa a monitorar", com direção — **aumentar**
   ("pelo menos" X) ou **diminuir/limite** ("no máximo" X).
 
@@ -436,11 +457,11 @@ Decisões que encerraram as pendências anteriores:
 
 - [x] Objetivo — dor e régua de sucesso definidas
 - [x] Hoje — processo atual (Bullet Journal em papel) e o que dói
-- [x] Pessoas — 2 usuários independentes, com login e dados separados
+- [x] Pessoas — vários usuários independentes, com login e dados separados
 - [x] O que o sistema faz — tarefas de negócio (grupos A–E + transversais)
 - [x] Regras e exceções
 - [x] Informações — dados e monitoráveis genéricos
-- [ ] Volume e ritmo — quantidades, picos _(pouco relevante: uso pessoal, 2 usuários)_
+- [ ] Volume e ritmo — quantidades, picos _(pouco relevante: uso pessoal, vários usuários sem número fixo)_
 - [x] Limites — só celular, sempre online, backup na nuvem; sem prazo/orçamento
 - [x] Prioridade — **versão 1 = gerenciador de tarefas (3 níveis) + tempo/cronômetro + listas + relatórios + conclusão/progresso + CRUD + uso sem fricção + facilidade p/ leigo + agenda/compromissos + login/nuvem** (req. 1–14); o resto em "Próximas versões"
 - [x] Não-objetivos confirmados
@@ -561,3 +582,17 @@ Decisões que encerraram as pendências anteriores:
   uma tarefa legada divergente a realinha automaticamente com a mãe. Todas essas escritas
   são atômicas (`WriteBatch`), incluindo o "mover tarefas ao excluir uma lista" — que
   antes reescrevia tarefa por tarefa e podia partir a árvore entre duas listas.
+- 2026-10-07 — **Além do navegador, o app passa a ter versão instalada no iPhone e
+  no Android.** Motivo: o cronômetro na tela bloqueada (nova funcionalidade, em
+  `entrevista-tela-bloqueio.md`) só funciona em aplicativo instalado. A versão do
+  navegador continua. Atualizado em "Limites".
+- 2026-10-07 (cont.) — **Vários usuários e vários aparelhos.** O app deixa de ser
+  limitado a 2 usuários: passa a ter vários, cada um com seus dados separados. E o
+  mesmo usuário pode usar mais de um aparelho ao mesmo tempo. Atualizado em
+  "Pessoas envolvidas", "Requisitos" (8), "Não faz parte" e "Limites".
+- 2026-10-07 (cont.) — **Entram três mudanças vindas da entrevista da tela bloqueada**
+  (`entrevista-tela-bloqueio.md`): **compromisso concluído** (sinal de "feito" na
+  agenda), **reabrir** folha ou compromisso concluído (a mãe e a avó reabrem junto),
+  e **aviso de tempo estourado** a cada 1 hora (desejável), que substitui a regra
+  antiga de "o app não avisa". Atualizados req. 10 e 14, "Desejável", "Futuro",
+  "Regras de negócio", "Quando dá errado" e o glossário.

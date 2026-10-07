@@ -7,8 +7,8 @@ paths:
 # Navigation Rules (`go_router` + BLoC)
 
 Navegação pertence **exclusivamente** à Presentation. Domain e Data NUNCA navegam.
-Como é **Flutter Web/PWA**, `go_router` é obrigatório (URL, deep link, botão voltar do
-navegador). O Bloc **atualiza estado**; o widget **reage e navega**.
+Como roda no **web (PWA)** e no **nativo (Android/iOS)**, `go_router` é obrigatório (URL,
+deep link — inclusive o toque na notificação do cronômetro —, botão voltar do navegador). O Bloc **atualiza estado**; o widget **reage e navega**.
 
 ```
 Bloc → emite estado → BlocListener detecta → context.go/push

@@ -4,9 +4,9 @@ paths:
   - "lib/core/ui/**"
 ---
 
-# Layout Rules (mobile-first / PWA de celular)
+# Layout Rules (mobile-first / celular)
 
-O Meu Tempo roda como **PWA em celular** — tela pequena, toque, uma coluna. **Nunca**
+O Meu Tempo roda **no celular** (PWA no navegador ou app nativo Android/iOS) — tela pequena, toque, uma coluna. **Nunca**
 desenhar layout de desktop. Projetar sempre para viewport estreito primeiro.
 
 ## Posicionamento flexível

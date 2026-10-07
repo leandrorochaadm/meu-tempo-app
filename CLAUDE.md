@@ -34,8 +34,16 @@ Nunca invente requisito. Se algo não está nos documentos, **pergunte** (ver sk
 
 ## Stack
 
-- **Flutter Web** compilado como **PWA** — uso **exclusivo em celular**. Projete
-  **mobile-first, tela pequena, alvos de toque grandes**. Não desenhe layouts de desktop.
+- **Flutter multiplataforma — Web (PWA) + Android + iOS**, do mesmo código — uso
+  **exclusivo em celular**. Projete **mobile-first, tela pequena, alvos de toque
+  grandes**. Não desenhe layouts de desktop.
+  - **Alvos nativos** (decisão de 07/10/2026): o cronômetro na tela bloqueada exige
+    código nativo, por isso entram Android e iOS; o **PWA continua**. Mínimo **iOS 17** e
+    **Android 13 (API 33)**; bundle/application id `br.com.tekton.meutempo`; instalação
+    direta, sem lojas. Detalhes e riscos em `docs/tecnico-time-control.md`.
+  - **Recurso só nativo:** cronômetro na tela bloqueada/notificação. No web, o código de
+    plataforma fica atrás de uma abstração com implementação vazia (`kIsWeb`).
+  - **Migração em andamento:** os alvos `android/` e `ios/` ainda não existem.
 - **Sempre online** — sem modo offline nesta versão.
 - **Backend: Firebase** — Auth (login por usuário) + Cloud Firestore (persistência na
   nuvem). **Dados isolados por usuário**: toda query filtra pelo `uid` do usuário logado.
@@ -141,9 +149,11 @@ ou DataSource direto.
 ## Comandos úteis
 
 ```bash
-make run                         # rodar no Chrome com perfil persistente (mantém login)
-flutter run -d chrome            # rodar sem perfil fixo (pede login a cada run)
+make run                         # web: rodar no Chrome com perfil persistente (mantém login)
+flutter run -d chrome            # web: rodar sem perfil fixo (pede login a cada run)
+flutter run -d <device>          # nativo: rodar no celular (Android ou iPhone conectado)
 flutter test                     # testes
 flutter analyze                  # análise estática (manter zero issues)
 flutter build web --release      # build de produção do PWA
+flutter build apk --release      # APK para instalação direta no Android
 ```

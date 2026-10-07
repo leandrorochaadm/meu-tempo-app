@@ -1,7 +1,8 @@
 # Meu Tempo
 
 Bullet Journal digital (metodologia Ryder Carroll) com **cronômetro por tarefa**,
-hierarquia de tarefas e agenda pessoal. PWA para uso no celular.
+hierarquia de tarefas e agenda pessoal. Para uso no celular: PWA (navegador) e app
+nativo Android/iOS.
 
 ## Ambiente de desenvolvimento
 
@@ -17,7 +18,7 @@ hierarquia de tarefas e agenda pessoal. PWA para uso no celular.
 
 ## Stack
 
-- **Flutter Web** compilado como **PWA** (mobile-first, sempre online)
+- **Flutter** — PWA (web) + Android + iOS, do mesmo código (mobile-first, sempre online)
 - **Firebase** — Auth + Cloud Firestore (dados isolados por usuário)
 - **BLoC** (`flutter_bloc`) — gerência de estado (event → state)
 - **fpdart** — `Either<Failure, T>` no domínio
@@ -40,5 +41,7 @@ make run                                           # rodar no Chrome mantendo o 
 flutter run -d chrome                              # rodar sem perfil fixo (pede login a cada run)
 flutter test                                       # testes
 flutter analyze                                    # análise estática (manter zero issues)
-flutter build web --release                        # build de produção
+flutter run -d <device>                            # rodar no celular (Android ou iPhone)
+flutter build web --release                        # build de produção do PWA
+flutter build apk --release                        # APK para instalação direta no Android
 ```

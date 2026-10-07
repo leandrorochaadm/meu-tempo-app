@@ -4,7 +4,7 @@ _Gerado em 2026-07-20, a partir de `requisitos-time-control.md` (aprovado em 202
 
 ## Visão geral
 
-Aplicativo pessoal (PWA em **Flutter Web**, backend **Firebase**) que digitaliza a
+Aplicativo pessoal (**Flutter** — PWA web + Android + iOS, backend **Firebase**) que digitaliza a
 metodologia Bullet Journal e resolve a dor de "o dia passa e não sei onde foi o
 tempo". A **versão 1** é um **gerenciador de tarefas hierárquico com medição de
 tempo**: tarefas em 3 níveis, cronômetro nas folhas e compromissos, priorização automática,
@@ -263,7 +263,7 @@ Um cronômetro por vez (inclui compromissos).
 ## Fora de escopo
 
 - Não medir uso de tela automaticamente (registro é manual).
-- Sem compartilhamento entre os 2 usuários (dados isolados).
+- Sem compartilhamento entre os usuários (dados isolados).
 - Sem versão de computador nesta versão.
 - Sem controle de finanças/dinheiro.
 
@@ -282,12 +282,14 @@ Um cronômetro por vez (inclui compromissos).
 - **Estado de cronômetro ativo** (no máximo 1 por usuário — vale para folhas e compromissos).
 - **Configuração** (horas disponíveis por dia; padrões da criação rápida).
 
-**Volumetria:** uso pessoal, **2 usuários independentes**, sem concorrência
+**Volumetria:** uso pessoal, **vários usuários independentes** (sem número fixo), cada
+um podendo usar mais de um aparelho ao mesmo tempo; sem concorrência
 relevante e sem picos. Carga baixa — dimensionamento não é preocupação para a v1.
 
 ## Restrições
 
-- **Plataforma:** PWA em **Flutter Web**; uso **só no celular** (sem versão desktop);
+- **Plataforma:** **Flutter** multiplataforma — PWA (web) + Android + iOS, do mesmo
+  código (nativo desde 07/10/2026, ver `tecnico-time-control.md`); uso **só no celular** (sem versão desktop);
   **sempre online** (sem modo offline).
 - **Backend:** **Firebase** (autenticação + persistência na nuvem).
 - **Prazo/orçamento:** não há — projeto pessoal, sem data de entrega nem custo definido.

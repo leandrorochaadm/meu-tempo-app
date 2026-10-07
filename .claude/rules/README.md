@@ -1,7 +1,7 @@
 # Regras do projeto — Meu Tempo
 
 Regras de arquitetura e convenções, adaptadas do projeto `limit_spending` para a stack
-do **Meu Tempo**: **Flutter Web (PWA mobile)** + **Firebase** + **BLoC** + **fpdart**.
+do **Meu Tempo**: **Flutter (PWA + Android + iOS, mobile)** + **Firebase** + **BLoC** + **fpdart**.
 
 Carregar sob demanda via `@.claude/rules/<arquivo>.md`.
 
