@@ -115,6 +115,8 @@ import 'package:meu_tempo/features/overrun_alert/domain/gateways/overrun_alert_s
     as _i191;
 import 'package:meu_tempo/features/overrun_alert/domain/usecases/plan_overrun_alerts_use_case.dart'
     as _i631;
+import 'package:meu_tempo/features/overrun_alert/domain/usecases/refresh_overrun_alert_schedule_use_case.dart'
+    as _i539;
 import 'package:meu_tempo/features/overrun_alert/domain/usecases/sync_overrun_alert_schedule_use_case.dart'
     as _i941;
 import 'package:meu_tempo/features/overrun_alert/domain/usecases/watch_overrun_alert_plan_use_case.dart'
@@ -465,6 +467,12 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i631.PlanOverrunAlertsUseCase>(),
       ),
     );
+    gh.lazySingleton<_i539.RefreshOverrunAlertScheduleUseCase>(
+      () => _i539.RefreshOverrunAlertScheduleUseCase(
+        gh<_i86.WatchOverrunAlertPlanUseCase>(),
+        gh<_i941.SyncOverrunAlertScheduleUseCase>(),
+      ),
+    );
     gh.lazySingleton<_i666.DeleteListUseCase>(
       () => _i666.DeleteListUseCase(
         gh<_i219.TaskListRepository>(),
@@ -718,6 +726,7 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i224.AuthRepository>(),
         gh<_i98.HandleLockScreenActionUseCase>(),
         gh<_i188.WatchLockScreenTimerUseCase>(),
+        gh<_i539.RefreshOverrunAlertScheduleUseCase>(),
       ),
     );
     return this;

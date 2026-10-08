@@ -60,6 +60,9 @@ dependencies:
 
   # Preferência de UI local no dispositivo (ex.: filtro de lista da home)
   shared_preferences: ^2.3.2
+  # Aviso de tempo estourado no celular — notificação local agendada
+  flutter_local_notifications: ^22.3.1
+  timezone: ^0.11.1
 
 dev_dependencies:
   flutter_test:
