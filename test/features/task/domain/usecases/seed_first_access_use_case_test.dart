@@ -25,15 +25,13 @@ void main() {
     configRepo = _MockConfigRepo();
     taskRepo = _MockTaskRepo();
     when(() => taskRepo.create(any())).thenAnswer(
-      (_) async => Right(TaskEntity(
-        id: 'x',
-        title: 'x',
-        listId: 'inbox',
-        createdAt: today,
-      )),
+      (_) async => Right(
+        TaskEntity(id: 'x', title: 'x', listId: 'inbox', createdAt: today),
+      ),
     );
-    when(() => configRepo.markOnboarded())
-        .thenAnswer((_) async => const Right(unit));
+    when(
+      () => configRepo.markOnboarded(),
+    ).thenAnswer((_) async => const Right(unit));
   });
 
   SeedFirstAccessUseCase useCase() =>
@@ -42,8 +40,9 @@ void main() {
   final params = SeedFirstAccessParams(today: today, inboxListId: 'inbox');
 
   test('primeiro acesso: cria tarefa-exemplo e marca onboarded', () async {
-    when(() => configRepo.getConfig())
-        .thenAnswer((_) async => const Right(DayConfigEntity()));
+    when(
+      () => configRepo.getConfig(),
+    ).thenAnswer((_) async => const Right(DayConfigEntity()));
 
     await useCase()(params);
 
@@ -52,9 +51,9 @@ void main() {
   });
 
   test('já onboarded: não cria nada (idempotente)', () async {
-    when(() => configRepo.getConfig()).thenAnswer(
-      (_) async => const Right(DayConfigEntity(onboarded: true)),
-    );
+    when(
+      () => configRepo.getConfig(),
+    ).thenAnswer((_) async => const Right(DayConfigEntity(onboarded: true)));
 
     await useCase()(params);
 

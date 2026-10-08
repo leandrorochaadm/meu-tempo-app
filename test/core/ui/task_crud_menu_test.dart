@@ -15,15 +15,15 @@ void main() {
   });
 
   Widget harness() => MaterialApp(
-        theme: AppTheme.dark,
-        home: Scaffold(
-          body: TaskCrudMenu(
-            onEdit: () => editTapped = true,
-            onMove: () => moveTapped = true,
-            onDelete: () => deleteTapped = true,
-          ),
-        ),
-      );
+    theme: AppTheme.dark,
+    home: Scaffold(
+      body: TaskCrudMenu(
+        onEdit: () => editTapped = true,
+        onMove: () => moveTapped = true,
+        onDelete: () => deleteTapped = true,
+      ),
+    ),
+  );
 
   Future<void> openAndSelect(WidgetTester tester, String item) async {
     await tester.tap(find.byIcon(Icons.more_vert_rounded));

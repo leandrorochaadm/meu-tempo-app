@@ -10,20 +10,20 @@ void main() {
   final startedAt = DateTime(2026, 7, 20, 10, 30);
 
   Map<String, dynamic> rawDoc({String? status}) => {
-        ActiveTimerFields.targetId: 't1',
-        ActiveTimerFields.startedAt: Timestamp.fromDate(startedAt),
-        ActiveTimerFields.targetType: TimerTargetTypeEnum.task.name,
-        ActiveTimerFields.listId: 'l1',
-        ActiveTimerFields.status: ?status,
-      };
+    ActiveTimerFields.targetId: 't1',
+    ActiveTimerFields.startedAt: Timestamp.fromDate(startedAt),
+    ActiveTimerFields.targetType: TimerTargetTypeEnum.task.name,
+    ActiveTimerFields.listId: 'l1',
+    ActiveTimerFields.status: ?status,
+  };
 
   ActiveTimerEntity entity(TimerStatusEnum status) => ActiveTimerEntity(
-        targetId: 't1',
-        targetType: TimerTargetTypeEnum.task,
-        listId: 'l1',
-        startedAt: startedAt,
-        status: status,
-      );
+    targetId: 't1',
+    targetType: TimerTargetTypeEnum.task,
+    listId: 'l1',
+    startedAt: startedAt,
+    status: status,
+  );
 
   group('ActiveTimerModel', () {
     test('doc antigo sem status vira entity running', () {
@@ -39,8 +39,9 @@ void main() {
     });
 
     test('grava o apiValue do status', () {
-      final json =
-          ActiveTimerModel.fromEntity(entity(TimerStatusEnum.paused)).toJson();
+      final json = ActiveTimerModel.fromEntity(
+        entity(TimerStatusEnum.paused),
+      ).toJson();
       expect(json[ActiveTimerFields.status], TimerStatusEnum.paused.apiValue);
     });
 

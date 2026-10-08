@@ -43,15 +43,19 @@ void main() {
     taskRepo = _MockTaskRepo();
     apptRepo = _MockAppointmentRepo();
     entryRepo = _MockTimeEntryRepo();
-    when(() => taskRepo.addSpentMinutes(any(), any()))
-        .thenAnswer((_) async => const Right(unit));
-    when(() => apptRepo.addSpentMinutes(any(), any()))
-        .thenAnswer((_) async => const Right(unit));
+    when(
+      () => taskRepo.addSpentMinutes(any(), any()),
+    ).thenAnswer((_) async => const Right(unit));
+    when(
+      () => apptRepo.addSpentMinutes(any(), any()),
+    ).thenAnswer((_) async => const Right(unit));
     when(() => entryRepo.add(any())).thenAnswer((_) async => const Right(unit));
-    when(() => timerRepo.replaceActiveIfUnchanged(
-          expected: any(named: 'expected'),
-          replacement: any(named: 'replacement'),
-        )).thenAnswer((_) async => const Right(true));
+    when(
+      () => timerRepo.replaceActiveIfUnchanged(
+        expected: any(named: 'expected'),
+        replacement: any(named: 'replacement'),
+      ),
+    ).thenAnswer((_) async => const Right(true));
     useCase = PauseTimerUseCase(
       timerRepo,
       RecordTimerSessionUseCase(taskRepo, apptRepo, entryRepo),
@@ -63,14 +67,13 @@ void main() {
     TimerTargetTypeEnum type = TimerTargetTypeEnum.task,
     int minutes = 25,
     TimerStatusEnum status = TimerStatusEnum.running,
-  }) =>
-      ActiveTimerEntity(
-        targetId: id,
-        targetType: type,
-        listId: 'l1',
-        startedAt: now.subtract(Duration(minutes: minutes)),
-        status: status,
-      );
+  }) => ActiveTimerEntity(
+    targetId: id,
+    targetType: type,
+    listId: 'l1',
+    startedAt: now.subtract(Duration(minutes: minutes)),
+    status: status,
+  );
 
   void stubActive(ActiveTimerEntity? timer) =>
       when(() => timerRepo.getActive()).thenAnswer((_) async => Right(timer));
@@ -78,52 +81,58 @@ void main() {
   PauseTimerParams params() => PauseTimerParams(targetId: 't1', now: now);
 
   void expectNoWrites() {
-    verifyNever(() => timerRepo.replaceActiveIfUnchanged(
-          expected: any(named: 'expected'),
-          replacement: any(named: 'replacement'),
-        ));
+    verifyNever(
+      () => timerRepo.replaceActiveIfUnchanged(
+        expected: any(named: 'expected'),
+        replacement: any(named: 'replacement'),
+      ),
+    );
     verifyNever(() => taskRepo.addSpentMinutes(any(), any()));
     verifyNever(() => apptRepo.addSpentMinutes(any(), any()));
     verifyNever(() => entryRepo.add(any()));
   }
 
   group('PauseTimerUseCase', () {
-    test('pausa a tarefa rodando: soma a sessão e grava como pausado',
-        () async {
-      final running = active();
-      stubActive(running);
+    test(
+      'pausa a tarefa rodando: soma a sessão e grava como pausado',
+      () async {
+        final running = active();
+        stubActive(running);
 
-      final result = await useCase(params());
+        final result = await useCase(params());
 
-      expect(result, const Right<Failure, Unit>(unit));
-      final captured = verify(() => timerRepo.replaceActiveIfUnchanged(
+        expect(result, const Right<Failure, Unit>(unit));
+        final captured = verify(
+          () => timerRepo.replaceActiveIfUnchanged(
             expected: captureAny(named: 'expected'),
             replacement: captureAny(named: 'replacement'),
-          )).captured;
-      expect(captured[0], running);
-      final replacement = captured[1] as ActiveTimerEntity;
-      expect(replacement.status, TimerStatusEnum.paused);
-      expect(replacement.startedAt, now);
-      expect(replacement.targetId, running.targetId);
-      expect(replacement.targetType, running.targetType);
-      expect(replacement.listId, running.listId);
-      verify(() => taskRepo.addSpentMinutes('t1', 25)).called(1);
-      verify(() => entryRepo.add(any())).called(1);
-    });
+          ),
+        ).captured;
+        expect(captured[0], running);
+        final replacement = captured[1] as ActiveTimerEntity;
+        expect(replacement.status, TimerStatusEnum.paused);
+        expect(replacement.startedAt, now);
+        expect(replacement.targetId, running.targetId);
+        expect(replacement.targetType, running.targetType);
+        expect(replacement.listId, running.listId);
+        verify(() => taskRepo.addSpentMinutes('t1', 25)).called(1);
+        verify(() => entryRepo.add(any())).called(1);
+      },
+    );
 
-    test('pausa o compromisso rodando somando no repositório de compromisso',
-        () async {
-      stubActive(active(
-        id: 't1',
-        type: TimerTargetTypeEnum.appointment,
-        minutes: 10,
-      ));
+    test(
+      'pausa o compromisso rodando somando no repositório de compromisso',
+      () async {
+        stubActive(
+          active(id: 't1', type: TimerTargetTypeEnum.appointment, minutes: 10),
+        );
 
-      await useCase(params());
+        await useCase(params());
 
-      verify(() => apptRepo.addSpentMinutes('t1', 10)).called(1);
-      verifyNever(() => taskRepo.addSpentMinutes(any(), any()));
-    });
+        verify(() => apptRepo.addSpentMinutes('t1', 10)).called(1);
+        verifyNever(() => taskRepo.addSpentMinutes(any(), any()));
+      },
+    );
 
     test('já pausado: no-op', () async {
       stubActive(active(status: TimerStatusEnum.paused));
@@ -154,10 +163,12 @@ void main() {
 
     test('corrida perdida (troca recusada): não soma', () async {
       stubActive(active());
-      when(() => timerRepo.replaceActiveIfUnchanged(
-            expected: any(named: 'expected'),
-            replacement: any(named: 'replacement'),
-          )).thenAnswer((_) async => const Right(false));
+      when(
+        () => timerRepo.replaceActiveIfUnchanged(
+          expected: any(named: 'expected'),
+          replacement: any(named: 'replacement'),
+        ),
+      ).thenAnswer((_) async => const Right(false));
 
       final result = await useCase(params());
 
@@ -182,8 +193,9 @@ void main() {
     });
 
     test('falha ao ler o cronômetro devolve Left', () async {
-      when(() => timerRepo.getActive())
-          .thenAnswer((_) async => const Left(ServerFailure()));
+      when(
+        () => timerRepo.getActive(),
+      ).thenAnswer((_) async => const Left(ServerFailure()));
 
       final result = await useCase(params());
 
@@ -193,10 +205,12 @@ void main() {
 
     test('falha na troca devolve Left sem somar', () async {
       stubActive(active());
-      when(() => timerRepo.replaceActiveIfUnchanged(
-            expected: any(named: 'expected'),
-            replacement: any(named: 'replacement'),
-          )).thenAnswer((_) async => const Left(NetworkFailure()));
+      when(
+        () => timerRepo.replaceActiveIfUnchanged(
+          expected: any(named: 'expected'),
+          replacement: any(named: 'replacement'),
+        ),
+      ).thenAnswer((_) async => const Left(NetworkFailure()));
 
       final result = await useCase(params());
 

@@ -55,14 +55,16 @@ void main() {
         BuildTaskTreeUseCase(GetPrioritizedLeavesUseCase()),
       ),
     );
-    when(() => taskRepo.getTasks())
-        .thenAnswer((_) async => Right([parent, child, done]));
-    when(() => listRepo.getLists()).thenAnswer((_) async => const Right([work]));
+    when(
+      () => taskRepo.getTasks(),
+    ).thenAnswer((_) async => Right([parent, child, done]));
+    when(
+      () => listRepo.getLists(),
+    ).thenAnswer((_) async => const Right([work]));
   });
 
   test('finds the task by id with context and lists', () async {
-    final result =
-        await useCase(const GetTaskEditTargetParams(taskId: 't1'));
+    final result = await useCase(const GetTaskEditTargetParams(taskId: 't1'));
 
     final target = result.getRight().toNullable()!;
     expect(target.editContext.task.id, 't1');
@@ -71,8 +73,7 @@ void main() {
   });
 
   test('done task also opens', () async {
-    final result =
-        await useCase(const GetTaskEditTargetParams(taskId: 'done'));
+    final result = await useCase(const GetTaskEditTargetParams(taskId: 'done'));
 
     expect(result.isRight(), isTrue);
   });
@@ -84,22 +85,22 @@ void main() {
   });
 
   test('failure on tasks is returned and the lists are not read', () async {
-    when(() => taskRepo.getTasks())
-        .thenAnswer((_) async => const Left(NetworkFailure()));
+    when(
+      () => taskRepo.getTasks(),
+    ).thenAnswer((_) async => const Left(NetworkFailure()));
 
-    final result =
-        await useCase(const GetTaskEditTargetParams(taskId: 't1'));
+    final result = await useCase(const GetTaskEditTargetParams(taskId: 't1'));
 
     expect(result, const Left(NetworkFailure()));
     verifyNever(() => listRepo.getLists());
   });
 
   test('failure on lists is returned', () async {
-    when(() => listRepo.getLists())
-        .thenAnswer((_) async => const Left(ServerFailure()));
+    when(
+      () => listRepo.getLists(),
+    ).thenAnswer((_) async => const Left(ServerFailure()));
 
-    final result =
-        await useCase(const GetTaskEditTargetParams(taskId: 't1'));
+    final result = await useCase(const GetTaskEditTargetParams(taskId: 't1'));
 
     expect(result, const Left(ServerFailure()));
   });

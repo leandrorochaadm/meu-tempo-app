@@ -8,7 +8,10 @@ void main() {
   const candidates = [
     ParentCandidate(id: 'm1', title: 'Lançar app', path: 'tarefa mãe'),
     ParentCandidate(
-        id: 'f1', title: 'Fazer telas', path: 'Lançar app · tarefa filha'),
+      id: 'f1',
+      title: 'Fazer telas',
+      path: 'Lançar app · tarefa filha',
+    ),
   ];
 
   void setView(WidgetTester tester) {
@@ -20,17 +23,19 @@ void main() {
 
   testWidgets('lista candidatos, raiz e cancelar', (tester) async {
     setView(tester);
-    await tester.pumpWidget(MaterialApp(
-      theme: AppTheme.dark,
-      home: Scaffold(
-        body: Builder(
-          builder: (ctx) => ElevatedButton(
-            onPressed: () => showTaskParentPicker(ctx, candidates),
-            child: const Text('abrir'),
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.dark,
+        home: Scaffold(
+          body: Builder(
+            builder: (ctx) => ElevatedButton(
+              onPressed: () => showTaskParentPicker(ctx, candidates),
+              child: const Text('abrir'),
+            ),
           ),
         ),
       ),
-    ));
+    );
     await tester.tap(find.text('abrir'));
     await tester.pumpAndSettle();
 
@@ -43,18 +48,20 @@ void main() {
   testWidgets('escolher um candidato devolve seu id', (tester) async {
     setView(tester);
     String? chosen;
-    await tester.pumpWidget(MaterialApp(
-      theme: AppTheme.dark,
-      home: Scaffold(
-        body: Builder(
-          builder: (ctx) => ElevatedButton(
-            onPressed: () async =>
-                chosen = await showTaskParentPicker(ctx, candidates),
-            child: const Text('abrir'),
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.dark,
+        home: Scaffold(
+          body: Builder(
+            builder: (ctx) => ElevatedButton(
+              onPressed: () async =>
+                  chosen = await showTaskParentPicker(ctx, candidates),
+              child: const Text('abrir'),
+            ),
           ),
         ),
       ),
-    ));
+    );
     await tester.tap(find.text('abrir'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Fazer telas'));
@@ -66,18 +73,20 @@ void main() {
   testWidgets('escolher raiz devolve a sentinela', (tester) async {
     setView(tester);
     String? chosen;
-    await tester.pumpWidget(MaterialApp(
-      theme: AppTheme.dark,
-      home: Scaffold(
-        body: Builder(
-          builder: (ctx) => ElevatedButton(
-            onPressed: () async =>
-                chosen = await showTaskParentPicker(ctx, candidates),
-            child: const Text('abrir'),
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.dark,
+        home: Scaffold(
+          body: Builder(
+            builder: (ctx) => ElevatedButton(
+              onPressed: () async =>
+                  chosen = await showTaskParentPicker(ctx, candidates),
+              child: const Text('abrir'),
+            ),
           ),
         ),
       ),
-    ));
+    );
     await tester.tap(find.text('abrir'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Tornar tarefa mãe (raiz)'));

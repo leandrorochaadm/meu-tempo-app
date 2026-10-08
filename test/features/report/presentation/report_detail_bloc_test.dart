@@ -55,53 +55,59 @@ void main() {
     watchEntries = _MockWatchEntries();
     watchLists = _MockWatchLists();
     when(() => watchTasks(any())).thenAnswer(
-      (_) => Stream.value(Right(<TaskEntity>[
-        TaskEntity(
-          id: 't1',
-          title: 'Montar proposta',
-          listId: 'prof',
-          createdAt: today,
-          estimatedMinutes: 60,
-        ),
-      ])),
+      (_) => Stream.value(
+        Right(<TaskEntity>[
+          TaskEntity(
+            id: 't1',
+            title: 'Montar proposta',
+            listId: 'prof',
+            createdAt: today,
+            estimatedMinutes: 60,
+          ),
+        ]),
+      ),
     );
-    when(() => watchAppts(any())).thenAnswer(
-      (_) => Stream.value(Right(<AppointmentEntity>[])),
-    );
+    when(
+      () => watchAppts(any()),
+    ).thenAnswer((_) => Stream.value(Right(<AppointmentEntity>[])));
     when(() => watchLists(any())).thenAnswer(
-      (_) => Stream.value(const Right(<TaskListEntity>[
-        TaskListEntity(id: 'prof', name: 'Profissional'),
-      ])),
+      (_) => Stream.value(
+        const Right(<TaskListEntity>[
+          TaskListEntity(id: 'prof', name: 'Profissional'),
+        ]),
+      ),
     );
     when(() => watchEntries(any())).thenAnswer(
-      (_) => Stream.value(Right(<TimeEntryEntity>[
-        TimeEntryEntity(
-          id: 'e1',
-          targetId: 't1',
-          targetType: TimerTargetTypeEnum.task,
-          listId: 'prof',
-          minutes: 90,
-          origin: TimeEntryOriginEnum.timer,
-          occurredAt: today,
-        ),
-      ])),
+      (_) => Stream.value(
+        Right(<TimeEntryEntity>[
+          TimeEntryEntity(
+            id: 'e1',
+            targetId: 't1',
+            targetType: TimerTargetTypeEnum.task,
+            listId: 'prof',
+            minutes: 90,
+            origin: TimeEntryOriginEnum.timer,
+            occurredAt: today,
+          ),
+        ]),
+      ),
     );
   });
 
   ReportDetailBloc build() => ReportDetailBloc(
-        watchTasks,
-        watchAppts,
-        watchEntries,
-        watchLists,
-        getTaskReport,
-      );
+    watchTasks,
+    watchAppts,
+    watchEntries,
+    watchLists,
+    getTaskReport,
+  );
 
   ReportDetailStarted started() => const ReportDetailStarted(
-        listId: 'prof',
-        period: ReportPeriodEnum.week,
-        offset: 0,
-        listName: 'Profissional',
-      );
+    listId: 'prof',
+    period: ReportPeriodEnum.week,
+    offset: 0,
+    listName: 'Profissional',
+  );
 
   // Os 4 streams emitem e cada update re-emite Loaded; por isso asseguramos o
   // ESTADO FINAL (via verify), não a sequência intermediária.
@@ -124,11 +130,13 @@ void main() {
   blocTest<ReportDetailBloc, ReportDetailState>(
     'resolve o nome da lista pelo id quando listName vem nulo',
     build: build,
-    act: (bloc) => bloc.add(const ReportDetailStarted(
-      listId: 'prof',
-      period: ReportPeriodEnum.week,
-      offset: 0,
-    )),
+    act: (bloc) => bloc.add(
+      const ReportDetailStarted(
+        listId: 'prof',
+        period: ReportPeriodEnum.week,
+        offset: 0,
+      ),
+    ),
     wait: const Duration(milliseconds: 20),
     verify: (bloc) {
       expect((bloc.state as ReportDetailLoaded).listName, 'Profissional');
@@ -166,9 +174,9 @@ void main() {
       when(() => watchLists(any())).thenAnswer(
         (_) => const Stream<Either<Failure, List<TaskListEntity>>>.empty(),
       );
-      when(() => watchEntries(any())).thenAnswer(
-        (_) => Stream.value(const Left(ServerFailure())),
-      );
+      when(
+        () => watchEntries(any()),
+      ).thenAnswer((_) => Stream.value(const Left(ServerFailure())));
       return build();
     },
     act: (bloc) => bloc.add(started()),

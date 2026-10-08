@@ -52,20 +52,21 @@ void main() {
   blocTest<EditTaskByIdBloc, EditTaskByIdState>(
     'deleted: NotFound',
     build: () {
-      when(() => getTarget(any()))
-          .thenAnswer((_) async => const Left(TaskNotFoundFailure()));
+      when(
+        () => getTarget(any()),
+      ).thenAnswer((_) async => const Left(TaskNotFoundFailure()));
       return EditTaskByIdBloc(getTarget);
     },
     act: (bloc) => bloc.add(const EditTaskByIdStarted('t1')),
-    expect: () =>
-        [const EditTaskByIdLoading(), const EditTaskByIdNotFound()],
+    expect: () => [const EditTaskByIdLoading(), const EditTaskByIdNotFound()],
   );
 
   blocTest<EditTaskByIdBloc, EditTaskByIdState>(
     'no internet: connection message',
     build: () {
-      when(() => getTarget(any()))
-          .thenAnswer((_) async => const Left(NetworkFailure()));
+      when(
+        () => getTarget(any()),
+      ).thenAnswer((_) async => const Left(NetworkFailure()));
       return EditTaskByIdBloc(getTarget);
     },
     act: (bloc) => bloc.add(const EditTaskByIdStarted('t1')),
@@ -78,14 +79,17 @@ void main() {
   blocTest<EditTaskByIdBloc, EditTaskByIdState>(
     'other failure: generic message',
     build: () {
-      when(() => getTarget(any()))
-          .thenAnswer((_) async => const Left(ServerFailure()));
+      when(
+        () => getTarget(any()),
+      ).thenAnswer((_) async => const Left(ServerFailure()));
       return EditTaskByIdBloc(getTarget);
     },
     act: (bloc) => bloc.add(const EditTaskByIdStarted('t1')),
     expect: () => [
       const EditTaskByIdLoading(),
-      const EditTaskByIdError('Não foi possível abrir a tarefa. Tente de novo.'),
+      const EditTaskByIdError(
+        'Não foi possível abrir a tarefa. Tente de novo.',
+      ),
     ],
   );
 }

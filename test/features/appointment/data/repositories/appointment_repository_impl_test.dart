@@ -29,8 +29,7 @@ void main() {
   );
 
   test('watchAll converte Model → Entity no sucesso', () async {
-    when(() => dataSource.watchAll())
-        .thenAnswer((_) => Stream.value([model]));
+    when(() => dataSource.watchAll()).thenAnswer((_) => Stream.value([model]));
 
     final result = await repository.watchAll().first;
 
@@ -48,7 +47,10 @@ void main() {
 
     final result = await repository.watchAll().first;
 
-    expect(result, const Left<Failure, List<AppointmentEntity>>(ServerFailure()));
+    expect(
+      result,
+      const Left<Failure, List<AppointmentEntity>>(ServerFailure()),
+    );
   });
 
   test('watchAll repassa isDone do model para a entity', () async {
@@ -78,8 +80,9 @@ void main() {
   });
 
   test('setDone mapeia NotFoundException → NotFoundFailure', () async {
-    when(() => dataSource.setDone('a1', true))
-        .thenThrow(const NotFoundException());
+    when(
+      () => dataSource.setDone('a1', true),
+    ).thenThrow(const NotFoundException());
 
     final result = await repository.setDone('a1', true);
 

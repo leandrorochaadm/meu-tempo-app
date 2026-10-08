@@ -7,7 +7,8 @@ import 'package:meu_tempo/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:meu_tempo/features/auth/presentation/pages/login_page.dart';
 import 'package:mocktail/mocktail.dart';
 
-class _MockAuthBloc extends MockBloc<AuthEvent, AuthState> implements AuthBloc {}
+class _MockAuthBloc extends MockBloc<AuthEvent, AuthState>
+    implements AuthBloc {}
 
 void main() {
   late _MockAuthBloc authBloc;
@@ -18,12 +19,12 @@ void main() {
   });
 
   Widget harness() => MaterialApp(
-        theme: AppTheme.dark,
-        home: BlocProvider<AuthBloc>.value(
-          value: authBloc,
-          child: const LoginPage(),
-        ),
-      );
+    theme: AppTheme.dark,
+    home: BlocProvider<AuthBloc>.value(
+      value: authBloc,
+      child: const LoginPage(),
+    ),
+  );
 
   testWidgets('mostra o botão Entrar com Google', (tester) async {
     tester.view.physicalSize = const Size(390, 844);

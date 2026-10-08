@@ -11,25 +11,24 @@ void main() {
     required String message,
     required VoidCallback onUndo,
     String actionLabel = 'Desfazer',
-  }) =>
-      MaterialApp(
-        theme: AppTheme.dark,
-        home: Scaffold(
-          body: Builder(
-            builder: (context) => Center(
-              child: ElevatedButton(
-                onPressed: () => AppUndoSnackBar.show(
-                  context,
-                  message: message,
-                  onUndo: onUndo,
-                  actionLabel: actionLabel,
-                ),
-                child: const Text('mostrar'),
-              ),
+  }) => MaterialApp(
+    theme: AppTheme.dark,
+    home: Scaffold(
+      body: Builder(
+        builder: (context) => Center(
+          child: ElevatedButton(
+            onPressed: () => AppUndoSnackBar.show(
+              context,
+              message: message,
+              onUndo: onUndo,
+              actionLabel: actionLabel,
             ),
+            child: const Text('mostrar'),
           ),
         ),
-      );
+      ),
+    ),
+  );
 
   Future<void> trigger(WidgetTester tester) async {
     await tester.tap(find.text('mostrar'));
@@ -59,9 +58,7 @@ void main() {
 
   testWidgets('tocar na ação dispara onUndo', (tester) async {
     var undone = false;
-    await tester.pumpWidget(
-      harness(message: 'X', onUndo: () => undone = true),
-    );
+    await tester.pumpWidget(harness(message: 'X', onUndo: () => undone = true));
     await trigger(tester);
     // Deixa a animação de entrada do snackbar concluir antes de tocar na ação.
     await tester.pump(const Duration(seconds: 1));
@@ -81,8 +78,9 @@ void main() {
     expect(find.text('Reverter'), findsOneWidget);
   });
 
-  testWidgets('substitui o snackbar anterior (hideCurrent + show)',
-      (tester) async {
+  testWidgets('substitui o snackbar anterior (hideCurrent + show)', (
+    tester,
+  ) async {
     await tester.pumpWidget(harness(message: 'Primeira', onUndo: () {}));
 
     await trigger(tester);

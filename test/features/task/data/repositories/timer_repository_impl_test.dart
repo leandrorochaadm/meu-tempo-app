@@ -26,10 +26,7 @@ void main() {
     repository = TimerRepositoryImpl(dataSource);
   });
 
-  ActiveTimerEntity entity(
-    TimerStatusEnum status, {
-    DateTime? at,
-  }) =>
+  ActiveTimerEntity entity(TimerStatusEnum status, {DateTime? at}) =>
       ActiveTimerEntity(
         targetId: 't1',
         targetType: TimerTargetTypeEnum.task,
@@ -40,56 +37,70 @@ void main() {
 
   group('TimerRepositoryImpl', () {
     test('getActive converte status do model', () async {
-      when(() => dataSource.getActive()).thenAnswer((_) async =>
-          ActiveTimerModel.fromEntity(entity(TimerStatusEnum.paused)));
+      when(() => dataSource.getActive()).thenAnswer(
+        (_) async =>
+            ActiveTimerModel.fromEntity(entity(TimerStatusEnum.paused)),
+      );
 
       final result = await repository.getActive();
 
       expect(result.getRight().toNullable()?.status, TimerStatusEnum.paused);
     });
 
-    test('replaceActiveIfUnchanged: predicado aceita o doc igual ao esperado',
-        () async {
-      when(() => dataSource.replaceActiveIf(
+    test(
+      'replaceActiveIfUnchanged: predicado aceita o doc igual ao esperado',
+      () async {
+        when(
+          () => dataSource.replaceActiveIf(
             matches: any(named: 'matches'),
             replacement: any(named: 'replacement'),
-          )).thenAnswer((_) async => true);
-      final expected = entity(TimerStatusEnum.running);
+          ),
+        ).thenAnswer((_) async => true);
+        final expected = entity(TimerStatusEnum.running);
 
-      final result = await repository.replaceActiveIfUnchanged(
-        expected: expected,
-        replacement: entity(TimerStatusEnum.paused),
-      );
+        final result = await repository.replaceActiveIfUnchanged(
+          expected: expected,
+          replacement: entity(TimerStatusEnum.paused),
+        );
 
-      expect(result, const Right<Failure, bool>(true));
-      final captured = verify(() => dataSource.replaceActiveIf(
+        expect(result, const Right<Failure, bool>(true));
+        final captured = verify(
+          () => dataSource.replaceActiveIf(
             matches: captureAny(named: 'matches'),
             replacement: captureAny(named: 'replacement'),
-          )).captured;
-      final matches = captured[0] as bool Function(ActiveTimerModel?);
-      final replacement = captured[1] as ActiveTimerModel;
-      expect(replacement.status, TimerStatusEnum.paused.apiValue);
-      expect(matches(ActiveTimerModel.fromEntity(expected)), isTrue);
-      expect(
-        matches(ActiveTimerModel.fromEntity(entity(
-          TimerStatusEnum.running,
-          at: startedAt.add(const Duration(minutes: 1)),
-        ))),
-        isFalse,
-      );
-      expect(
-        matches(ActiveTimerModel.fromEntity(entity(TimerStatusEnum.paused))),
-        isFalse,
-      );
-      expect(matches(null), isFalse);
-    });
+          ),
+        ).captured;
+        final matches = captured[0] as bool Function(ActiveTimerModel?);
+        final replacement = captured[1] as ActiveTimerModel;
+        expect(replacement.status, TimerStatusEnum.paused.apiValue);
+        expect(matches(ActiveTimerModel.fromEntity(expected)), isTrue);
+        expect(
+          matches(
+            ActiveTimerModel.fromEntity(
+              entity(
+                TimerStatusEnum.running,
+                at: startedAt.add(const Duration(minutes: 1)),
+              ),
+            ),
+          ),
+          isFalse,
+        );
+        expect(
+          matches(ActiveTimerModel.fromEntity(entity(TimerStatusEnum.paused))),
+          isFalse,
+        );
+        expect(matches(null), isFalse);
+      },
+    );
 
     test('replaceActiveIfUnchanged devolve Right(false) quando o datasource '
         'recusa', () async {
-      when(() => dataSource.replaceActiveIf(
-            matches: any(named: 'matches'),
-            replacement: any(named: 'replacement'),
-          )).thenAnswer((_) async => false);
+      when(
+        () => dataSource.replaceActiveIf(
+          matches: any(named: 'matches'),
+          replacement: any(named: 'replacement'),
+        ),
+      ).thenAnswer((_) async => false);
 
       final result = await repository.replaceActiveIfUnchanged(
         expected: entity(TimerStatusEnum.running),
@@ -156,10 +167,12 @@ void main() {
     });
 
     test('AppException vira Left(Failure)', () async {
-      when(() => dataSource.replaceActiveIf(
-            matches: any(named: 'matches'),
-            replacement: any(named: 'replacement'),
-          )).thenThrow(const ServerException());
+      when(
+        () => dataSource.replaceActiveIf(
+          matches: any(named: 'matches'),
+          replacement: any(named: 'replacement'),
+        ),
+      ).thenThrow(const ServerException());
 
       final result = await repository.replaceActiveIfUnchanged(
         expected: entity(TimerStatusEnum.running),

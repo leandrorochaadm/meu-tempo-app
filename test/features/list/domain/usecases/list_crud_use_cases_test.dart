@@ -43,8 +43,9 @@ void main() {
   });
 
   test('RenameList delega com nome aparado', () async {
-    when(() => listRepo.rename(any(), any()))
-        .thenAnswer((_) async => const Right(unit));
+    when(
+      () => listRepo.rename(any(), any()),
+    ).thenAnswer((_) async => const Right(unit));
     await RenameListUseCase(listRepo)(
       const RenameListParams(listId: 'l1', name: '  Estudo '),
     );
@@ -56,44 +57,53 @@ void main() {
         TaskListEntity(id: id, name: id, isDefault: isDefault);
 
     test('bloqueia excluir a lista padrão (Entrada)', () async {
-      when(() => listRepo.getLists()).thenAnswer(
-        (_) async => Right([list('inbox', isDefault: true)]),
-      );
+      when(
+        () => listRepo.getLists(),
+      ).thenAnswer((_) async => Right([list('inbox', isDefault: true)]));
       final r = await DeleteListUseCase(listRepo, taskRepo)(
         const DeleteListParams(listId: 'inbox'),
       );
-      r.getLeft().fold(() => fail('esperava Left'),
-          (f) => expect(f, isA<CannotDeleteInboxFailure>()));
+      r.getLeft().fold(
+        () => fail('esperava Left'),
+        (f) => expect(f, isA<CannotDeleteInboxFailure>()),
+      );
     });
 
     test('move as tarefas para outra lista e exclui', () async {
-      when(() => listRepo.getLists())
-          .thenAnswer((_) async => Right([list('a'), list('b')]));
-      when(() => taskRepo.getTasks()).thenAnswer((_) async => Right([
-            TaskEntity(
-                id: 't1', title: 't1', listId: 'a', createdAt: today),
-          ]));
-      when(() => taskRepo.updateAll(any()))
-          .thenAnswer((_) async => const Right(unit));
-      when(() => listRepo.delete(any()))
-          .thenAnswer((_) async => const Right(unit));
+      when(
+        () => listRepo.getLists(),
+      ).thenAnswer((_) async => Right([list('a'), list('b')]));
+      when(() => taskRepo.getTasks()).thenAnswer(
+        (_) async => Right([
+          TaskEntity(id: 't1', title: 't1', listId: 'a', createdAt: today),
+        ]),
+      );
+      when(
+        () => taskRepo.updateAll(any()),
+      ).thenAnswer((_) async => const Right(unit));
+      when(
+        () => listRepo.delete(any()),
+      ).thenAnswer((_) async => const Right(unit));
 
       await DeleteListUseCase(listRepo, taskRepo)(
         const DeleteListParams(listId: 'a', moveToListId: 'b'),
       );
 
-      final moved = verify(() => taskRepo.updateAll(captureAny()))
-          .captured
-          .single as List<TaskEntity>;
+      final moved =
+          verify(() => taskRepo.updateAll(captureAny())).captured.single
+              as List<TaskEntity>;
       expect(moved.single.listId, 'b');
       verify(() => listRepo.delete('a')).called(1);
     });
 
-    test('move a árvore inteira num único commit (lista é da árvore)',
-        () async {
-      when(() => listRepo.getLists())
-          .thenAnswer((_) async => Right([list('a'), list('b')]));
-      when(() => taskRepo.getTasks()).thenAnswer((_) async => Right([
+    test(
+      'move a árvore inteira num único commit (lista é da árvore)',
+      () async {
+        when(
+          () => listRepo.getLists(),
+        ).thenAnswer((_) async => Right([list('a'), list('b')]));
+        when(() => taskRepo.getTasks()).thenAnswer(
+          (_) async => Right([
             TaskEntity(
               id: 'mae',
               title: 'mae',
@@ -108,68 +118,90 @@ void main() {
               createdAt: today,
               parentId: 'mae',
             ),
-            TaskEntity(id: 'outra', title: 'outra', listId: 'b', createdAt: today),
-          ]));
-      when(() => taskRepo.updateAll(any()))
-          .thenAnswer((_) async => const Right(unit));
-      when(() => listRepo.delete(any()))
-          .thenAnswer((_) async => const Right(unit));
+            TaskEntity(
+              id: 'outra',
+              title: 'outra',
+              listId: 'b',
+              createdAt: today,
+            ),
+          ]),
+        );
+        when(
+          () => taskRepo.updateAll(any()),
+        ).thenAnswer((_) async => const Right(unit));
+        when(
+          () => listRepo.delete(any()),
+        ).thenAnswer((_) async => const Right(unit));
 
-      await DeleteListUseCase(listRepo, taskRepo)(
-        const DeleteListParams(listId: 'a', moveToListId: 'b'),
-      );
+        await DeleteListUseCase(listRepo, taskRepo)(
+          const DeleteListParams(listId: 'a', moveToListId: 'b'),
+        );
 
-      final moved = verify(() => taskRepo.updateAll(captureAny()))
-          .captured
-          .single as List<TaskEntity>;
-      expect(moved.map((t) => t.id), ['mae', 'filha']);
-      expect(moved.every((t) => t.listId == 'b'), isTrue);
-      // Uma escrita só — nunca uma por tarefa.
-      verifyNever(() => taskRepo.update(any()));
-    });
+        final moved =
+            verify(() => taskRepo.updateAll(captureAny())).captured.single
+                as List<TaskEntity>;
+        expect(moved.map((t) => t.id), ['mae', 'filha']);
+        expect(moved.every((t) => t.listId == 'b'), isTrue);
+        // Uma escrita só — nunca uma por tarefa.
+        verifyNever(() => taskRepo.update(any()));
+      },
+    );
 
     test('exclui todas as tarefas quando não há destino', () async {
-      when(() => listRepo.getLists())
-          .thenAnswer((_) async => Right([list('a')]));
-      when(() => taskRepo.getTasks()).thenAnswer((_) async => Right([
-            TaskEntity(id: 't1', title: 't1', listId: 'a', createdAt: today),
-          ]));
-      when(() => taskRepo.deleteSubtree(
-            any(),
-            emptiedParentId: any(named: 'emptiedParentId'),
-          )).thenAnswer((_) async => const Right(unit));
-      when(() => listRepo.delete(any()))
-          .thenAnswer((_) async => const Right(unit));
+      when(
+        () => listRepo.getLists(),
+      ).thenAnswer((_) async => Right([list('a')]));
+      when(() => taskRepo.getTasks()).thenAnswer(
+        (_) async => Right([
+          TaskEntity(id: 't1', title: 't1', listId: 'a', createdAt: today),
+        ]),
+      );
+      when(
+        () => taskRepo.deleteSubtree(
+          any(),
+          emptiedParentId: any(named: 'emptiedParentId'),
+        ),
+      ).thenAnswer((_) async => const Right(unit));
+      when(
+        () => listRepo.delete(any()),
+      ).thenAnswer((_) async => const Right(unit));
 
       await DeleteListUseCase(listRepo, taskRepo)(
         const DeleteListParams(listId: 'a'),
       );
 
-      final deleted = verify(() => taskRepo.deleteSubtree(
-            captureAny(),
-            emptiedParentId: any(named: 'emptiedParentId'),
-          )).captured.single as List<String>;
+      final deleted =
+          verify(
+                () => taskRepo.deleteSubtree(
+                  captureAny(),
+                  emptiedParentId: any(named: 'emptiedParentId'),
+                ),
+              ).captured.single
+              as List<String>;
       expect(deleted, ['t1']);
       verify(() => listRepo.delete('a')).called(1);
     });
 
     test('lista vazia não dispara escrita de tarefas', () async {
-      when(() => listRepo.getLists())
-          .thenAnswer((_) async => Right([list('a')]));
-      when(() => taskRepo.getTasks())
-          .thenAnswer((_) async => const Right([]));
-      when(() => listRepo.delete(any()))
-          .thenAnswer((_) async => const Right(unit));
+      when(
+        () => listRepo.getLists(),
+      ).thenAnswer((_) async => Right([list('a')]));
+      when(() => taskRepo.getTasks()).thenAnswer((_) async => const Right([]));
+      when(
+        () => listRepo.delete(any()),
+      ).thenAnswer((_) async => const Right(unit));
 
       await DeleteListUseCase(listRepo, taskRepo)(
         const DeleteListParams(listId: 'a'),
       );
 
       verifyNever(() => taskRepo.updateAll(any()));
-      verifyNever(() => taskRepo.deleteSubtree(
-            any(),
-            emptiedParentId: any(named: 'emptiedParentId'),
-          ));
+      verifyNever(
+        () => taskRepo.deleteSubtree(
+          any(),
+          emptiedParentId: any(named: 'emptiedParentId'),
+        ),
+      );
       verify(() => listRepo.delete('a')).called(1);
     });
   });

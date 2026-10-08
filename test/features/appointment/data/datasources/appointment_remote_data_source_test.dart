@@ -51,26 +51,28 @@ void main() {
     expect(models.map((m) => m.title), containsAll(['Reunião A', 'Reunião B']));
   });
 
-  test('watchAll só enxerga a coleção do usuário logado (isolamento)',
-      () async {
-    await seed('meu', 'Meu', DateTime(2026, 7, 10));
-    // Compromisso de outro usuário — não deve aparecer.
-    await firestore
-        .collection(FirestorePaths.appointments('outro'))
-        .doc('alheio')
-        .set({
-      'title': 'Alheio',
-      'listId': 'x',
-      'date': Timestamp.fromDate(DateTime(2026, 7, 10)),
-      'startMinute': 600,
-      'durationMinutes': 30,
-      'spentMinutes': 0,
-    });
+  test(
+    'watchAll só enxerga a coleção do usuário logado (isolamento)',
+    () async {
+      await seed('meu', 'Meu', DateTime(2026, 7, 10));
+      // Compromisso de outro usuário — não deve aparecer.
+      await firestore
+          .collection(FirestorePaths.appointments('outro'))
+          .doc('alheio')
+          .set({
+            'title': 'Alheio',
+            'listId': 'x',
+            'date': Timestamp.fromDate(DateTime(2026, 7, 10)),
+            'startMinute': 600,
+            'durationMinutes': 30,
+            'spentMinutes': 0,
+          });
 
-    final models = await dataSource.watchAll().first;
+      final models = await dataSource.watchAll().first;
 
-    expect(models.map((m) => m.id), ['meu']);
-  });
+      expect(models.map((m) => m.id), ['meu']);
+    },
+  );
 
   test('watchAll lê compromisso sem isDone como não concluído', () async {
     await seed('a1', 'Antigo', DateTime(2026, 7, 10));

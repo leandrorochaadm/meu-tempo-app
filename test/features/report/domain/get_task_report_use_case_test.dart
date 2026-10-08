@@ -18,40 +18,38 @@ void main() {
     int est, {
     String? parentId,
     String? title,
-  }) =>
-      TaskEntity(
-        id: id,
-        title: title ?? id,
-        listId: listId,
-        createdAt: today,
-        estimatedMinutes: est,
-        parentId: parentId,
-      );
+  }) => TaskEntity(
+    id: id,
+    title: title ?? id,
+    listId: listId,
+    createdAt: today,
+    estimatedMinutes: est,
+    parentId: parentId,
+  );
 
   TaskEntity mother(String id, String listId, {String? parentId}) => TaskEntity(
-        id: id,
-        title: id,
-        listId: listId,
-        createdAt: today,
-        parentId: parentId,
-        hasChildren: true,
-      );
+    id: id,
+    title: id,
+    listId: listId,
+    createdAt: today,
+    parentId: parentId,
+    hasChildren: true,
+  );
 
   TimeEntryEntity entry(
     String targetId,
     String listId,
     int minutes, {
     TimerTargetTypeEnum type = TimerTargetTypeEnum.task,
-  }) =>
-      TimeEntryEntity(
-        id: '$targetId-$minutes',
-        targetId: targetId,
-        targetType: type,
-        listId: listId,
-        minutes: minutes,
-        origin: TimeEntryOriginEnum.timer,
-        occurredAt: today,
-      );
+  }) => TimeEntryEntity(
+    id: '$targetId-$minutes',
+    targetId: targetId,
+    targetType: type,
+    listId: listId,
+    minutes: minutes,
+    origin: TimeEntryOriginEnum.timer,
+    occurredAt: today,
+  );
 
   AppointmentEntity appt(String id, String listId, String title) =>
       AppointmentEntity(

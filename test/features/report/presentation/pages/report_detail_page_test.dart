@@ -48,33 +48,39 @@ void main() {
       );
 
   void stub(ReportDetailState state) {
-    whenListen(bloc, const Stream<ReportDetailState>.empty(),
-        initialState: state);
+    whenListen(
+      bloc,
+      const Stream<ReportDetailState>.empty(),
+      initialState: state,
+    );
   }
 
   Widget harness() => MaterialApp(
-        theme: AppTheme.dark,
-        home: BlocProvider<ReportDetailBloc>.value(
-          value: bloc,
-          child: const ReportDetailPage(
-            listId: 'prof',
-            period: ReportPeriodEnum.week,
-            offset: 0,
-            listName: 'Profissional',
-          ),
-        ),
-      );
+    theme: AppTheme.dark,
+    home: BlocProvider<ReportDetailBloc>.value(
+      value: bloc,
+      child: const ReportDetailPage(
+        listId: 'prof',
+        period: ReportPeriodEnum.week,
+        offset: 0,
+        listName: 'Profissional',
+      ),
+    ),
+  );
 
-  ReportTreeNode leafNode(String id, String title,
-          {int spent = 60, int est = 60}) =>
-      ReportTreeNode(
-        id: id,
-        title: title,
-        targetType: TimerTargetTypeEnum.task,
-        level: 0,
-        spentMinutes: spent,
-        estimatedMinutes: est,
-      );
+  ReportTreeNode leafNode(
+    String id,
+    String title, {
+    int spent = 60,
+    int est = 60,
+  }) => ReportTreeNode(
+    id: id,
+    title: title,
+    targetType: TimerTargetTypeEnum.task,
+    level: 0,
+    spentMinutes: spent,
+    estimatedMinutes: est,
+  );
 
   final motherNode = ReportTreeNode(
     id: 'mae',
@@ -103,8 +109,9 @@ void main() {
     spentMinutes: 60,
   );
 
-  testWidgets('renderiza os nós de topo e os chips (sem Mãe/Avó)',
-      (tester) async {
+  testWidgets('renderiza os nós de topo e os chips (sem Mãe/Avó)', (
+    tester,
+  ) async {
     setView(tester);
     stub(loaded([motherNode]));
 
@@ -118,8 +125,9 @@ void main() {
     expect(find.text('Montar proposta'), findsNothing);
   });
 
-  testWidgets('exibe o percentual de participação de cada nó no total',
-      (tester) async {
+  testWidgets('exibe o percentual de participação de cada nó no total', (
+    tester,
+  ) async {
     setView(tester);
     // mãe 120 + compromisso 60 = 180 gasto → 66,7% e 33,3%.
     stub(loaded([motherNode, apptNode], total: 180));
@@ -170,8 +178,9 @@ void main() {
     ],
   );
 
-  testWidgets('expandir a avó revela mãe e neta; recolher esconde',
-      (tester) async {
+  testWidgets('expandir a avó revela mãe e neta; recolher esconde', (
+    tester,
+  ) async {
     setView(tester);
     stub(loaded([avoComNeta]));
 
@@ -190,8 +199,9 @@ void main() {
     expect(find.text('Neta Gama'), findsNothing);
   });
 
-  testWidgets('folha de topo não é expansível (sem seta, tocar não faz nada)',
-      (tester) async {
+  testWidgets('folha de topo não é expansível (sem seta, tocar não faz nada)', (
+    tester,
+  ) async {
     setView(tester);
     stub(loaded([leafNode('a', 'Tarefa Solo')]));
 
@@ -220,9 +230,9 @@ void main() {
     await tester.tap(find.text('Estouro'));
     await tester.pump();
 
-    verify(() => bloc.add(
-          const ReportDetailSortChanged(TaskReportSortEnum.overrun),
-        )).called(1);
+    verify(
+      () => bloc.add(const ReportDetailSortChanged(TaskReportSortEnum.overrun)),
+    ).called(1);
   });
 
   testWidgets('sem nós mostra o empty state', (tester) async {

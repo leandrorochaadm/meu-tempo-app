@@ -10,39 +10,38 @@ void main() {
   const useCase = GetListReportUseCase();
   final today = DateTime(2026, 7, 20);
 
-  TaskEntity leaf(String id, String listId, int est,
-          {bool hasChildren = false}) =>
-      TaskEntity(
-        id: id,
-        title: id,
-        listId: listId,
-        createdAt: today,
-        estimatedMinutes: est,
-        hasChildren: hasChildren,
-      );
+  TaskEntity leaf(
+    String id,
+    String listId,
+    int est, {
+    bool hasChildren = false,
+  }) => TaskEntity(
+    id: id,
+    title: id,
+    listId: listId,
+    createdAt: today,
+    estimatedMinutes: est,
+    hasChildren: hasChildren,
+  );
 
   TimeEntryEntity entry(
     String targetId,
     String listId,
     int minutes, {
     TimerTargetTypeEnum type = TimerTargetTypeEnum.task,
-  }) =>
-      TimeEntryEntity(
-        id: '$targetId-$minutes',
-        targetId: targetId,
-        targetType: type,
-        listId: listId,
-        minutes: minutes,
-        origin: TimeEntryOriginEnum.timer,
-        occurredAt: today,
-      );
+  }) => TimeEntryEntity(
+    id: '$targetId-$minutes',
+    targetId: targetId,
+    targetType: type,
+    listId: listId,
+    minutes: minutes,
+    origin: TimeEntryOriginEnum.timer,
+    occurredAt: today,
+  );
 
   test('real = soma das entries; estimado só das folhas que tiveram tempo', () {
     final report = useCase(
-      [
-        entry('a', 'prof', 90),
-        entry('c', 'estudo', 45),
-      ],
+      [entry('a', 'prof', 90), entry('c', 'estudo', 45)],
       [
         leaf('a', 'prof', 60),
         leaf('b', 'prof', 30), // sem entry → não conta no estimado

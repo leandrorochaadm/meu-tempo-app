@@ -40,15 +40,17 @@ void main() {
         'spentMinutes': 0,
       });
 
-  test('includeDone: false traz apenas as pendentes (filtro no backend)',
-      () async {
-    await seed('pendente', isDone: false);
-    await seed('concluida', isDone: true);
+  test(
+    'includeDone: false traz apenas as pendentes (filtro no backend)',
+    () async {
+      await seed('pendente', isDone: false);
+      await seed('concluida', isDone: true);
 
-    final models = await dataSource.watchTasks(includeDone: false).first;
+      final models = await dataSource.watchTasks(includeDone: false).first;
 
-    expect(models.map((m) => m.id), ['pendente']);
-  });
+      expect(models.map((m) => m.id), ['pendente']);
+    },
+  );
 
   test('includeDone: true traz todas (pendentes e concluídas)', () async {
     await seed('pendente', isDone: false);
@@ -70,14 +72,17 @@ void main() {
 
   test('só enxerga a coleção do usuário logado (isolamento)', () async {
     await seed('minha', isDone: false);
-    await firestore.collection(FirestorePaths.tasks('outro')).doc('alheia').set({
-      'title': 'Alheia',
-      'listId': 'inbox',
-      'createdAt': Timestamp.fromDate(DateTime(2026, 7, 20)),
-      'isDone': false,
-      'hasChildren': false,
-      'spentMinutes': 0,
-    });
+    await firestore
+        .collection(FirestorePaths.tasks('outro'))
+        .doc('alheia')
+        .set({
+          'title': 'Alheia',
+          'listId': 'inbox',
+          'createdAt': Timestamp.fromDate(DateTime(2026, 7, 20)),
+          'isDone': false,
+          'hasChildren': false,
+          'spentMinutes': 0,
+        });
 
     final models = await dataSource.watchTasks(includeDone: true).first;
 
@@ -86,12 +91,12 @@ void main() {
 
   group('escritas atômicas de hierarquia (WriteBatch)', () {
     TaskModel model(String id, {String? parentId}) => TaskModel(
-          id: id,
-          title: id.isEmpty ? 'Nova filha' : id,
-          listId: 'inbox',
-          createdAt: DateTime(2026, 7, 20),
-          parentId: parentId,
-        );
+      id: id,
+      title: id.isEmpty ? 'Nova filha' : id,
+      listId: 'inbox',
+      createdAt: DateTime(2026, 7, 20),
+      parentId: parentId,
+    );
 
     Future<bool?> hasChildrenOf(String id) async {
       final doc = await collection().doc(id).get();
@@ -130,24 +135,26 @@ void main() {
       expect(created.title, isNotEmpty);
     });
 
-    test('moveTask grava a tarefa e ajusta os dois pais no mesmo commit',
-        () async {
-      await seed('maeAntiga', isDone: false);
-      await seed('maeNova', isDone: false);
-      await collection().doc('maeAntiga').update({'hasChildren': true});
-      await seed('filha', isDone: false);
+    test(
+      'moveTask grava a tarefa e ajusta os dois pais no mesmo commit',
+      () async {
+        await seed('maeAntiga', isDone: false);
+        await seed('maeNova', isDone: false);
+        await collection().doc('maeAntiga').update({'hasChildren': true});
+        await seed('filha', isDone: false);
 
-      await dataSource.moveTask(
-        [model('filha', parentId: 'maeNova')],
-        newParentId: 'maeNova',
-        emptiedParentId: 'maeAntiga',
-      );
+        await dataSource.moveTask(
+          [model('filha', parentId: 'maeNova')],
+          newParentId: 'maeNova',
+          emptiedParentId: 'maeAntiga',
+        );
 
-      final filha = await collection().doc('filha').get();
-      expect(filha.data()?['parentId'], 'maeNova');
-      expect(await hasChildrenOf('maeNova'), isTrue);
-      expect(await hasChildrenOf('maeAntiga'), isFalse);
-    });
+        final filha = await collection().doc('filha').get();
+        expect(filha.data()?['parentId'], 'maeNova');
+        expect(await hasChildrenOf('maeNova'), isTrue);
+        expect(await hasChildrenOf('maeAntiga'), isFalse);
+      },
+    );
 
     test('moveTask sem emptiedParentId não toca no pai antigo', () async {
       await seed('maeAntiga', isDone: false);
@@ -155,10 +162,9 @@ void main() {
       await collection().doc('maeAntiga').update({'hasChildren': true});
       await seed('filha', isDone: false);
 
-      await dataSource.moveTask(
-        [model('filha', parentId: 'maeNova')],
-        newParentId: 'maeNova',
-      );
+      await dataSource.moveTask([
+        model('filha', parentId: 'maeNova'),
+      ], newParentId: 'maeNova');
 
       // Ainda tem outra filha: continua marcada como mãe.
       expect(await hasChildrenOf('maeAntiga'), isTrue);
@@ -170,35 +176,34 @@ void main() {
       await collection().doc('mae').update({'hasChildren': true});
       await seed('filha', isDone: false);
 
-      await dataSource.moveTask(
-        [model('filha')],
-        emptiedParentId: 'mae',
-      );
+      await dataSource.moveTask([model('filha')], emptiedParentId: 'mae');
 
       final filha = await collection().doc('filha').get();
       expect(filha.data()?['parentId'], isNull);
       expect(await hasChildrenOf('mae'), isFalse);
     });
 
-    test('deleteSubtree remove todos os ids e libera o pai no mesmo commit',
-        () async {
-      await seed('mae', isDone: false);
-      await collection().doc('mae').update({'hasChildren': true});
-      await seed('filha', isDone: false);
-      await seed('neta', isDone: false);
-      await seed('outra', isDone: false);
+    test(
+      'deleteSubtree remove todos os ids e libera o pai no mesmo commit',
+      () async {
+        await seed('mae', isDone: false);
+        await collection().doc('mae').update({'hasChildren': true});
+        await seed('filha', isDone: false);
+        await seed('neta', isDone: false);
+        await seed('outra', isDone: false);
 
-      await dataSource.deleteSubtree(
-        ['filha', 'neta'],
-        emptiedParentId: 'mae',
-      );
+        await dataSource.deleteSubtree([
+          'filha',
+          'neta',
+        ], emptiedParentId: 'mae');
 
-      final ids = await idsInCollection();
-      expect(ids, isNot(contains('filha')));
-      expect(ids, isNot(contains('neta')));
-      expect(ids, containsAll(['mae', 'outra']));
-      expect(await hasChildrenOf('mae'), isFalse);
-    });
+        final ids = await idsInCollection();
+        expect(ids, isNot(contains('filha')));
+        expect(ids, isNot(contains('neta')));
+        expect(ids, containsAll(['mae', 'outra']));
+        expect(await hasChildrenOf('mae'), isFalse);
+      },
+    );
 
     test('deleteSubtree sem emptiedParentId só remove', () async {
       await seed('mae', isDone: false);
@@ -211,21 +216,23 @@ void main() {
       expect(await hasChildrenOf('mae'), isTrue);
     });
 
-    test('restoreSubtree recria com os ids originais e remarca o pai',
-        () async {
-      await seed('mae', isDone: false);
+    test(
+      'restoreSubtree recria com os ids originais e remarca o pai',
+      () async {
+        await seed('mae', isDone: false);
 
-      await dataSource.restoreSubtree(
-        [model('filha', parentId: 'mae'), model('neta', parentId: 'filha')],
-        parentId: 'mae',
-      );
+        await dataSource.restoreSubtree([
+          model('filha', parentId: 'mae'),
+          model('neta', parentId: 'filha'),
+        ], parentId: 'mae');
 
-      final ids = await idsInCollection();
-      expect(ids, containsAll(['mae', 'filha', 'neta']));
-      expect(await hasChildrenOf('mae'), isTrue);
-      final neta = await collection().doc('neta').get();
-      expect(neta.data()?['parentId'], 'filha');
-    });
+        final ids = await idsInCollection();
+        expect(ids, containsAll(['mae', 'filha', 'neta']));
+        expect(await hasChildrenOf('mae'), isTrue);
+        final neta = await collection().doc('neta').get();
+        expect(neta.data()?['parentId'], 'filha');
+      },
+    );
 
     test('restoreSubtree sem parentId (raiz) não remarca ninguém', () async {
       await dataSource.restoreSubtree([model('mae')]);
@@ -234,16 +241,22 @@ void main() {
       expect(await hasChildrenOf('mae'), isFalse);
     });
 
-    test('escritas atômicas ficam na coleção do usuário logado (isolamento)',
-        () async {
-      await seed('mae', isDone: false);
+    test(
+      'escritas atômicas ficam na coleção do usuário logado (isolamento)',
+      () async {
+        await seed('mae', isDone: false);
 
-      await dataSource.createChild(model('', parentId: 'mae'), parentId: 'mae');
+        await dataSource.createChild(
+          model('', parentId: 'mae'),
+          parentId: 'mae',
+        );
 
-      final alheia =
-          await firestore.collection(FirestorePaths.tasks('outro')).get();
-      expect(alheia.docs, isEmpty);
-      expect(await idsInCollection(), hasLength(2));
-    });
+        final alheia = await firestore
+            .collection(FirestorePaths.tasks('outro'))
+            .get();
+        expect(alheia.docs, isEmpty);
+        expect(await idsInCollection(), hasLength(2));
+      },
+    );
   });
 }

@@ -17,8 +17,9 @@ void main() {
   });
 
   test('delega o listId escolhido ao repository', () async {
-    when(() => repository.setSelectedListId(any()))
-        .thenAnswer((_) async => const Right(unit));
+    when(
+      () => repository.setSelectedListId(any()),
+    ).thenAnswer((_) async => const Right(unit));
 
     final result = await useCase(const SaveTaskListFilterParams('lista-3'));
 
@@ -27,8 +28,9 @@ void main() {
   });
 
   test('repassa null (limpar filtro) ao repository', () async {
-    when(() => repository.setSelectedListId(any()))
-        .thenAnswer((_) async => const Right(unit));
+    when(
+      () => repository.setSelectedListId(any()),
+    ).thenAnswer((_) async => const Right(unit));
 
     await useCase(const SaveTaskListFilterParams(null));
 

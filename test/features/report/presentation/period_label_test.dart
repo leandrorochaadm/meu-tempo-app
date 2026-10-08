@@ -9,11 +9,8 @@ void main() {
 
   final now = DateTime(2026, 7, 20); // segunda
 
-  String label(ReportPeriodEnum p, int offset) => reportPeriodLabel(
-        p,
-        PeriodRange.at(p, now, offset),
-        now,
-      );
+  String label(ReportPeriodEnum p, int offset) =>
+      reportPeriodLabel(p, PeriodRange.at(p, now, offset), now);
 
   test('dia atual = "Hoje"; anterior = "Ontem"', () {
     expect(label(ReportPeriodEnum.day, 0), 'Hoje');

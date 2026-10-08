@@ -45,10 +45,7 @@ void main() {
     },
     act: (bloc) => bloc.add(const SettingsStarted()),
     wait: const Duration(milliseconds: 10),
-    expect: () => [
-      const SettingsLoading(),
-      const SettingsLoaded(300),
-    ],
+    expect: () => [const SettingsLoading(), const SettingsLoaded(300)],
   );
 
   blocTest<SettingsBloc, SettingsState>(
@@ -57,8 +54,9 @@ void main() {
       when(() => watchConfig(any())).thenAnswer(
         (_) => const Stream<Either<Failure, DayConfigEntity>>.empty(),
       );
-      when(() => setAvailable(any()))
-          .thenAnswer((_) async => const Right(unit));
+      when(
+        () => setAvailable(any()),
+      ).thenAnswer((_) async => const Right(unit));
       return build();
     },
     act: (bloc) async {
@@ -67,8 +65,9 @@ void main() {
       bloc.add(const AvailableMinutesChanged(600));
     },
     verify: (_) {
-      final p = verify(() => setAvailable(captureAny())).captured.single
-          as SetAvailableMinutesParams;
+      final p =
+          verify(() => setAvailable(captureAny())).captured.single
+              as SetAvailableMinutesParams;
       expect(p.minutes, 600);
     },
   );
@@ -76,9 +75,9 @@ void main() {
   blocTest<SettingsBloc, SettingsState>(
     'stream de config com erro emite SettingsError',
     build: () {
-      when(() => watchConfig(any())).thenAnswer(
-        (_) => Stream.value(const Left(ServerFailure())),
-      );
+      when(
+        () => watchConfig(any()),
+      ).thenAnswer((_) => Stream.value(const Left(ServerFailure())));
       return build();
     },
     act: (bloc) => bloc.add(const SettingsStarted()),

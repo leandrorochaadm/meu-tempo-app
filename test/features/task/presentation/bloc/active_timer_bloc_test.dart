@@ -53,8 +53,9 @@ void main() {
     BuildTaskTreeUseCase(GetPrioritizedLeavesUseCase()),
   );
   // Transformação pura em memória — usa a implementação real, sem mock.
-  const getActiveTaskDetails =
-      GetActiveTaskDetailsUseCase(GetPrioritizedLeavesUseCase());
+  const getActiveTaskDetails = GetActiveTaskDetailsUseCase(
+    GetPrioritizedLeavesUseCase(),
+  );
   final today = DateTime(2026, 7, 22);
 
   final leaf = TaskEntity(
@@ -87,18 +88,17 @@ void main() {
     bool parentChanged = false,
     bool doneChanged = false,
     bool isDone = false,
-  }) =>
-      EditTaskResult(
-        title: 'Novo título',
-        estimatedMinutes: 30,
-        dueDate: null,
-        importance: null,
-        listId: 'inbox',
-        newParentId: parentChanged ? 'mae' : null,
-        parentChanged: parentChanged,
-        isDone: isDone,
-        doneChanged: doneChanged,
-      );
+  }) => EditTaskResult(
+    title: 'Novo título',
+    estimatedMinutes: 30,
+    dueDate: null,
+    importance: null,
+    listId: 'inbox',
+    newParentId: parentChanged ? 'mae' : null,
+    parentChanged: parentChanged,
+    isDone: isDone,
+    doneChanged: doneChanged,
+  );
 
   setUpAll(() {
     registerFallbackValue(const NoParams());
@@ -122,13 +122,11 @@ void main() {
     when(() => watchActiveTimer(any())).thenAnswer(
       (_) => Stream.value(const Right<Failure, ActiveTimerEntity?>(null)),
     );
-    when(() => watchTasks(any())).thenAnswer(
-      (_) => Stream.value(Right<Failure, List<TaskEntity>>([leaf])),
-    );
+    when(
+      () => watchTasks(any()),
+    ).thenAnswer((_) => Stream.value(Right<Failure, List<TaskEntity>>([leaf])));
     when(() => watchLists(any())).thenAnswer(
-      (_) => Stream.value(
-        const Right<Failure, List<TaskListEntity>>([]),
-      ),
+      (_) => Stream.value(const Right<Failure, List<TaskListEntity>>([])),
     );
     when(() => stopTimer(any())).thenAnswer((_) async => const Right(unit));
     when(() => completeTask(any())).thenAnswer((_) async => const Right(unit));
@@ -137,16 +135,16 @@ void main() {
   });
 
   ActiveTimerBloc build() => ActiveTimerBloc(
-        watchActiveTimer,
-        watchTasks,
-        watchLists,
-        stopTimer,
-        getEditContext,
-        getActiveTaskDetails,
-        editTask,
-        moveTask,
-        completeTask,
-      );
+    watchActiveTimer,
+    watchTasks,
+    watchLists,
+    stopTimer,
+    getEditContext,
+    getActiveTaskDetails,
+    editTask,
+    moveTask,
+    completeTask,
+  );
 
   blocTest<ActiveTimerBloc, ActiveTimerState>(
     'exibe a barra quando o cronômetro roda numa folha resolvida',
@@ -235,8 +233,9 @@ void main() {
   blocTest<ActiveTimerBloc, ActiveTimerState>(
     'falha ao parar emite ActiveTimerActionFailed com mensagem',
     build: () {
-      when(() => stopTimer(any()))
-          .thenAnswer((_) async => const Left(NetworkFailure()));
+      when(
+        () => stopTimer(any()),
+      ).thenAnswer((_) async => const Left(NetworkFailure()));
       return build();
     },
     act: (bloc) => bloc.add(const ActiveTimerStopRequested()),
@@ -255,17 +254,18 @@ void main() {
     act: (bloc) => bloc.add(const ActiveTimerCompleteRequested('t1')),
     verify: (_) {
       verify(() => stopTimer(any())).called(1);
-      verify(() => completeTask(
-            any(that: isA<CompleteTaskParams>()),
-          )).called(1);
+      verify(
+        () => completeTask(any(that: isA<CompleteTaskParams>())),
+      ).called(1);
     },
   );
 
   blocTest<ActiveTimerBloc, ActiveTimerState>(
     'falha ao concluir (após parar) emite ActiveTimerActionFailed',
     build: () {
-      when(() => completeTask(any()))
-          .thenAnswer((_) async => const Left(NetworkFailure()));
+      when(
+        () => completeTask(any()),
+      ).thenAnswer((_) async => const Left(NetworkFailure()));
       return build();
     },
     act: (bloc) => bloc.add(const ActiveTimerCompleteRequested('t1')),
@@ -276,8 +276,7 @@ void main() {
   blocTest<ActiveTimerBloc, ActiveTimerState>(
     'editar sem mudança de mãe/conclusão só chama EditTaskUseCase',
     build: build,
-    act: (bloc) =>
-        bloc.add(ActiveTimerEditSubmitted('t1', editResult())),
+    act: (bloc) => bloc.add(ActiveTimerEditSubmitted('t1', editResult())),
     verify: (_) {
       verify(() => editTask(any())).called(1);
       verifyNever(() => moveTask(any()));
@@ -288,10 +287,12 @@ void main() {
   blocTest<ActiveTimerBloc, ActiveTimerState>(
     'editar com parentChanged e doneChanged dispara move e complete',
     build: build,
-    act: (bloc) => bloc.add(ActiveTimerEditSubmitted(
-      't1',
-      editResult(parentChanged: true, doneChanged: true, isDone: true),
-    )),
+    act: (bloc) => bloc.add(
+      ActiveTimerEditSubmitted(
+        't1',
+        editResult(parentChanged: true, doneChanged: true, isDone: true),
+      ),
+    ),
     verify: (_) {
       verify(() => editTask(any())).called(1);
       verify(() => moveTask(any())).called(1);
@@ -302,14 +303,17 @@ void main() {
   blocTest<ActiveTimerBloc, ActiveTimerState>(
     'falha ao editar interrompe a sequência (não move nem conclui) e avisa',
     build: () {
-      when(() => editTask(any()))
-          .thenAnswer((_) async => const Left(TaskNotFoundFailure()));
+      when(
+        () => editTask(any()),
+      ).thenAnswer((_) async => const Left(TaskNotFoundFailure()));
       return build();
     },
-    act: (bloc) => bloc.add(ActiveTimerEditSubmitted(
-      't1',
-      editResult(parentChanged: true, doneChanged: true, isDone: true),
-    )),
+    act: (bloc) => bloc.add(
+      ActiveTimerEditSubmitted(
+        't1',
+        editResult(parentChanged: true, doneChanged: true, isDone: true),
+      ),
+    ),
     expect: () => [
       isA<ActiveTimerActionFailed>().having(
         (s) => s.message,
@@ -326,14 +330,14 @@ void main() {
   blocTest<ActiveTimerBloc, ActiveTimerState>(
     'falha ao mover (parentChanged) emite mensagem específica',
     build: () {
-      when(() => moveTask(any()))
-          .thenAnswer((_) async => const Left(InvalidMoveFailure()));
+      when(
+        () => moveTask(any()),
+      ).thenAnswer((_) async => const Left(InvalidMoveFailure()));
       return build();
     },
-    act: (bloc) => bloc.add(ActiveTimerEditSubmitted(
-      't1',
-      editResult(parentChanged: true),
-    )),
+    act: (bloc) => bloc.add(
+      ActiveTimerEditSubmitted('t1', editResult(parentChanged: true)),
+    ),
     expect: () => [
       isA<ActiveTimerActionFailed>().having(
         (s) => s.message,

@@ -13,7 +13,8 @@ import 'package:meu_tempo/features/task/presentation/widgets/prioritized_leaf_ti
 void main() {
   final today = DateTime(2026, 7, 21);
 
-  TaskEntity leafTask({bool isDone = false, int spentMinutes = 90}) => TaskEntity(
+  TaskEntity leafTask({bool isDone = false, int spentMinutes = 90}) =>
+      TaskEntity(
         id: 't1',
         title: 'Estudar Flutter',
         listId: 'l1',
@@ -28,19 +29,18 @@ void main() {
     bool isDone = false,
     int spentMinutes = 90,
     bool isOverdue = false,
-  }) =>
-      PrioritizedLeaf(
-        task: leafTask(isDone: isDone, spentMinutes: spentMinutes),
-        breakdown: const PriorityBreakdown(
-          estimatedMinutes: 42,
-          importance: ImportanceEnum.min,
-          urgencyWeight: 1,
-          daysUntilDue: null,
-        ),
-        ancestryLabel: '',
-        rank: 1,
-        isOverdue: isOverdue,
-      );
+  }) => PrioritizedLeaf(
+    task: leafTask(isDone: isDone, spentMinutes: spentMinutes),
+    breakdown: const PriorityBreakdown(
+      estimatedMinutes: 42,
+      importance: ImportanceEnum.min,
+      urgencyWeight: 1,
+      daysUntilDue: null,
+    ),
+    ancestryLabel: '',
+    rank: 1,
+    isOverdue: isOverdue,
+  );
 
   // Callbacks-espião: registram que foram chamados.
   late bool timerTapped;
@@ -63,24 +63,23 @@ void main() {
     required PrioritizedLeaf leaf,
     required bool isActive,
     DateTime? activeStartedAt,
-  }) =>
-      MaterialApp(
-        theme: AppTheme.dark,
-        home: Scaffold(
-          body: PrioritizedLeafTile(
-            leaf: leaf,
-            isActive: isActive,
-            activeStartedAt: activeStartedAt,
-            today: today,
-            onToggleTimer: () => timerTapped = true,
-            onAddTime: () => addTimeTapped = true,
-            onToggleDone: () => doneTapped = true,
-            onEdit: () => editTapped = true,
-            onMove: () => moveTapped = true,
-            onDelete: () => deleteTapped = true,
-          ),
-        ),
-      );
+  }) => MaterialApp(
+    theme: AppTheme.dark,
+    home: Scaffold(
+      body: PrioritizedLeafTile(
+        leaf: leaf,
+        isActive: isActive,
+        activeStartedAt: activeStartedAt,
+        today: today,
+        onToggleTimer: () => timerTapped = true,
+        onAddTime: () => addTimeTapped = true,
+        onToggleDone: () => doneTapped = true,
+        onEdit: () => editTapped = true,
+        onMove: () => moveTapped = true,
+        onDelete: () => deleteTapped = true,
+      ),
+    ),
+  );
 
   void setView(WidgetTester tester) {
     tester.view.physicalSize = const Size(390, 844);
@@ -96,8 +95,9 @@ void main() {
     expect(find.textContaining('gasto'), findsOneWidget);
   });
 
-  testWidgets('mostra a posição (#rank) em vez da pontuação bruta',
-      (tester) async {
+  testWidgets('mostra a posição (#rank) em vez da pontuação bruta', (
+    tester,
+  ) async {
     setView(tester);
     await tester.pumpWidget(harness(leaf: leaf(), isActive: false));
 
@@ -107,11 +107,9 @@ void main() {
 
   testWidgets('shows running badge when active', (tester) async {
     setView(tester);
-    await tester.pumpWidget(harness(
-      leaf: leaf(),
-      isActive: true,
-      activeStartedAt: DateTime.now(),
-    ));
+    await tester.pumpWidget(
+      harness(leaf: leaf(), isActive: true, activeStartedAt: DateTime.now()),
+    );
 
     expect(find.byType(TaskRunningBadge), findsOneWidget);
   });
@@ -130,8 +128,9 @@ void main() {
     expect(find.byType(TaskCrudMenu), findsOneWidget);
   });
 
-  testWidgets('tapping the timer button triggers onToggleTimer',
-      (tester) async {
+  testWidgets('tapping the timer button triggers onToggleTimer', (
+    tester,
+  ) async {
     setView(tester);
     await tester.pumpWidget(harness(leaf: leaf(), isActive: false));
 
@@ -151,8 +150,9 @@ void main() {
     expect(addTimeTapped, isTrue);
   });
 
-  testWidgets('tapping the complete circle triggers onToggleDone',
-      (tester) async {
+  testWidgets('tapping the complete circle triggers onToggleDone', (
+    tester,
+  ) async {
     setView(tester);
     await tester.pumpWidget(harness(leaf: leaf(), isActive: false));
 
@@ -200,10 +200,12 @@ void main() {
 
   BoxDecoration cardDecoration(WidgetTester tester) {
     final container = tester.widget<Container>(
-      find.descendant(
-        of: find.byType(PrioritizedLeafTile),
-        matching: find.byType(Container),
-      ).first,
+      find
+          .descendant(
+            of: find.byType(PrioritizedLeafTile),
+            matching: find.byType(Container),
+          )
+          .first,
     );
     return container.decoration! as BoxDecoration;
   }
@@ -232,8 +234,7 @@ void main() {
   Color leftBorderColor(WidgetTester tester) =>
       (cardDecoration(tester).border! as Border).left.color;
 
-  testWidgets('overdue leaf paints the left border in warning',
-      (tester) async {
+  testWidgets('overdue leaf paints the left border in warning', (tester) async {
     setView(tester);
     await tester.pumpWidget(
       harness(leaf: leaf(isOverdue: true), isActive: false),
@@ -242,16 +243,18 @@ void main() {
     expect(leftBorderColor(tester), AppColors.dark.warning);
   });
 
-  testWidgets('non-overdue leaf paints the left border in primary',
-      (tester) async {
+  testWidgets('non-overdue leaf paints the left border in primary', (
+    tester,
+  ) async {
     setView(tester);
     await tester.pumpWidget(harness(leaf: leaf(), isActive: false));
 
     expect(leftBorderColor(tester), AppColors.dark.primary);
   });
 
-  testWidgets('active leaf keeps the timer-active border even if overdue',
-      (tester) async {
+  testWidgets('active leaf keeps the timer-active border even if overdue', (
+    tester,
+  ) async {
     setView(tester);
     await tester.pumpWidget(
       harness(leaf: leaf(isOverdue: true), isActive: true),

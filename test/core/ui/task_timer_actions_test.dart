@@ -13,15 +13,15 @@ void main() {
   });
 
   Widget harness({required bool isActive}) => MaterialApp(
-        theme: AppTheme.dark,
-        home: Scaffold(
-          body: TaskTimerActions(
-            isActive: isActive,
-            onToggleTimer: () => timerTapped = true,
-            onAddTime: () => addTimeTapped = true,
-          ),
-        ),
-      );
+    theme: AppTheme.dark,
+    home: Scaffold(
+      body: TaskTimerActions(
+        isActive: isActive,
+        onToggleTimer: () => timerTapped = true,
+        onAddTime: () => addTimeTapped = true,
+      ),
+    ),
+  );
 
   testWidgets('shows "Iniciar" when inactive', (tester) async {
     await tester.pumpWidget(harness(isActive: false));
@@ -43,8 +43,9 @@ void main() {
     expect(find.text('+${TaskTimerActions.quickMinutes} min'), findsOneWidget);
   });
 
-  testWidgets('tapping the timer button triggers onToggleTimer',
-      (tester) async {
+  testWidgets('tapping the timer button triggers onToggleTimer', (
+    tester,
+  ) async {
     await tester.pumpWidget(harness(isActive: false));
 
     await tester.tap(find.text('Iniciar'));

@@ -46,12 +46,12 @@ void main() {
   setUp(() => bloc = _MockBloc());
 
   Widget harness() => MaterialApp(
-        theme: AppTheme.dark,
-        home: BlocProvider<TimeEntryBloc>.value(
-          value: bloc,
-          child: TimeEntryPage(leaf: leaf),
-        ),
-      );
+    theme: AppTheme.dark,
+    home: BlocProvider<TimeEntryBloc>.value(
+      value: bloc,
+      child: TimeEntryPage(leaf: leaf),
+    ),
+  );
 
   void setView(WidgetTester tester) {
     tester.view.physicalSize = const Size(390, 844);
@@ -66,9 +66,9 @@ void main() {
 
     await tester.pumpWidget(harness());
 
-    verify(() => bloc.add(
-          const TimeEntryStarted(targetId: 't1', listId: 'l1'),
-        )).called(1);
+    verify(
+      () => bloc.add(const TimeEntryStarted(targetId: 't1', listId: 'l1')),
+    ).called(1);
   });
 
   testWidgets('mostra empty state sem registros', (tester) async {
@@ -89,8 +89,9 @@ void main() {
     expect(find.byType(TimeEntryTile), findsOneWidget);
   });
 
-  testWidgets('excluir dispara TimeEntryDeleted e mostra desfazer',
-      (tester) async {
+  testWidgets('excluir dispara TimeEntryDeleted e mostra desfazer', (
+    tester,
+  ) async {
     setView(tester);
     when(() => bloc.state).thenReturn(TimeEntryLoaded([entry]));
 
@@ -141,8 +142,9 @@ void main() {
     await tester.tap(find.text('Salvar'));
     await tester.pumpAndSettle();
 
-    final captured =
-        verify(() => bloc.add(captureAny())).captured.whereType<TimeEntryAdded>();
+    final captured = verify(
+      () => bloc.add(captureAny()),
+    ).captured.whereType<TimeEntryAdded>();
     expect(captured, isNotEmpty);
     expect(captured.first.minutes, 30);
   });

@@ -3,11 +3,11 @@ import 'package:meu_tempo/features/task/domain/entities/quick_add_target_entity.
 
 void main() {
   QuickAddTargetEntity target(int level) => QuickAddTargetEntity(
-        taskId: 't1',
-        title: 'Lançar app',
-        listId: 'inbox',
-        level: level,
-      );
+    taskId: 't1',
+    title: 'Lançar app',
+    listId: 'inbox',
+    level: level,
+  );
 
   test('mãe (nível 0) aceita filha', () {
     expect(target(0).acceptsChild, isTrue);

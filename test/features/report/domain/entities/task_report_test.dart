@@ -4,12 +4,12 @@ import 'package:meu_tempo/features/task/domain/entities/timer_target_type_enum.d
 
 void main() {
   ReportTreeNode node(String id, {required int spent}) => ReportTreeNode(
-        id: id,
-        title: id,
-        targetType: TimerTargetTypeEnum.task,
-        level: 0,
-        spentMinutes: spent,
-      );
+    id: id,
+    title: id,
+    targetType: TimerTargetTypeEnum.task,
+    level: 0,
+    spentMinutes: spent,
+  );
 
   test('shareRatio e sharePercent = participação do nó no total gasto', () {
     final a = node('a', spent: 120);

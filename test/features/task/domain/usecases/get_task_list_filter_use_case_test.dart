@@ -18,8 +18,9 @@ void main() {
   });
 
   test('delega ao repository e devolve o filtro salvo', () async {
-    when(() => repository.getSelectedListId())
-        .thenAnswer((_) async => const Right<Failure, String?>('lista-9'));
+    when(
+      () => repository.getSelectedListId(),
+    ).thenAnswer((_) async => const Right<Failure, String?>('lista-9'));
 
     final result = await useCase(const NoParams());
 
@@ -28,8 +29,9 @@ void main() {
   });
 
   test('propaga o Left do repository', () async {
-    when(() => repository.getSelectedListId())
-        .thenAnswer((_) async => const Left<Failure, String?>(ServerFailure()));
+    when(
+      () => repository.getSelectedListId(),
+    ).thenAnswer((_) async => const Left<Failure, String?>(ServerFailure()));
 
     final result = await useCase(const NoParams());
 

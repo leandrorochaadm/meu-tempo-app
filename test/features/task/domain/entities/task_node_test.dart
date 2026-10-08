@@ -18,12 +18,12 @@ void main() {
   /// Tarefa que tem filhas — como o banco a grava (`hasChildren: true`, mantido
   /// atomicamente ao criar/mover/excluir subtarefa).
   TaskEntity parent(String id) => TaskEntity(
-        id: id,
-        title: id,
-        listId: 'inbox',
-        createdAt: today,
-        hasChildren: true,
-      );
+    id: id,
+    title: id,
+    listId: 'inbox',
+    createdAt: today,
+    hasChildren: true,
+  );
 
   test('folha: tempo é o próprio, progresso reflete conclusão', () {
     final node = TaskNode(task: leaf('a', minutes: 45), level: 2);
@@ -122,9 +122,9 @@ void main() {
     expect(base, isNot(equals(TaskNode(task: leaf('a'), level: 1, rank: 2))));
     expect(
       base,
-      isNot(equals(
-        TaskNode(task: leaf('a'), level: 1, rank: 1, isOverdue: true),
-      )),
+      isNot(
+        equals(TaskNode(task: leaf('a'), level: 1, rank: 1, isOverdue: true)),
+      ),
     );
     expect(base.props, hasLength(5));
   });

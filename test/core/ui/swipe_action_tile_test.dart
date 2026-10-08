@@ -17,24 +17,25 @@ void main() {
 
   // [canComplete] false simula mãe/avó (sem conclusão).
   Widget harness({bool canComplete = true}) => MaterialApp(
-        theme: AppTheme.dark,
-        home: Scaffold(
-          body: SwipeActionTile(
-            itemKey: const ValueKey('task-1'),
-            onSwipeComplete: canComplete ? () => completeCalled = true : null,
-            onSwipeEdit: () => editCalled = true,
-            onLongPressDelete: () => deleteCalled = true,
-            child: const SizedBox(
-              height: 80,
-              width: double.infinity,
-              child: Text('Tarefa'),
-            ),
-          ),
+    theme: AppTheme.dark,
+    home: Scaffold(
+      body: SwipeActionTile(
+        itemKey: const ValueKey('task-1'),
+        onSwipeComplete: canComplete ? () => completeCalled = true : null,
+        onSwipeEdit: () => editCalled = true,
+        onLongPressDelete: () => deleteCalled = true,
+        child: const SizedBox(
+          height: 80,
+          width: double.infinity,
+          child: Text('Tarefa'),
         ),
-      );
+      ),
+    ),
+  );
 
-  testWidgets('arrastar da esquerda para a direita conclui a tarefa',
-      (tester) async {
+  testWidgets('arrastar da esquerda para a direita conclui a tarefa', (
+    tester,
+  ) async {
     await tester.pumpWidget(harness());
 
     await tester.drag(find.text('Tarefa'), const Offset(500, 0));
@@ -46,8 +47,9 @@ void main() {
     expect(find.text('Tarefa'), findsOneWidget);
   });
 
-  testWidgets('arrastar da direita para a esquerda edita a tarefa',
-      (tester) async {
+  testWidgets('arrastar da direita para a esquerda edita a tarefa', (
+    tester,
+  ) async {
     await tester.pumpWidget(harness());
 
     await tester.drag(find.text('Tarefa'), const Offset(-500, 0));
@@ -69,9 +71,9 @@ void main() {
     expect(editCalled, isFalse);
   });
 
-  testWidgets(
-      'sem conclusão (mãe/avó): arrastar para a direita não faz nada',
-      (tester) async {
+  testWidgets('sem conclusão (mãe/avó): arrastar para a direita não faz nada', (
+    tester,
+  ) async {
     await tester.pumpWidget(harness(canComplete: false));
 
     await tester.drag(find.text('Tarefa'), const Offset(500, 0));
@@ -82,8 +84,9 @@ void main() {
     expect(find.text('Tarefa'), findsOneWidget);
   });
 
-  testWidgets('sem conclusão (mãe/avó): arrastar para a esquerda ainda edita',
-      (tester) async {
+  testWidgets('sem conclusão (mãe/avó): arrastar para a esquerda ainda edita', (
+    tester,
+  ) async {
     await tester.pumpWidget(harness(canComplete: false));
 
     await tester.drag(find.text('Tarefa'), const Offset(-500, 0));
@@ -92,8 +95,9 @@ void main() {
     expect(editCalled, isTrue);
   });
 
-  testWidgets('sem conclusão (mãe/avó): clique longo continua excluindo',
-      (tester) async {
+  testWidgets('sem conclusão (mãe/avó): clique longo continua excluindo', (
+    tester,
+  ) async {
     await tester.pumpWidget(harness(canComplete: false));
 
     await tester.longPress(find.text('Tarefa'));
@@ -122,9 +126,9 @@ void main() {
       hapticCalls = [];
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(SystemChannels.platform, (call) async {
-        if (call.method == 'HapticFeedback.vibrate') hapticCalls.add(call);
-        return null;
-      });
+            if (call.method == 'HapticFeedback.vibrate') hapticCalls.add(call);
+            return null;
+          });
     });
 
     tearDown(() {

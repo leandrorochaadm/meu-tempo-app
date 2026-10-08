@@ -46,22 +46,29 @@ void main() {
     createTask = _MockCreateTask();
     addSubtask = _MockAddSubtask();
     startTimer = _MockStartTimer();
-    useCase = CreateTaskAndStartTimerUseCase(createTask, addSubtask, startTimer);
+    useCase = CreateTaskAndStartTimerUseCase(
+      createTask,
+      addSubtask,
+      startTimer,
+    );
   });
 
   test('sem alvo: cria tarefa raiz e inicia o cronômetro nela', () async {
     when(() => createTask(any())).thenAnswer((_) async => Right(created));
     when(() => startTimer(any())).thenAnswer((_) async => const Right(unit));
 
-    final result = await useCase(CreateTaskAndStartTimerParams(
-      title: 'Estudar',
-      listId: 'inbox',
-      now: now,
-    ));
+    final result = await useCase(
+      CreateTaskAndStartTimerParams(
+        title: 'Estudar',
+        listId: 'inbox',
+        now: now,
+      ),
+    );
 
     expect(result.getRight().toNullable(), created);
-    final p = verify(() => startTimer(captureAny())).captured.single
-        as StartTimerParams;
+    final p =
+        verify(() => startTimer(captureAny())).captured.single
+            as StartTimerParams;
     expect(p.targetId, 't1');
     expect(p.targetIsLeaf, isTrue); // recém-criada é sempre folha
     verifyNever(() => addSubtask(any()));
@@ -71,20 +78,23 @@ void main() {
     when(() => addSubtask(any())).thenAnswer((_) async => Right(created));
     when(() => startTimer(any())).thenAnswer((_) async => const Right(unit));
 
-    await useCase(CreateTaskAndStartTimerParams(
-      title: 'Fazer telas',
-      listId: 'ignorada',
-      now: now,
-      parent: const QuickAddTargetEntity(
-        taskId: 'p1',
-        title: 'Lançar app',
-        listId: 'trabalho',
-        level: 0,
+    await useCase(
+      CreateTaskAndStartTimerParams(
+        title: 'Fazer telas',
+        listId: 'ignorada',
+        now: now,
+        parent: const QuickAddTargetEntity(
+          taskId: 'p1',
+          title: 'Lançar app',
+          listId: 'trabalho',
+          level: 0,
+        ),
       ),
-    ));
+    );
 
-    final p = verify(() => addSubtask(captureAny())).captured.single
-        as AddSubtaskParams;
+    final p =
+        verify(() => addSubtask(captureAny())).captured.single
+            as AddSubtaskParams;
     expect(p.parentId, 'p1');
     expect(p.parentLevel, 0);
     expect(p.listId, 'trabalho'); // filha herda a lista da mãe
@@ -92,55 +102,61 @@ void main() {
   });
 
   test('título vazio: falha na criação e o cronômetro nem é chamado', () async {
-    when(() => createTask(any()))
-        .thenAnswer((_) async => const Left(EmptyTitleFailure()));
+    when(
+      () => createTask(any()),
+    ).thenAnswer((_) async => const Left(EmptyTitleFailure()));
 
-    final result = await useCase(CreateTaskAndStartTimerParams(
-      title: '   ',
-      listId: 'inbox',
-      now: now,
-    ));
+    final result = await useCase(
+      CreateTaskAndStartTimerParams(title: '   ', listId: 'inbox', now: now),
+    );
 
     expect(result.getLeft().toNullable(), isA<EmptyTitleFailure>());
     verifyNever(() => startTimer(any()));
   });
 
-  test('4º nível: devolve MaxLevelExceededFailure sem tocar no cronômetro',
-      () async {
-    when(() => addSubtask(any()))
-        .thenAnswer((_) async => const Left(MaxLevelExceededFailure()));
+  test(
+    '4º nível: devolve MaxLevelExceededFailure sem tocar no cronômetro',
+    () async {
+      when(
+        () => addSubtask(any()),
+      ).thenAnswer((_) async => const Left(MaxLevelExceededFailure()));
 
-    final result = await useCase(CreateTaskAndStartTimerParams(
-      title: 'Bisneta',
-      listId: 'inbox',
-      now: now,
-      parent: const QuickAddTargetEntity(
-        taskId: 'n1',
-        title: 'Neta',
-        listId: 'inbox',
-        level: 2,
-      ),
-    ));
+      final result = await useCase(
+        CreateTaskAndStartTimerParams(
+          title: 'Bisneta',
+          listId: 'inbox',
+          now: now,
+          parent: const QuickAddTargetEntity(
+            taskId: 'n1',
+            title: 'Neta',
+            listId: 'inbox',
+            level: 2,
+          ),
+        ),
+      );
 
-    expect(result.getLeft().toNullable(), isA<MaxLevelExceededFailure>());
-    verifyNever(() => startTimer(any()));
-  });
+      expect(result.getLeft().toNullable(), isA<MaxLevelExceededFailure>());
+      verifyNever(() => startTimer(any()));
+    },
+  );
 
-  test('só o cronômetro falha: TimerNotStartedFailure com o id da criada',
-      () async {
-    when(() => createTask(any())).thenAnswer((_) async => Right(created));
-    when(() => startTimer(any()))
-        .thenAnswer((_) async => const Left(NetworkFailure()));
+  test(
+    'só o cronômetro falha: TimerNotStartedFailure com o id da criada',
+    () async {
+      when(() => createTask(any())).thenAnswer((_) async => Right(created));
+      when(
+        () => startTimer(any()),
+      ).thenAnswer((_) async => const Left(NetworkFailure()));
 
-    final result = await useCase(CreateTaskAndStartTimerParams(
-      title: 'Estudar',
-      listId: 'inbox',
-      now: now,
-    ));
+      final result = await useCase(
+        CreateTaskAndStartTimerParams(
+          title: 'Estudar',
+          listId: 'inbox',
+          now: now,
+        ),
+      );
 
-    expect(
-      result.getLeft().toNullable(),
-      const TimerNotStartedFailure('t1'),
-    );
-  });
+      expect(result.getLeft().toNullable(), const TimerNotStartedFailure('t1'));
+    },
+  );
 }

@@ -7,9 +7,9 @@ import 'package:meu_tempo/features/task/presentation/widgets/priority_info_butto
 
 void main() {
   Widget harness(PriorityBreakdown breakdown) => MaterialApp(
-        theme: AppTheme.dark,
-        home: Scaffold(body: PriorityInfoButton(breakdown: breakdown)),
-      );
+    theme: AppTheme.dark,
+    home: Scaffold(body: PriorityInfoButton(breakdown: breakdown)),
+  );
 
   Future<void> openDialog(WidgetTester tester, PriorityBreakdown b) async {
     await tester.pumpWidget(harness(b));

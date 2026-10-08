@@ -11,12 +11,12 @@ void main() {
   );
 
   TaskEntity t(String id, {String? parentId}) => TaskEntity(
-        id: id,
-        title: id,
-        listId: 'inbox',
-        createdAt: today,
-        parentId: parentId,
-      );
+    id: id,
+    title: id,
+    listId: 'inbox',
+    createdAt: today,
+    parentId: parentId,
+  );
 
   // Árvore: mae → filha → neta, e uma raiz solta "outra".
   final tasks = [

@@ -3,14 +3,14 @@ import 'package:meu_tempo/features/appointment/domain/entities/appointment_entit
 
 void main() {
   AppointmentEntity build({bool? isDone}) => AppointmentEntity(
-        id: 'a1',
-        title: 'Dentista',
-        listId: 'pessoal',
-        date: DateTime(2026, 10, 7),
-        startMinute: 900,
-        durationMinutes: 60,
-        isDone: isDone ?? false,
-      );
+    id: 'a1',
+    title: 'Dentista',
+    listId: 'pessoal',
+    date: DateTime(2026, 10, 7),
+    startMinute: 900,
+    durationMinutes: 60,
+    isDone: isDone ?? false,
+  );
 
   test('isDone é false por padrão', () {
     final entity = AppointmentEntity(

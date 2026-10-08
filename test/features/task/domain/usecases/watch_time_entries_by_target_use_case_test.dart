@@ -26,8 +26,9 @@ void main() {
   setUp(() => repo = _MockRepo());
 
   test('delega ao repositório passando o targetId', () async {
-    when(() => repo.watchByTarget('t1'))
-        .thenAnswer((_) => Stream.value(Right([entry])));
+    when(
+      () => repo.watchByTarget('t1'),
+    ).thenAnswer((_) => Stream.value(Right([entry])));
 
     final result = await WatchTimeEntriesByTargetUseCase(repo)(
       const WatchTimeEntriesByTargetParams(targetId: 't1'),
@@ -38,8 +39,9 @@ void main() {
   });
 
   test('propaga Left do repositório', () async {
-    when(() => repo.watchByTarget('t1'))
-        .thenAnswer((_) => Stream.value(const Left(ServerFailure())));
+    when(
+      () => repo.watchByTarget('t1'),
+    ).thenAnswer((_) => Stream.value(const Left(ServerFailure())));
 
     final result = await WatchTimeEntriesByTargetUseCase(repo)(
       const WatchTimeEntriesByTargetParams(targetId: 't1'),

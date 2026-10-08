@@ -12,17 +12,16 @@ void main() {
     String? parentId,
     DateTime? dueDate,
     bool hasChildren = false,
-  }) =>
-      TaskEntity(
-        id: id,
-        title: id,
-        listId: 'inbox',
-        createdAt: today,
-        parentId: parentId,
-        dueDate: dueDate,
-        estimatedMinutes: 30,
-        hasChildren: hasChildren,
-      );
+  }) => TaskEntity(
+    id: id,
+    title: id,
+    listId: 'inbox',
+    createdAt: today,
+    parentId: parentId,
+    dueDate: dueDate,
+    estimatedMinutes: 30,
+    hasChildren: hasChildren,
+  );
 
   test('monta mãe → filha → neta com níveis corretos', () {
     final roots = useCase([
@@ -46,13 +45,10 @@ void main() {
   });
 
   test('marca folha atrasada quando recebe `today`', () {
-    final roots = useCase(
-      [
-        t('atrasada', dueDate: DateTime(2026, 7, 19)),
-        t('no prazo', dueDate: DateTime(2026, 7, 25)),
-      ],
-      today,
-    );
+    final roots = useCase([
+      t('atrasada', dueDate: DateTime(2026, 7, 19)),
+      t('no prazo', dueDate: DateTime(2026, 7, 25)),
+    ], today);
     final byId = {for (final n in roots) n.task.id: n};
     expect(byId['atrasada']!.isOverdue, isTrue);
     expect(byId['no prazo']!.isOverdue, isFalse);
@@ -66,18 +62,17 @@ void main() {
   group('rank — posição na fila de prioridade', () {
     test('numera as folhas na ordem da fila, mesmo aninhadas', () {
       // Mesma estimativa (30 min) e importância; o prazo decide a ordem.
-      final roots = useCase(
-        [
-          t('mae', hasChildren: true),
-          t('filha',
-              parentId: 'mae',
-              dueDate: DateTime(2026, 7, 30),
-              hasChildren: true),
-          t('neta', parentId: 'filha', dueDate: DateTime(2026, 7, 20)),
-          t('solta', dueDate: DateTime(2026, 7, 22)),
-        ],
-        today,
-      );
+      final roots = useCase([
+        t('mae', hasChildren: true),
+        t(
+          'filha',
+          parentId: 'mae',
+          dueDate: DateTime(2026, 7, 30),
+          hasChildren: true,
+        ),
+        t('neta', parentId: 'filha', dueDate: DateTime(2026, 7, 20)),
+        t('solta', dueDate: DateTime(2026, 7, 22)),
+      ], today);
 
       final byId = {for (final n in roots) n.task.id: n};
       final mae = byId['mae']!;
@@ -90,34 +85,28 @@ void main() {
     });
 
     test('mãe e avó não recebem posição', () {
-      final roots = useCase(
-        [
-          t('mae', hasChildren: true),
-          t('filha', parentId: 'mae', dueDate: today),
-        ],
-        today,
-      );
+      final roots = useCase([
+        t('mae', hasChildren: true),
+        t('filha', parentId: 'mae', dueDate: today),
+      ], today);
 
       expect(roots.single.rank, isNull);
       expect(roots.single.children.single.rank, 1);
     });
 
     test('folha concluída não recebe posição', () {
-      final roots = useCase(
-        [
-          TaskEntity(
-            id: 'feita',
-            title: 'feita',
-            listId: 'inbox',
-            createdAt: today,
-            dueDate: today,
-            estimatedMinutes: 30,
-            isDone: true,
-          ),
-          t('pendente', dueDate: today),
-        ],
-        today,
-      );
+      final roots = useCase([
+        TaskEntity(
+          id: 'feita',
+          title: 'feita',
+          listId: 'inbox',
+          createdAt: today,
+          dueDate: today,
+          estimatedMinutes: 30,
+          isDone: true,
+        ),
+        t('pendente', dueDate: today),
+      ], today);
 
       final byId = {for (final n in roots) n.task.id: n};
       expect(byId['feita']!.rank, isNull);
@@ -142,10 +131,9 @@ void main() {
     });
 
     test('mãe sem filhas visíveis fica fora da fila de prioridade', () {
-      final roots = useCase(
-        [t('mae', hasChildren: true, dueDate: today)],
-        today,
-      );
+      final roots = useCase([
+        t('mae', hasChildren: true, dueDate: today),
+      ], today);
 
       expect(roots.single.rank, isNull);
     });

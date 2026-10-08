@@ -13,31 +13,31 @@ void main() {
   });
 
   Widget harness({String message = 'Mensagem A'}) => MaterialApp(
-        theme: AppTheme.dark,
-        home: Scaffold(
-          body: Builder(
-            builder: (context) => Column(
-              children: [
-                TextButton(
-                  onPressed: () => AppNoticeBanner.show(
-                    context,
-                    icon: Icons.info_rounded,
-                    message: message,
-                    actionLabel: 'Agir',
-                    onAction: () => actions++,
-                    onDismiss: () => dismissals++,
-                  ),
-                  child: const Text('abrir'),
-                ),
-                TextButton(
-                  onPressed: () => AppNoticeBanner.hide(context),
-                  child: const Text('fechar'),
-                ),
-              ],
+    theme: AppTheme.dark,
+    home: Scaffold(
+      body: Builder(
+        builder: (context) => Column(
+          children: [
+            TextButton(
+              onPressed: () => AppNoticeBanner.show(
+                context,
+                icon: Icons.info_rounded,
+                message: message,
+                actionLabel: 'Agir',
+                onAction: () => actions++,
+                onDismiss: () => dismissals++,
+              ),
+              child: const Text('abrir'),
             ),
-          ),
+            TextButton(
+              onPressed: () => AppNoticeBanner.hide(context),
+              child: const Text('fechar'),
+            ),
+          ],
         ),
-      );
+      ),
+    ),
+  );
 
   testWidgets('shows message, action and "Agora não"', (tester) async {
     await tester.pumpWidget(harness());

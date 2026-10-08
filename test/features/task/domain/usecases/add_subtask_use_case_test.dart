@@ -24,21 +24,28 @@ void main() {
   });
 
   AddSubtaskParams params(int parentLevel) => AddSubtaskParams(
-        parentId: 'p1',
-        parentLevel: parentLevel,
-        listId: 'inbox',
-        title: 'Fazer telas',
-        today: today,
+    parentId: 'p1',
+    parentLevel: parentLevel,
+    listId: 'inbox',
+    title: 'Fazer telas',
+    today: today,
+  );
+
+  test(
+    'bloqueia filha de neta (nível 2) com MaxLevelExceededFailure',
+    () async {
+      final result = await useCase(params(2));
+
+      expect(result, isA<Left<Failure, TaskEntity>>());
+      result.getLeft().fold(
+        () => fail('esperava Left'),
+        (f) => expect(f, isA<MaxLevelExceededFailure>()),
       );
-
-  test('bloqueia filha de neta (nível 2) com MaxLevelExceededFailure', () async {
-    final result = await useCase(params(2));
-
-    expect(result, isA<Left<Failure, TaskEntity>>());
-    result.getLeft().fold(() => fail('esperava Left'),
-        (f) => expect(f, isA<MaxLevelExceededFailure>()));
-    verifyNever(() => repository.createChild(any(), parentId: any(named: 'parentId')));
-  });
+      verifyNever(
+        () => repository.createChild(any(), parentId: any(named: 'parentId')),
+      );
+    },
+  );
 
   test('título vazio retorna EmptyTitleFailure', () async {
     final result = await useCase(
@@ -61,8 +68,9 @@ void main() {
       createdAt: today,
       parentId: 'p1',
     );
-    when(() => repository.createChild(any(), parentId: any(named: 'parentId')))
-        .thenAnswer((_) async => Right(child));
+    when(
+      () => repository.createChild(any(), parentId: any(named: 'parentId')),
+    ).thenAnswer((_) async => Right(child));
 
     final result = await useCase(params(0));
 
@@ -90,8 +98,9 @@ void main() {
 
   test('a filha nasce com parentId, listId e prazo de hoje', () async {
     late TaskEntity captured;
-    when(() => repository.createChild(any(), parentId: any(named: 'parentId')))
-        .thenAnswer((invocation) async {
+    when(
+      () => repository.createChild(any(), parentId: any(named: 'parentId')),
+    ).thenAnswer((invocation) async {
       captured = invocation.positionalArguments.first as TaskEntity;
       return Right(captured);
     });
@@ -106,8 +115,9 @@ void main() {
   });
 
   test('propaga o Failure do repositório sem inventar sucesso', () async {
-    when(() => repository.createChild(any(), parentId: any(named: 'parentId')))
-        .thenAnswer((_) async => const Left(NetworkFailure()));
+    when(
+      () => repository.createChild(any(), parentId: any(named: 'parentId')),
+    ).thenAnswer((_) async => const Left(NetworkFailure()));
 
     final result = await useCase(params(0));
 
@@ -122,8 +132,9 @@ void main() {
       createdAt: today,
       parentId: 'p1',
     );
-    when(() => repository.createChild(any(), parentId: any(named: 'parentId')))
-        .thenAnswer((_) async => Right(child));
+    when(
+      () => repository.createChild(any(), parentId: any(named: 'parentId')),
+    ).thenAnswer((_) async => Right(child));
 
     expect((await useCase(params(0))).isRight(), isTrue);
     expect((await useCase(params(1))).isRight(), isTrue);

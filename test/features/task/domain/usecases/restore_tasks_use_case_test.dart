@@ -18,25 +18,28 @@ void main() {
 
   setUp(() {
     repo = _MockTaskRepo();
-    when(() => repo.restoreSubtree(any(), parentId: any(named: 'parentId')))
-        .thenAnswer((_) async => const Right(unit));
+    when(
+      () => repo.restoreSubtree(any(), parentId: any(named: 'parentId')),
+    ).thenAnswer((_) async => const Right(unit));
   });
 
   TaskEntity node(String id, {String? parentId}) => TaskEntity(
-        id: id,
-        title: id,
-        listId: 'inbox',
-        createdAt: today,
-        parentId: parentId,
-      );
+    id: id,
+    title: id,
+    listId: 'inbox',
+    createdAt: today,
+    parentId: parentId,
+  );
 
   /// Captura a chamada atômica: subárvore recriada + pai remarcado.
   /// `verify` consome as interações, então chame **uma vez** por teste.
   ({List<TaskEntity> tasks, String? parent}) captureRestore() {
-    final captured = verify(() => repo.restoreSubtree(
-          captureAny(),
-          parentId: captureAny(named: 'parentId'),
-        )).captured;
+    final captured = verify(
+      () => repo.restoreSubtree(
+        captureAny(),
+        parentId: captureAny(named: 'parentId'),
+      ),
+    ).captured;
     return (
       tasks: captured[0] as List<TaskEntity>,
       parent: captured[1] as String?,
@@ -94,8 +97,9 @@ void main() {
   });
 
   test('propaga o Failure da escrita atômica', () async {
-    when(() => repo.restoreSubtree(any(), parentId: any(named: 'parentId')))
-        .thenAnswer((_) async => const Left(ServerFailure()));
+    when(
+      () => repo.restoreSubtree(any(), parentId: any(named: 'parentId')),
+    ).thenAnswer((_) async => const Left(ServerFailure()));
 
     final r = await RestoreTasksUseCase(repo)(
       RestoreTasksParams(tasks: [node('mae')]),

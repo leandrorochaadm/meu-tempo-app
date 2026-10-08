@@ -39,20 +39,29 @@ void main() {
     required int minutes,
     required DateTime occurredAt,
     String listId = 'l1',
-  }) =>
-      collection().doc(id).set({
-        'targetId': targetId,
-        'targetType': TimerTargetTypeEnum.task.name,
-        'listId': listId,
-        'minutes': minutes,
-        'origin': TimeEntryOriginEnum.manual.name,
-        'occurredAt': Timestamp.fromDate(occurredAt),
-      });
+  }) => collection().doc(id).set({
+    'targetId': targetId,
+    'targetType': TimerTargetTypeEnum.task.name,
+    'listId': listId,
+    'minutes': minutes,
+    'origin': TimeEntryOriginEnum.manual.name,
+    'occurredAt': Timestamp.fromDate(occurredAt),
+  });
 
   group('watchByTarget', () {
     test('retorna só os registros da folha alvo', () async {
-      await seed('e1', targetId: 't1', minutes: 30, occurredAt: DateTime(2026, 7, 10));
-      await seed('e2', targetId: 't2', minutes: 15, occurredAt: DateTime(2026, 7, 11));
+      await seed(
+        'e1',
+        targetId: 't1',
+        minutes: 30,
+        occurredAt: DateTime(2026, 7, 10),
+      );
+      await seed(
+        'e2',
+        targetId: 't2',
+        minutes: 15,
+        occurredAt: DateTime(2026, 7, 11),
+      );
 
       final models = await dataSource.watchByTarget('t1').first;
 
@@ -60,9 +69,24 @@ void main() {
     });
 
     test('ordena por occurredAt decrescente (mais recente primeiro)', () async {
-      await seed('antigo', targetId: 't1', minutes: 10, occurredAt: DateTime(2026, 7, 1));
-      await seed('novo', targetId: 't1', minutes: 20, occurredAt: DateTime(2026, 7, 20));
-      await seed('meio', targetId: 't1', minutes: 30, occurredAt: DateTime(2026, 7, 10));
+      await seed(
+        'antigo',
+        targetId: 't1',
+        minutes: 10,
+        occurredAt: DateTime(2026, 7, 1),
+      );
+      await seed(
+        'novo',
+        targetId: 't1',
+        minutes: 20,
+        occurredAt: DateTime(2026, 7, 20),
+      );
+      await seed(
+        'meio',
+        targetId: 't1',
+        minutes: 30,
+        occurredAt: DateTime(2026, 7, 10),
+      );
 
       final models = await dataSource.watchByTarget('t1').first;
 
@@ -70,18 +94,23 @@ void main() {
     });
 
     test('isola por usuário logado', () async {
-      await seed('meu', targetId: 't1', minutes: 30, occurredAt: DateTime(2026, 7, 10));
+      await seed(
+        'meu',
+        targetId: 't1',
+        minutes: 30,
+        occurredAt: DateTime(2026, 7, 10),
+      );
       await firestore
           .collection(FirestorePaths.timeEntries('outro'))
           .doc('alheio')
           .set({
-        'targetId': 't1',
-        'targetType': TimerTargetTypeEnum.task.name,
-        'listId': 'x',
-        'minutes': 99,
-        'origin': TimeEntryOriginEnum.manual.name,
-        'occurredAt': Timestamp.fromDate(DateTime(2026, 7, 10)),
-      });
+            'targetId': 't1',
+            'targetType': TimerTargetTypeEnum.task.name,
+            'listId': 'x',
+            'minutes': 99,
+            'origin': TimeEntryOriginEnum.manual.name,
+            'occurredAt': Timestamp.fromDate(DateTime(2026, 7, 10)),
+          });
 
       final models = await dataSource.watchByTarget('t1').first;
 
@@ -91,17 +120,26 @@ void main() {
 
   group('update', () {
     test('sobrescreve minutos e data do registro existente', () async {
-      await seed('e1', targetId: 't1', minutes: 30, occurredAt: DateTime(2026, 7, 10));
-
-      await dataSource.update(TimeEntryModel.fromEntity(TimeEntryEntity(
-        id: 'e1',
+      await seed(
+        'e1',
         targetId: 't1',
-        targetType: TimerTargetTypeEnum.task,
-        listId: 'l1',
-        minutes: 55,
-        origin: TimeEntryOriginEnum.manual,
-        occurredAt: DateTime(2026, 7, 12),
-      )));
+        minutes: 30,
+        occurredAt: DateTime(2026, 7, 10),
+      );
+
+      await dataSource.update(
+        TimeEntryModel.fromEntity(
+          TimeEntryEntity(
+            id: 'e1',
+            targetId: 't1',
+            targetType: TimerTargetTypeEnum.task,
+            listId: 'l1',
+            minutes: 55,
+            origin: TimeEntryOriginEnum.manual,
+            occurredAt: DateTime(2026, 7, 12),
+          ),
+        ),
+      );
 
       final doc = await collection().doc('e1').get();
       expect(doc.data()!['minutes'], 55);
@@ -110,7 +148,12 @@ void main() {
 
   group('delete', () {
     test('remove o registro pelo id', () async {
-      await seed('e1', targetId: 't1', minutes: 30, occurredAt: DateTime(2026, 7, 10));
+      await seed(
+        'e1',
+        targetId: 't1',
+        minutes: 30,
+        occurredAt: DateTime(2026, 7, 10),
+      );
 
       await dataSource.delete('e1');
 

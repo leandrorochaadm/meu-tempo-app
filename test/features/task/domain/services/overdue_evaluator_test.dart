@@ -9,17 +9,16 @@ void main() {
     DateTime? dueDate,
     bool isDone = false,
     bool hasChildren = false,
-  }) =>
-      TaskEntity(
-        id: 't1',
-        title: 'Tarefa',
-        listId: 'l1',
-        createdAt: today,
-        dueDate: dueDate,
-        isDone: isDone,
-        hasChildren: hasChildren,
-        estimatedMinutes: 30,
-      );
+  }) => TaskEntity(
+    id: 't1',
+    title: 'Tarefa',
+    listId: 'l1',
+    createdAt: today,
+    dueDate: dueDate,
+    isDone: isDone,
+    hasChildren: hasChildren,
+    estimatedMinutes: 30,
+  );
 
   test('atrasada: folha não concluída com prazo antes de hoje', () {
     final task = leaf(dueDate: DateTime(2026, 7, 20));

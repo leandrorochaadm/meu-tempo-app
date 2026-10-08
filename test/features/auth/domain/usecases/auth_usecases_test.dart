@@ -17,8 +17,9 @@ void main() {
   setUp(() => repository = _MockAuthRepository());
 
   test('SignInWithGoogleUseCase delega ao repositório', () async {
-    when(() => repository.signInWithGoogle())
-        .thenAnswer((_) async => const Right(unit));
+    when(
+      () => repository.signInWithGoogle(),
+    ).thenAnswer((_) async => const Right(unit));
 
     final result = await SignInWithGoogleUseCase(repository)(const NoParams());
 

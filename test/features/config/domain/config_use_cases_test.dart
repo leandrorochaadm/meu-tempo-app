@@ -17,7 +17,9 @@ void main() {
 
   test('WatchConfigUseCase repassa o stream', () {
     when(() => repo.watchConfig()).thenAnswer(
-      (_) => Stream.value(const Right(DayConfigEntity(availableMinutesPerDay: 300))),
+      (_) => Stream.value(
+        const Right(DayConfigEntity(availableMinutesPerDay: 300)),
+      ),
     );
     expect(
       WatchConfigUseCase(repo)(const NoParams()),
@@ -26,19 +28,19 @@ void main() {
   });
 
   test('SetAvailableMinutes normaliza valores <= 0 para 1', () async {
-    when(() => repo.setAvailableMinutes(any()))
-        .thenAnswer((_) async => const Right(unit));
+    when(
+      () => repo.setAvailableMinutes(any()),
+    ).thenAnswer((_) async => const Right(unit));
 
-    await SetAvailableMinutesUseCase(repo)(
-      const SetAvailableMinutesParams(0),
-    );
+    await SetAvailableMinutesUseCase(repo)(const SetAvailableMinutesParams(0));
 
     verify(() => repo.setAvailableMinutes(1)).called(1);
   });
 
   test('SetAvailableMinutes repassa valor válido', () async {
-    when(() => repo.setAvailableMinutes(any()))
-        .thenAnswer((_) async => const Right(unit));
+    when(
+      () => repo.setAvailableMinutes(any()),
+    ).thenAnswer((_) async => const Right(unit));
 
     await SetAvailableMinutesUseCase(repo)(
       const SetAvailableMinutesParams(360),

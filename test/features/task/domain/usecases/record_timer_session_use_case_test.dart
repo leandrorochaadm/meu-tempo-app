@@ -33,10 +33,12 @@ void main() {
     taskRepo = _MockTaskRepo();
     apptRepo = _MockAppointmentRepo();
     entryRepo = _MockTimeEntryRepo();
-    when(() => taskRepo.addSpentMinutes(any(), any()))
-        .thenAnswer((_) async => const Right(unit));
-    when(() => apptRepo.addSpentMinutes(any(), any()))
-        .thenAnswer((_) async => const Right(unit));
+    when(
+      () => taskRepo.addSpentMinutes(any(), any()),
+    ).thenAnswer((_) async => const Right(unit));
+    when(
+      () => apptRepo.addSpentMinutes(any(), any()),
+    ).thenAnswer((_) async => const Right(unit));
     when(() => entryRepo.add(any())).thenAnswer((_) async => const Right(unit));
     useCase = RecordTimerSessionUseCase(taskRepo, apptRepo, entryRepo);
   });
@@ -46,14 +48,13 @@ void main() {
     String id = 't1',
     int minutes = 30,
     TimerStatusEnum status = TimerStatusEnum.running,
-  }) =>
-      ActiveTimerEntity(
-        targetId: id,
-        targetType: type,
-        listId: 'l1',
-        startedAt: now.subtract(Duration(minutes: minutes)),
-        status: status,
-      );
+  }) => ActiveTimerEntity(
+    targetId: id,
+    targetType: type,
+    listId: 'l1',
+    startedAt: now.subtract(Duration(minutes: minutes)),
+    status: status,
+  );
 
   void expectNothingCalled() {
     verifyNever(() => taskRepo.addSpentMinutes(any(), any()));
@@ -70,8 +71,9 @@ void main() {
       expect(result.isRight(), isTrue);
       verify(() => taskRepo.addSpentMinutes('t1', 30)).called(1);
       verifyNever(() => apptRepo.addSpentMinutes(any(), any()));
-      final entry = verify(() => entryRepo.add(captureAny())).captured.single
-          as TimeEntryEntity;
+      final entry =
+          verify(() => entryRepo.add(captureAny())).captured.single
+              as TimeEntryEntity;
       expect(entry.minutes, 30);
       expect(entry.origin, TimeEntryOriginEnum.timer);
       expect(entry.occurredAt, now);
@@ -79,14 +81,16 @@ void main() {
     });
 
     test('compromisso: soma no repositório de compromisso', () async {
-      await useCase(RecordTimerSessionParams(
-        session: session(
-          type: TimerTargetTypeEnum.appointment,
-          id: 'a1',
-          minutes: 10,
+      await useCase(
+        RecordTimerSessionParams(
+          session: session(
+            type: TimerTargetTypeEnum.appointment,
+            id: 'a1',
+            minutes: 10,
+          ),
+          now: now,
         ),
-        now: now,
-      ));
+      );
 
       verify(() => apptRepo.addSpentMinutes('a1', 10)).called(1);
       verifyNever(() => taskRepo.addSpentMinutes(any(), any()));
@@ -102,17 +106,20 @@ void main() {
     });
 
     test('cronômetro pausado não grava nada', () async {
-      await useCase(RecordTimerSessionParams(
-        session: session(minutes: 40, status: TimerStatusEnum.paused),
-        now: now,
-      ));
+      await useCase(
+        RecordTimerSessionParams(
+          session: session(minutes: 40, status: TimerStatusEnum.paused),
+          now: now,
+        ),
+      );
 
       expectNothingCalled();
     });
 
     test('falha ao somar devolve Left e ainda grava o registro', () async {
-      when(() => taskRepo.addSpentMinutes(any(), any()))
-          .thenAnswer((_) async => const Left(ServerFailure()));
+      when(
+        () => taskRepo.addSpentMinutes(any(), any()),
+      ).thenAnswer((_) async => const Left(ServerFailure()));
 
       final result = await useCase(
         RecordTimerSessionParams(session: session(), now: now),
@@ -123,8 +130,9 @@ void main() {
     });
 
     test('falha ao gravar o registro devolve Left', () async {
-      when(() => entryRepo.add(any()))
-          .thenAnswer((_) async => const Left(ServerFailure()));
+      when(
+        () => entryRepo.add(any()),
+      ).thenAnswer((_) async => const Left(ServerFailure()));
 
       final result = await useCase(
         RecordTimerSessionParams(session: session(), now: now),

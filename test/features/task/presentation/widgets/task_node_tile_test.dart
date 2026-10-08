@@ -10,14 +10,14 @@ void main() {
   final today = DateTime(2026, 7, 21);
 
   TaskEntity task(String id, String title) => TaskEntity(
-        id: id,
-        title: title,
-        listId: 'l1',
-        createdAt: today,
-        estimatedMinutes: 60,
-        dueDate: today,
-        spentMinutes: 30,
-      );
+    id: id,
+    title: title,
+    listId: 'l1',
+    createdAt: today,
+    estimatedMinutes: 60,
+    dueDate: today,
+    spentMinutes: 30,
+  );
 
   // Folha = nó sem filhas.
   TaskNode leafNode() => TaskNode(task: task('leaf', 'Folha'), level: 0);
@@ -25,43 +25,43 @@ void main() {
   // Mãe = tarefa com `hasChildren` (como o banco grava) e uma filha na árvore.
   // Não é folha → sem conclusão por swipe, sem cronômetro.
   TaskNode parentNode() => TaskNode(
-        task: TaskEntity(
-          id: 'parent',
-          title: 'Mãe',
-          listId: 'l1',
-          createdAt: today,
-          hasChildren: true,
-        ),
-        level: 0,
-        children: [TaskNode(task: task('child', 'Filha'), level: 1)],
-      );
+    task: TaskEntity(
+      id: 'parent',
+      title: 'Mãe',
+      listId: 'l1',
+      createdAt: today,
+      hasChildren: true,
+    ),
+    level: 0,
+    children: [TaskNode(task: task('child', 'Filha'), level: 1)],
+  );
 
   // Mãe cuja única filha está em OUTRA lista: o filtro por lista a remove da
   // coleção, então o nó chega sem `children`. Ela continua não sendo folha.
   TaskNode parentWithFilteredChild() => TaskNode(
-        task: TaskEntity(
-          id: 'parent',
-          title: 'Mãe',
-          listId: 'l1',
-          createdAt: today,
-          hasChildren: true,
-        ),
-        level: 0,
-      );
+    task: TaskEntity(
+      id: 'parent',
+      title: 'Mãe',
+      listId: 'l1',
+      createdAt: today,
+      hasChildren: true,
+    ),
+    level: 0,
+  );
 
   TaskNode doneLeafNode() => TaskNode(
-        task: TaskEntity(
-          id: 'leaf',
-          title: 'Folha',
-          listId: 'l1',
-          createdAt: today,
-          estimatedMinutes: 60,
-          dueDate: today,
-          spentMinutes: 30,
-          isDone: true,
-        ),
-        level: 0,
-      );
+    task: TaskEntity(
+      id: 'leaf',
+      title: 'Folha',
+      listId: 'l1',
+      createdAt: today,
+      estimatedMinutes: 60,
+      dueDate: today,
+      spentMinutes: 30,
+      isDone: true,
+    ),
+    level: 0,
+  );
 
   late bool doneTapped;
   bool? doneValue;
@@ -76,24 +76,24 @@ void main() {
   });
 
   Widget harness(TaskNode node) => MaterialApp(
-        theme: AppTheme.dark,
-        home: Scaffold(
-          body: TaskNodeTile(
-            node: node,
-            isActive: false,
-            onAddSubtask: (_) {},
-            onToggleTimer: (_, _) {},
-            onAddTime: (_, _) {},
-            onToggleDone: (_, done) {
-              doneTapped = true;
-              doneValue = done;
-            },
-            onDelete: (_) => deleteTapped = true,
-            onEdit: (_) => editTapped = true,
-            onMove: (_) {},
-          ),
-        ),
-      );
+    theme: AppTheme.dark,
+    home: Scaffold(
+      body: TaskNodeTile(
+        node: node,
+        isActive: false,
+        onAddSubtask: (_) {},
+        onToggleTimer: (_, _) {},
+        onAddTime: (_, _) {},
+        onToggleDone: (_, done) {
+          doneTapped = true;
+          doneValue = done;
+        },
+        onDelete: (_) => deleteTapped = true,
+        onEdit: (_) => editTapped = true,
+        onMove: (_) {},
+      ),
+    ),
+  );
 
   testWidgets('folha: arrastar para a direita conclui', (tester) async {
     await tester.pumpWidget(harness(leafNode()));
@@ -105,8 +105,9 @@ void main() {
   });
 
   group('concluir e reabrir a folha', () {
-    testWidgets('folha aberta oferece Concluir e envia done = true',
-        (tester) async {
+    testWidgets('folha aberta oferece Concluir e envia done = true', (
+      tester,
+    ) async {
       await tester.pumpWidget(harness(leafNode()));
 
       await tester.tap(find.byTooltip('Concluir'));
@@ -114,8 +115,9 @@ void main() {
       expect(doneValue, isTrue);
     });
 
-    testWidgets('folha concluída oferece Reabrir e envia done = false',
-        (tester) async {
+    testWidgets('folha concluída oferece Reabrir e envia done = false', (
+      tester,
+    ) async {
       await tester.pumpWidget(harness(doneLeafNode()));
 
       expect(find.byTooltip('Reabrir'), findsOneWidget);
@@ -124,8 +126,9 @@ void main() {
       expect(doneValue, isFalse);
     });
 
-    testWidgets('arrastar a folha concluída para a direita reabre',
-        (tester) async {
+    testWidgets('arrastar a folha concluída para a direita reabre', (
+      tester,
+    ) async {
       await tester.pumpWidget(harness(doneLeafNode()));
 
       await tester.drag(find.text('Folha'), const Offset(500, 0));
@@ -134,8 +137,7 @@ void main() {
       expect(doneValue, isFalse);
     });
 
-    testWidgets('botão de concluir tem alvo de toque de 48 dp',
-        (tester) async {
+    testWidgets('botão de concluir tem alvo de toque de 48 dp', (tester) async {
       await tester.pumpWidget(harness(leafNode()));
 
       expect(
@@ -154,8 +156,9 @@ void main() {
     });
   });
 
-  testWidgets('mãe: arrastar para a direita NÃO conclui (gate isLeaf)',
-      (tester) async {
+  testWidgets('mãe: arrastar para a direita NÃO conclui (gate isLeaf)', (
+    tester,
+  ) async {
     await tester.pumpWidget(harness(parentNode()));
 
     await tester.drag(find.text('Mãe'), const Offset(500, 0));
@@ -184,18 +187,19 @@ void main() {
 
   // Container do card = o único com BoxDecoration que tem borda esquerda.
   Color leftBorderColor(WidgetTester tester) {
-    final container = tester.widgetList<Container>(find.byType(Container)).firstWhere(
-      (c) {
-        final d = c.decoration;
-        return d is BoxDecoration && d.border is Border;
-      },
-    );
+    final container = tester
+        .widgetList<Container>(find.byType(Container))
+        .firstWhere((c) {
+          final d = c.decoration;
+          return d is BoxDecoration && d.border is Border;
+        });
     final border = (container.decoration! as BoxDecoration).border! as Border;
     return border.left.color;
   }
 
-  testWidgets('folha atrasada pinta a borda esquerda de warning',
-      (tester) async {
+  testWidgets('folha atrasada pinta a borda esquerda de warning', (
+    tester,
+  ) async {
     final node = TaskNode(
       task: task('leaf', 'Folha'),
       level: 0,
@@ -235,8 +239,9 @@ void main() {
   });
 
   group('mãe cuja filha foi removida pelo filtro de lista', () {
-    testWidgets('não conclui por swipe (continua não sendo folha)',
-        (tester) async {
+    testWidgets('não conclui por swipe (continua não sendo folha)', (
+      tester,
+    ) async {
       await tester.pumpWidget(harness(parentWithFilteredChild()));
 
       await tester.drag(find.text('Mãe'), const Offset(500, 0));

@@ -25,8 +25,9 @@ void main() {
 
   test('devolve a Entrada existente sem criar outra', () async {
     const inbox = TaskListEntity(id: 'l1', name: 'Entrada', isDefault: true);
-    when(() => repository.getLists())
-        .thenAnswer((_) async => const Right([inbox]));
+    when(
+      () => repository.getLists(),
+    ).thenAnswer((_) async => const Right([inbox]));
 
     final result = await useCase(const NoParams());
 
@@ -35,12 +36,11 @@ void main() {
   });
 
   test('cria a Entrada quando não há lista default', () async {
-    when(() => repository.getLists())
-        .thenAnswer((_) async => const Right(<TaskListEntity>[]));
+    when(
+      () => repository.getLists(),
+    ).thenAnswer((_) async => const Right(<TaskListEntity>[]));
     when(() => repository.create(any())).thenAnswer(
-      (inv) async => Right(
-        (inv.positionalArguments.first as TaskListEntity),
-      ),
+      (inv) async => Right((inv.positionalArguments.first as TaskListEntity)),
     );
 
     final result = await useCase(const NoParams());
@@ -54,8 +54,9 @@ void main() {
   });
 
   test('propaga Left quando a leitura falha', () async {
-    when(() => repository.getLists())
-        .thenAnswer((_) async => const Left(ServerFailure()));
+    when(
+      () => repository.getLists(),
+    ).thenAnswer((_) async => const Left(ServerFailure()));
 
     final result = await useCase(const NoParams());
 

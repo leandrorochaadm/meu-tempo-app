@@ -52,7 +52,9 @@ void main() {
   test('rows é imutável', () {
     final report = ListReport([row('a', est: 10, spent: 10)]);
 
-    expect(() => report.rows.add(row('b', est: 1, spent: 1)),
-        throwsUnsupportedError);
+    expect(
+      () => report.rows.add(row('b', est: 1, spent: 1)),
+      throwsUnsupportedError,
+    );
   });
 }

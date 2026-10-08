@@ -13,16 +13,15 @@ void main() {
     int minutes = 30,
     TimeEntryOriginEnum origin = TimeEntryOriginEnum.manual,
     DateTime? occurredAt,
-  }) =>
-      TimeEntryEntity(
-        id: 'e1',
-        targetId: 't1',
-        targetType: TimerTargetTypeEnum.task,
-        listId: 'l1',
-        minutes: minutes,
-        origin: origin,
-        occurredAt: occurredAt ?? today,
-      );
+  }) => TimeEntryEntity(
+    id: 'e1',
+    targetId: 't1',
+    targetType: TimerTargetTypeEnum.task,
+    listId: 'l1',
+    minutes: minutes,
+    origin: origin,
+    occurredAt: occurredAt ?? today,
+  );
 
   late bool editTapped;
   late bool deleteTapped;
@@ -33,16 +32,16 @@ void main() {
   });
 
   Widget harness(TimeEntryEntity e) => MaterialApp(
-        theme: AppTheme.dark,
-        home: Scaffold(
-          body: TimeEntryTile(
-            entry: e,
-            today: today,
-            onEdit: () => editTapped = true,
-            onDelete: () => deleteTapped = true,
-          ),
-        ),
-      );
+    theme: AppTheme.dark,
+    home: Scaffold(
+      body: TimeEntryTile(
+        entry: e,
+        today: today,
+        onEdit: () => editTapped = true,
+        onDelete: () => deleteTapped = true,
+      ),
+    ),
+  );
 
   void setView(WidgetTester tester) {
     tester.view.physicalSize = const Size(390, 844);
@@ -68,8 +67,7 @@ void main() {
 
   testWidgets('mostra a origem cronômetro', (tester) async {
     setView(tester);
-    await tester
-        .pumpWidget(harness(entry(origin: TimeEntryOriginEnum.timer)));
+    await tester.pumpWidget(harness(entry(origin: TimeEntryOriginEnum.timer)));
 
     expect(find.textContaining('Cronômetro'), findsOneWidget);
   });

@@ -61,15 +61,13 @@ void main() {
   blocTest<AuthBloc, AuthState>(
     'sign-in cancelado emite [Loading, AuthError]',
     build: () {
-      when(() => signIn(any()))
-          .thenAnswer((_) async => const Left(SignInCancelledFailure()));
+      when(
+        () => signIn(any()),
+      ).thenAnswer((_) async => const Left(SignInCancelledFailure()));
       return build();
     },
     act: (bloc) => bloc.add(const AuthGoogleSignInRequested()),
-    expect: () => [
-      const AuthLoading(),
-      const AuthError('Login cancelado.'),
-    ],
+    expect: () => [const AuthLoading(), const AuthError('Login cancelado.')],
   );
 
   blocTest<AuthBloc, AuthState>(
@@ -95,36 +93,40 @@ void main() {
   blocTest<AuthBloc, AuthState>(
     'sign-out com falha emite AuthError',
     build: () {
-      when(() => signOut(any())).thenAnswer((_) async => const Left(AuthFailure()));
+      when(
+        () => signOut(any()),
+      ).thenAnswer((_) async => const Left(AuthFailure()));
       return build();
     },
     act: (bloc) => bloc.add(const AuthSignOutRequested()),
     expect: () => [isA<AuthError>()],
   );
 
-  test('login que não completa dentro do timeout emite [Loading, AuthError]',
-      () {
-    fakeAsync((async) {
-      // Login que nunca resolve (ex.: redirect trava) — simula o congelamento.
-      final pending = Completer<Either<Failure, Unit>>();
-      when(() => signIn(any())).thenAnswer((_) => pending.future);
+  test(
+    'login que não completa dentro do timeout emite [Loading, AuthError]',
+    () {
+      fakeAsync((async) {
+        // Login que nunca resolve (ex.: redirect trava) — simula o congelamento.
+        final pending = Completer<Either<Failure, Unit>>();
+        when(() => signIn(any())).thenAnswer((_) => pending.future);
 
-      final bloc = build();
-      final states = <AuthState>[];
-      final sub = bloc.stream.listen(states.add);
+        final bloc = build();
+        final states = <AuthState>[];
+        final sub = bloc.stream.listen(states.add);
 
-      bloc.add(const AuthGoogleSignInRequested());
-      async.flushMicrotasks();
-      expect(states, [const AuthLoading()]);
+        bloc.add(const AuthGoogleSignInRequested());
+        async.flushMicrotasks();
+        expect(states, [const AuthLoading()]);
 
-      // Avança além do timeout de 30s do AuthBloc.
-      async.elapse(const Duration(seconds: 31));
-      async.flushMicrotasks();
+        // Avança além do timeout de 30s do AuthBloc.
+        async.elapse(const Duration(seconds: 31));
+        async.flushMicrotasks();
 
-      expect(states, [const AuthLoading(), isA<AuthError>()]);
+        expect(states, [const AuthLoading(), isA<AuthError>()]);
 
-      sub.cancel();
-      bloc.close();
-    });
-  });
+        sub.cancel();
+        bloc.close();
+      });
+    },
+  );
 }

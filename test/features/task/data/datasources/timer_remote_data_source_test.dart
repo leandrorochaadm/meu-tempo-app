@@ -36,21 +36,24 @@ void main() {
       .collection(FirestorePaths.config(uid))
       .doc(FirestorePaths.activeTimerDoc);
 
-  ActiveTimerModel model(TimerStatusEnum status) =>
-      ActiveTimerModel.fromEntity(ActiveTimerEntity(
-        targetId: 't1',
-        targetType: TimerTargetTypeEnum.task,
-        listId: 'l1',
-        startedAt: startedAt,
-        status: status,
-      ));
+  ActiveTimerModel model(TimerStatusEnum status) => ActiveTimerModel.fromEntity(
+    ActiveTimerEntity(
+      targetId: 't1',
+      targetType: TimerTargetTypeEnum.task,
+      listId: 'l1',
+      startedAt: startedAt,
+      status: status,
+    ),
+  );
 
   group('TimerRemoteDataSourceImpl', () {
     test('setActive grava o status e getActive lê de volta', () async {
       await dataSource.setActive(model(TimerStatusEnum.paused));
 
-      expect((await doc().get()).data()![ActiveTimerFields.status],
-          TimerStatusEnum.paused.apiValue);
+      expect(
+        (await doc().get()).data()![ActiveTimerFields.status],
+        TimerStatusEnum.paused.apiValue,
+      );
       final read = await dataSource.getActive();
       expect(read?.toEntity().status, TimerStatusEnum.paused);
     });
@@ -77,8 +80,10 @@ void main() {
       );
 
       expect(replaced, isTrue);
-      expect((await doc().get()).data()![ActiveTimerFields.status],
-          TimerStatusEnum.paused.apiValue);
+      expect(
+        (await doc().get()).data()![ActiveTimerFields.status],
+        TimerStatusEnum.paused.apiValue,
+      );
     });
 
     test('replaceActiveIf não grava quando o predicado recusa', () async {
@@ -90,8 +95,10 @@ void main() {
       );
 
       expect(replaced, isFalse);
-      expect((await doc().get()).data()![ActiveTimerFields.status],
-          TimerStatusEnum.running.apiValue);
+      expect(
+        (await doc().get()).data()![ActiveTimerFields.status],
+        TimerStatusEnum.running.apiValue,
+      );
     });
 
     test('replaceActiveIf sem doc passa null ao predicado', () async {

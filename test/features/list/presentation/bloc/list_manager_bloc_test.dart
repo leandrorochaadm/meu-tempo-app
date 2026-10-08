@@ -55,8 +55,9 @@ void main() {
   blocTest<ListManagerBloc, ListManagerState>(
     'started emite [Loading, Loaded]',
     build: () {
-      when(() => watchLists(any()))
-          .thenAnswer((_) => Stream.value(const Right([list])));
+      when(
+        () => watchLists(any()),
+      ).thenAnswer((_) => Stream.value(const Right([list])));
       return build();
     },
     act: (bloc) => bloc.add(const ListManagerStarted()),
@@ -69,10 +70,10 @@ void main() {
   blocTest<ListManagerBloc, ListManagerState>(
     'ListCreated delega ao CreateListUseCase',
     build: () {
-      when(() => watchLists(any()))
-          .thenAnswer((_) => Stream.value(const Right([list])));
-      when(() => createList(any()))
-          .thenAnswer((_) async => const Right(list));
+      when(
+        () => watchLists(any()),
+      ).thenAnswer((_) => Stream.value(const Right([list])));
+      when(() => createList(any())).thenAnswer((_) async => const Right(list));
       return build();
     },
     act: (bloc) async {
@@ -81,8 +82,9 @@ void main() {
       bloc.add(const ListCreated('Estudo'));
     },
     verify: (_) {
-      final p = verify(() => createList(captureAny())).captured.single
-          as CreateListParams;
+      final p =
+          verify(() => createList(captureAny())).captured.single
+              as CreateListParams;
       expect(p.name, 'Estudo');
     },
   );
@@ -90,10 +92,12 @@ void main() {
   blocTest<ListManagerBloc, ListManagerState>(
     'ListDeleted delega ao DeleteListUseCase e propaga erro',
     build: () {
-      when(() => watchLists(any()))
-          .thenAnswer((_) => Stream.value(const Right([list])));
-      when(() => deleteList(any()))
-          .thenAnswer((_) async => const Left(NetworkFailure()));
+      when(
+        () => watchLists(any()),
+      ).thenAnswer((_) => Stream.value(const Right([list])));
+      when(
+        () => deleteList(any()),
+      ).thenAnswer((_) async => const Left(NetworkFailure()));
       return build();
     },
     act: (bloc) async {

@@ -9,21 +9,20 @@ void main() {
   ActiveTimerEntity timer({
     required DateTime startedAt,
     TimerStatusEnum? status,
-  }) =>
-      status == null
-          ? ActiveTimerEntity(
-              targetId: 't1',
-              targetType: TimerTargetTypeEnum.task,
-              listId: 'l1',
-              startedAt: startedAt,
-            )
-          : ActiveTimerEntity(
-              targetId: 't1',
-              targetType: TimerTargetTypeEnum.task,
-              listId: 'l1',
-              startedAt: startedAt,
-              status: status,
-            );
+  }) => status == null
+      ? ActiveTimerEntity(
+          targetId: 't1',
+          targetType: TimerTargetTypeEnum.task,
+          listId: 'l1',
+          startedAt: startedAt,
+        )
+      : ActiveTimerEntity(
+          targetId: 't1',
+          targetType: TimerTargetTypeEnum.task,
+          listId: 'l1',
+          startedAt: startedAt,
+          status: status,
+        );
 
   group('ActiveTimerEntity', () {
     test('status padrão é running', () {

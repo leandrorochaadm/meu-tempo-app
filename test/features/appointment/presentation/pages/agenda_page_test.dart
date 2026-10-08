@@ -27,54 +27,58 @@ void main() {
   }
 
   AgendaLoaded loaded({bool done = false}) => AgendaLoaded(
-        appointments: [
-          AppointmentEntity(
-            id: 'a1',
-            title: 'Dentista',
-            listId: 'pessoal',
-            date: DateTime(2026, 10, 7),
-            startMinute: 900,
-            durationMinutes: 60,
-            isDone: done,
-          ),
-        ],
-        fit: const DayFit(plannedMinutes: 60, availableMinutes: 480),
-      );
+    appointments: [
+      AppointmentEntity(
+        id: 'a1',
+        title: 'Dentista',
+        listId: 'pessoal',
+        date: DateTime(2026, 10, 7),
+        startMinute: 900,
+        durationMinutes: 60,
+        isDone: done,
+      ),
+    ],
+    fit: const DayFit(plannedMinutes: 60, availableMinutes: 480),
+  );
 
   Widget harness() => MaterialApp(
-        theme: AppTheme.dark,
-        home: BlocProvider<AgendaBloc>.value(
-          value: bloc,
-          child: const AgendaPage(),
-        ),
-      );
+    theme: AppTheme.dark,
+    home: BlocProvider<AgendaBloc>.value(
+      value: bloc,
+      child: const AgendaPage(),
+    ),
+  );
 
   const doneEvent = AppointmentDoneToggled(appointmentId: 'a1', done: true);
   const reopenEvent = AppointmentDoneToggled(appointmentId: 'a1', done: false);
 
-  testWidgets('compromisso aberto não mostra o sinal de feito e oferece Concluir',
-      (tester) async {
-    setView(tester);
-    when(() => bloc.state).thenReturn(loaded());
-    await tester.pumpWidget(harness());
+  testWidgets(
+    'compromisso aberto não mostra o sinal de feito e oferece Concluir',
+    (tester) async {
+      setView(tester);
+      when(() => bloc.state).thenReturn(loaded());
+      await tester.pumpWidget(harness());
 
-    expect(find.byIcon(Icons.task_alt_rounded), findsNothing);
-    expect(find.byTooltip('Concluir'), findsOneWidget);
-    expect(find.text('Dentista'), findsOneWidget);
-  });
+      expect(find.byIcon(Icons.task_alt_rounded), findsNothing);
+      expect(find.byTooltip('Concluir'), findsOneWidget);
+      expect(find.text('Dentista'), findsOneWidget);
+    },
+  );
 
-  testWidgets('compromisso concluído mostra o sinal de feito e continua igual',
-      (tester) async {
-    setView(tester);
-    when(() => bloc.state).thenReturn(loaded(done: true));
-    await tester.pumpWidget(harness());
+  testWidgets(
+    'compromisso concluído mostra o sinal de feito e continua igual',
+    (tester) async {
+      setView(tester);
+      when(() => bloc.state).thenReturn(loaded(done: true));
+      await tester.pumpWidget(harness());
 
-    expect(find.byIcon(Icons.task_alt_rounded), findsOneWidget);
-    expect(find.text('Dentista'), findsOneWidget);
-    expect(find.byTooltip('Iniciar cronômetro'), findsOneWidget);
-    expect(find.byTooltip('Excluir'), findsOneWidget);
-    expect(find.byTooltip('Reabrir'), findsOneWidget);
-  });
+      expect(find.byIcon(Icons.task_alt_rounded), findsOneWidget);
+      expect(find.text('Dentista'), findsOneWidget);
+      expect(find.byTooltip('Iniciar cronômetro'), findsOneWidget);
+      expect(find.byTooltip('Excluir'), findsOneWidget);
+      expect(find.byTooltip('Reabrir'), findsOneWidget);
+    },
+  );
 
   testWidgets('tocar em Concluir conclui e oferece Desfazer', (tester) async {
     setView(tester);

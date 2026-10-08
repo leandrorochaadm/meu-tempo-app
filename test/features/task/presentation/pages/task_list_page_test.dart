@@ -19,7 +19,8 @@ import 'package:mocktail/mocktail.dart';
 class _MockTaskListBloc extends MockBloc<TaskListEvent, TaskListState>
     implements TaskListBloc {}
 
-class _MockAuthBloc extends MockBloc<AuthEvent, AuthState> implements AuthBloc {}
+class _MockAuthBloc extends MockBloc<AuthEvent, AuthState>
+    implements AuthBloc {}
 
 void main() {
   late _MockTaskListBloc taskBloc;
@@ -40,15 +41,15 @@ void main() {
   });
 
   Widget harness() => MaterialApp(
-        theme: AppTheme.dark,
-        home: MultiBlocProvider(
-          providers: [
-            BlocProvider<TaskListBloc>.value(value: taskBloc),
-            BlocProvider<AuthBloc>.value(value: authBloc),
-          ],
-          child: const TaskListPage(),
-        ),
-      );
+    theme: AppTheme.dark,
+    home: MultiBlocProvider(
+      providers: [
+        BlocProvider<TaskListBloc>.value(value: taskBloc),
+        BlocProvider<AuthBloc>.value(value: authBloc),
+      ],
+      child: const TaskListPage(),
+    ),
+  );
 
   void setView(WidgetTester tester) {
     tester.view.physicalSize = const Size(390, 844);
@@ -119,8 +120,9 @@ void main() {
   TaskListLoaded loadedWithLeaf() =>
       TaskListLoaded(const [], prioritized: [leaf]);
 
-  testWidgets('concluir na visão por prioridade dispara CompleteToggled',
-      (tester) async {
+  testWidgets('concluir na visão por prioridade dispara CompleteToggled', (
+    tester,
+  ) async {
     setView(tester);
     when(() => taskBloc.state).thenReturn(loadedWithLeaf());
 
@@ -128,8 +130,9 @@ void main() {
     await tester.tap(find.byIcon(Icons.circle_outlined));
     await tester.pump();
 
-    verify(() => taskBloc.add(const CompleteToggled(taskId: 't1', done: true)))
-        .called(1);
+    verify(
+      () => taskBloc.add(const CompleteToggled(taskId: 't1', done: true)),
+    ).called(1);
   });
 
   testWidgets('concluir mostra snackbar com ação de desfazer', (tester) async {
@@ -143,8 +146,9 @@ void main() {
     expect(find.text('Desfazer'), findsOneWidget);
   });
 
-  testWidgets('snackbar de desfazer fica visível por 10 segundos',
-      (tester) async {
+  testWidgets('snackbar de desfazer fica visível por 10 segundos', (
+    tester,
+  ) async {
     setView(tester);
     when(() => taskBloc.state).thenReturn(loadedWithLeaf());
 
@@ -160,8 +164,9 @@ void main() {
     expect(snackBar.persist, isFalse);
   });
 
-  testWidgets('iniciar cronômetro na prioridade dispara TimerStartRequested',
-      (tester) async {
+  testWidgets('iniciar cronômetro na prioridade dispara TimerStartRequested', (
+    tester,
+  ) async {
     setView(tester);
     when(() => taskBloc.state).thenReturn(loadedWithLeaf());
 
@@ -169,9 +174,9 @@ void main() {
     await tester.tap(find.text('Iniciar'));
     await tester.pump();
 
-    verify(() => taskBloc.add(
-          const TimerStartRequested(taskId: 't1', isLeaf: true),
-        )).called(1);
+    verify(
+      () => taskBloc.add(const TimerStartRequested(taskId: 't1', isLeaf: true)),
+    ).called(1);
   });
 
   // --- Filtro por lista (ListFilterBar) ---
@@ -198,7 +203,9 @@ void main() {
       TaskListLoaded(
         const [],
         prioritized: [leaf],
-        lists: const [TaskListEntity(id: 'inbox', name: 'Entrada', isDefault: true)],
+        lists: const [
+          TaskListEntity(id: 'inbox', name: 'Entrada', isDefault: true),
+        ],
       ),
     );
 
@@ -207,8 +214,9 @@ void main() {
     expect(find.text('Todas as listas'), findsNothing);
   });
 
-  testWidgets('trocar de lista no seletor dispara ListFilterChanged',
-      (tester) async {
+  testWidgets('trocar de lista no seletor dispara ListFilterChanged', (
+    tester,
+  ) async {
     setView(tester);
     when(() => taskBloc.state).thenReturn(
       TaskListLoaded(const [], prioritized: [leaf], lists: twoLists),
@@ -223,8 +231,9 @@ void main() {
     verify(() => taskBloc.add(const ListFilterChanged('work'))).called(1);
   });
 
-  testWidgets('escolher "Todas as listas" dispara ListFilterChanged(null)',
-      (tester) async {
+  testWidgets('escolher "Todas as listas" dispara ListFilterChanged(null)', (
+    tester,
+  ) async {
     setView(tester);
     when(() => taskBloc.state).thenReturn(
       const TaskListLoaded(
@@ -266,8 +275,9 @@ void main() {
 
   // --- Filtro de concluídas (HideDoneChip) ---
 
-  testWidgets('mostra o chip de concluídas sempre (rótulo de ação)',
-      (tester) async {
+  testWidgets('mostra o chip de concluídas sempre (rótulo de ação)', (
+    tester,
+  ) async {
     setView(tester);
     when(() => taskBloc.state).thenReturn(loadedWithLeaf());
 
@@ -277,8 +287,9 @@ void main() {
     expect(find.text('Mostrar concluídas'), findsOneWidget);
   });
 
-  testWidgets('chip aparece mesmo sem filtro de lista (<2 listas)',
-      (tester) async {
+  testWidgets('chip aparece mesmo sem filtro de lista (<2 listas)', (
+    tester,
+  ) async {
     setView(tester);
     when(() => taskBloc.state).thenReturn(loadedWithLeaf());
 
@@ -289,8 +300,9 @@ void main() {
     expect(find.text('Mostrar concluídas'), findsOneWidget);
   });
 
-  testWidgets('tocar no chip dispara HideDoneToggled(false) quando oculto',
-      (tester) async {
+  testWidgets('tocar no chip dispara HideDoneToggled(false) quando oculto', (
+    tester,
+  ) async {
     setView(tester);
     // hideDone padrão = true (oculto) → tocar pede para mostrar (false).
     when(() => taskBloc.state).thenReturn(loadedWithLeaf());
@@ -302,8 +314,9 @@ void main() {
     verify(() => taskBloc.add(const HideDoneToggled(false))).called(1);
   });
 
-  testWidgets('tocar no chip dispara HideDoneToggled(true) quando exibindo',
-      (tester) async {
+  testWidgets('tocar no chip dispara HideDoneToggled(true) quando exibindo', (
+    tester,
+  ) async {
     setView(tester);
     when(() => taskBloc.state).thenReturn(
       TaskListLoaded(const [], prioritized: [leaf], hideDone: false),
@@ -316,12 +329,13 @@ void main() {
     verify(() => taskBloc.add(const HideDoneToggled(true))).called(1);
   });
 
-  testWidgets('vazio com concluídas ocultas mostra "Nada pendente"',
-      (tester) async {
+  testWidgets('vazio com concluídas ocultas mostra "Nada pendente"', (
+    tester,
+  ) async {
     setView(tester);
-    when(() => taskBloc.state).thenReturn(
-      const TaskListLoaded([], prioritized: []),
-    );
+    when(
+      () => taskBloc.state,
+    ).thenReturn(const TaskListLoaded([], prioritized: []));
 
     await tester.pumpWidget(harness());
 

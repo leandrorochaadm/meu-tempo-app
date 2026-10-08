@@ -56,8 +56,10 @@ void main() {
           durationMinutes: 60,
         ),
       );
-      r.getLeft().fold(() => fail('esperava Left'),
-          (f) => expect(f, isA<EmptyAppointmentTitleFailure>()));
+      r.getLeft().fold(
+        () => fail('esperava Left'),
+        (f) => expect(f, isA<EmptyAppointmentTitleFailure>()),
+      );
     });
 
     test('recusa duração <= 0', () async {
@@ -75,7 +77,8 @@ void main() {
 
     test('cria com data normalizada para meia-noite', () async {
       when(() => repo.create(any())).thenAnswer(
-        (inv) async => Right(inv.positionalArguments.first as AppointmentEntity),
+        (inv) async =>
+            Right(inv.positionalArguments.first as AppointmentEntity),
       );
       await CreateAppointmentUseCase(repo)(
         CreateAppointmentParams(

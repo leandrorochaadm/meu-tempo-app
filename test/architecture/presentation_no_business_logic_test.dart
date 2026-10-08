@@ -29,8 +29,13 @@ void main() {
 
           for (final pattern in _forbiddenPatterns) {
             if (pattern.regex.hasMatch(line)) {
-              final rel = file.path.replaceFirst('${Directory.current.path}/', '');
-              offenders.add('$rel:${i + 1} → ${pattern.reason}\n    ${line.trim()}');
+              final rel = file.path.replaceFirst(
+                '${Directory.current.path}/',
+                '',
+              );
+              offenders.add(
+                '$rel:${i + 1} → ${pattern.reason}\n    ${line.trim()}',
+              );
             }
           }
         }
@@ -40,7 +45,8 @@ void main() {
     expect(
       offenders,
       isEmpty,
-      reason: 'Regra de negócio detectada na camada presentation. '
+      reason:
+          'Regra de negócio detectada na camada presentation. '
           'Mova o cálculo/decisão para uma Entity (getter) ou UseCase.\n\n'
           '${offenders.join('\n')}',
     );

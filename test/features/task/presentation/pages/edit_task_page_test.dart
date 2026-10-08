@@ -20,42 +20,42 @@ void main() {
   ];
 
   TaskEntity leaf({bool isDone = false}) => TaskEntity(
-        id: 't1',
-        title: 'Estudar',
-        listId: 'inbox',
-        createdAt: today,
-        estimatedMinutes: 30,
-        importance: ImportanceEnum.min,
-        dueDate: today,
-        isDone: isDone,
-      );
+    id: 't1',
+    title: 'Estudar',
+    listId: 'inbox',
+    createdAt: today,
+    estimatedMinutes: 30,
+    importance: ImportanceEnum.min,
+    dueDate: today,
+    isDone: isDone,
+  );
 
   /// Folha **com mãe**: a lista dela é herdada, não escolhida.
   TaskEntity child() => TaskEntity(
-        id: 'c1',
-        title: 'Tela de login',
-        listId: 'work',
-        createdAt: today,
-        parentId: 'm0',
-        estimatedMinutes: 30,
-        importance: ImportanceEnum.min,
-        dueDate: today,
-      );
+    id: 'c1',
+    title: 'Tela de login',
+    listId: 'work',
+    createdAt: today,
+    parentId: 'm0',
+    estimatedMinutes: 30,
+    importance: ImportanceEnum.min,
+    dueDate: today,
+  );
 
   TaskEntity mother() => TaskEntity(
-        id: 'm0',
-        title: 'Projeto',
-        listId: 'inbox',
-        createdAt: today,
-        hasChildren: true,
-      );
+    id: 'm0',
+    title: 'Projeto',
+    listId: 'inbox',
+    createdAt: today,
+    hasChildren: true,
+  );
 
   EditTaskArgs args(TaskEntity task, {String parentLabel = ''}) => EditTaskArgs(
-        task: task,
-        lists: lists,
-        parentCandidates: candidates,
-        currentParentLabel: parentLabel,
-      );
+    task: task,
+    lists: lists,
+    parentCandidates: candidates,
+    currentParentLabel: parentLabel,
+  );
 
   void setView(WidgetTester tester) {
     tester.view.physicalSize = const Size(390, 1400);
@@ -65,25 +65,26 @@ void main() {
   }
 
   // Empurra a página e captura o EditTaskResult devolvido pelo pop (Salvar).
-  Future<EditTaskResult?> pushPage(
-    WidgetTester tester,
-    EditTaskArgs a,
-  ) async {
+  Future<EditTaskResult?> pushPage(WidgetTester tester, EditTaskArgs a) async {
     EditTaskResult? result;
-    await tester.pumpWidget(MaterialApp(
-      theme: AppTheme.dark,
-      home: Scaffold(
-        body: Builder(
-          builder: (ctx) => ElevatedButton(
-            onPressed: () async => result = await Navigator.of(ctx)
-                .push<EditTaskResult>(MaterialPageRoute(
-              builder: (_) => EditTaskPage(args: a, today: today),
-            )),
-            child: const Text('abrir'),
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.dark,
+        home: Scaffold(
+          body: Builder(
+            builder: (ctx) => ElevatedButton(
+              onPressed: () async =>
+                  result = await Navigator.of(ctx).push<EditTaskResult>(
+                    MaterialPageRoute(
+                      builder: (_) => EditTaskPage(args: a, today: today),
+                    ),
+                  ),
+              child: const Text('abrir'),
+            ),
           ),
         ),
       ),
-    ));
+    );
     await tester.tap(find.text('abrir'));
     await tester.pumpAndSettle();
     return result;
@@ -115,8 +116,9 @@ void main() {
       expect(find.text('Ajustar tempo gasto'), findsNothing);
     });
 
-    testWidgets('filha não mostra o seletor de lista (herda da mãe)',
-        (tester) async {
+    testWidgets('filha não mostra o seletor de lista (herda da mãe)', (
+      tester,
+    ) async {
       setView(tester);
       await pushPage(tester, args(child(), parentLabel: 'Projeto'));
 
@@ -137,26 +139,32 @@ void main() {
       expect(find.text('Trabalho'), findsNothing);
     });
 
-    testWidgets('salvar filha devolve a lista herdada, intacta', (tester) async {
+    testWidgets('salvar filha devolve a lista herdada, intacta', (
+      tester,
+    ) async {
       setView(tester);
       EditTaskResult? captured;
-      await tester.pumpWidget(MaterialApp(
-        theme: AppTheme.dark,
-        home: Scaffold(
-          body: Builder(
-            builder: (ctx) => ElevatedButton(
-              onPressed: () async => captured = await Navigator.of(ctx)
-                  .push<EditTaskResult>(MaterialPageRoute(
-                builder: (_) => EditTaskPage(
-                  args: args(child(), parentLabel: 'Projeto'),
-                  today: today,
-                ),
-              )),
-              child: const Text('abrir'),
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.dark,
+          home: Scaffold(
+            body: Builder(
+              builder: (ctx) => ElevatedButton(
+                onPressed: () async =>
+                    captured = await Navigator.of(ctx).push<EditTaskResult>(
+                      MaterialPageRoute(
+                        builder: (_) => EditTaskPage(
+                          args: args(child(), parentLabel: 'Projeto'),
+                          today: today,
+                        ),
+                      ),
+                    ),
+                child: const Text('abrir'),
+              ),
             ),
           ),
         ),
-      ));
+      );
       await tester.tap(find.text('abrir'));
       await tester.pumpAndSettle();
 
@@ -176,23 +184,30 @@ void main() {
   });
 
   group('salvar', () {
-    testWidgets('devolve os campos atuais sem mudanças de flag', (tester) async {
+    testWidgets('devolve os campos atuais sem mudanças de flag', (
+      tester,
+    ) async {
       setView(tester);
       EditTaskResult? captured;
-      await tester.pumpWidget(MaterialApp(
-        theme: AppTheme.dark,
-        home: Scaffold(
-          body: Builder(
-            builder: (ctx) => ElevatedButton(
-              onPressed: () async => captured = await Navigator.of(ctx)
-                  .push<EditTaskResult>(MaterialPageRoute(
-                builder: (_) => EditTaskPage(args: args(leaf()), today: today),
-              )),
-              child: const Text('abrir'),
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.dark,
+          home: Scaffold(
+            body: Builder(
+              builder: (ctx) => ElevatedButton(
+                onPressed: () async =>
+                    captured = await Navigator.of(ctx).push<EditTaskResult>(
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            EditTaskPage(args: args(leaf()), today: today),
+                      ),
+                    ),
+                child: const Text('abrir'),
+              ),
             ),
           ),
         ),
-      ));
+      );
       await tester.tap(find.text('abrir'));
       await tester.pumpAndSettle();
 
@@ -207,23 +222,30 @@ void main() {
       expect(captured!.estimatedMinutes, 30);
     });
 
-    testWidgets('trocar a lista reflete no listId do resultado', (tester) async {
+    testWidgets('trocar a lista reflete no listId do resultado', (
+      tester,
+    ) async {
       setView(tester);
       EditTaskResult? captured;
-      await tester.pumpWidget(MaterialApp(
-        theme: AppTheme.dark,
-        home: Scaffold(
-          body: Builder(
-            builder: (ctx) => ElevatedButton(
-              onPressed: () async => captured = await Navigator.of(ctx)
-                  .push<EditTaskResult>(MaterialPageRoute(
-                builder: (_) => EditTaskPage(args: args(leaf()), today: today),
-              )),
-              child: const Text('abrir'),
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.dark,
+          home: Scaffold(
+            body: Builder(
+              builder: (ctx) => ElevatedButton(
+                onPressed: () async =>
+                    captured = await Navigator.of(ctx).push<EditTaskResult>(
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            EditTaskPage(args: args(leaf()), today: today),
+                      ),
+                    ),
+                child: const Text('abrir'),
+              ),
             ),
           ),
         ),
-      ));
+      );
       await tester.tap(find.text('abrir'));
       await tester.pumpAndSettle();
 
@@ -238,20 +260,25 @@ void main() {
     testWidgets('marcar Concluída seta doneChanged', (tester) async {
       setView(tester);
       EditTaskResult? captured;
-      await tester.pumpWidget(MaterialApp(
-        theme: AppTheme.dark,
-        home: Scaffold(
-          body: Builder(
-            builder: (ctx) => ElevatedButton(
-              onPressed: () async => captured = await Navigator.of(ctx)
-                  .push<EditTaskResult>(MaterialPageRoute(
-                builder: (_) => EditTaskPage(args: args(leaf()), today: today),
-              )),
-              child: const Text('abrir'),
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.dark,
+          home: Scaffold(
+            body: Builder(
+              builder: (ctx) => ElevatedButton(
+                onPressed: () async =>
+                    captured = await Navigator.of(ctx).push<EditTaskResult>(
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            EditTaskPage(args: args(leaf()), today: today),
+                      ),
+                    ),
+                child: const Text('abrir'),
+              ),
             ),
           ),
         ),
-      ));
+      );
       await tester.tap(find.text('abrir'));
       await tester.pumpAndSettle();
 
@@ -264,24 +291,30 @@ void main() {
       expect(captured!.isDone, isTrue);
     });
 
-    testWidgets('escolher nova mãe seta parentChanged e newParentId',
-        (tester) async {
+    testWidgets('escolher nova mãe seta parentChanged e newParentId', (
+      tester,
+    ) async {
       setView(tester);
       EditTaskResult? captured;
-      await tester.pumpWidget(MaterialApp(
-        theme: AppTheme.dark,
-        home: Scaffold(
-          body: Builder(
-            builder: (ctx) => ElevatedButton(
-              onPressed: () async => captured = await Navigator.of(ctx)
-                  .push<EditTaskResult>(MaterialPageRoute(
-                builder: (_) => EditTaskPage(args: args(leaf()), today: today),
-              )),
-              child: const Text('abrir'),
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.dark,
+          home: Scaffold(
+            body: Builder(
+              builder: (ctx) => ElevatedButton(
+                onPressed: () async =>
+                    captured = await Navigator.of(ctx).push<EditTaskResult>(
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            EditTaskPage(args: args(leaf()), today: today),
+                      ),
+                    ),
+                child: const Text('abrir'),
+              ),
             ),
           ),
         ),
-      ));
+      );
       await tester.tap(find.text('abrir'));
       await tester.pumpAndSettle();
 

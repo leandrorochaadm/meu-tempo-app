@@ -117,10 +117,10 @@ void main() {
   }
 
   void emitReady() => whenListen(
-        editBloc,
-        Stream<EditTaskByIdState>.value(EditTaskByIdReady(target)),
-        initialState: const EditTaskByIdLoading(),
-      );
+    editBloc,
+    Stream<EditTaskByIdState>.value(EditTaskByIdReady(target)),
+    initialState: const EditTaskByIdLoading(),
+  );
 
   testWidgets('asks to load by id', (tester) async {
     when(() => editBloc.state).thenReturn(const EditTaskByIdLoading());
@@ -130,8 +130,9 @@ void main() {
     verify(() => editBloc.add(const EditTaskByIdStarted('t1'))).called(1);
   });
 
-  testWidgets('ready: opens the editor, saves on submit and closes',
-      (tester) async {
+  testWidgets('ready: opens the editor, saves on submit and closes', (
+    tester,
+  ) async {
     emitReady();
     await openPage(tester);
     expect(find.text('salvar'), findsOneWidget);
@@ -141,13 +142,15 @@ void main() {
       await tester.pump(const Duration(milliseconds: 300));
     }
 
-    verify(() => timerBloc.add(const ActiveTimerEditSubmitted('t1', _result)))
-        .called(1);
+    verify(
+      () => timerBloc.add(const ActiveTimerEditSubmitted('t1', _result)),
+    ).called(1);
     expect(find.text('abrir'), findsOneWidget);
   });
 
-  testWidgets('going back without saving does not write and closes',
-      (tester) async {
+  testWidgets('going back without saving does not write and closes', (
+    tester,
+  ) async {
     emitReady();
     await openPage(tester);
 
@@ -169,9 +172,9 @@ void main() {
   });
 
   testWidgets('error shows the message', (tester) async {
-    when(() => editBloc.state).thenReturn(
-      const EditTaskByIdError('Sem conexão. Verifique a internet.'),
-    );
+    when(
+      () => editBloc.state,
+    ).thenReturn(const EditTaskByIdError('Sem conexão. Verifique a internet.'));
 
     await openPage(tester);
 

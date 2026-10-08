@@ -6,8 +6,7 @@ import 'package:meu_tempo/features/task/domain/usecases/get_active_task_details_
 import 'package:meu_tempo/features/task/domain/usecases/get_prioritized_leaves_use_case.dart';
 
 void main() {
-  const useCase =
-      GetActiveTaskDetailsUseCase(GetPrioritizedLeavesUseCase());
+  const useCase = GetActiveTaskDetailsUseCase(GetPrioritizedLeavesUseCase());
   final today = DateTime(2026, 7, 25);
 
   const lists = [
@@ -22,18 +21,17 @@ void main() {
     ImportanceEnum? importance = ImportanceEnum.max,
     bool isDone = false,
     bool hasChildren = false,
-  }) =>
-      TaskEntity(
-        id: 't1',
-        title: 'Fazer telas',
-        listId: listId,
-        createdAt: DateTime(2026, 7, 20),
-        estimatedMinutes: estimatedMinutes,
-        dueDate: dueDate,
-        importance: importance,
-        isDone: isDone,
-        hasChildren: hasChildren,
-      );
+  }) => TaskEntity(
+    id: 't1',
+    title: 'Fazer telas',
+    listId: listId,
+    createdAt: DateTime(2026, 7, 20),
+    estimatedMinutes: estimatedMinutes,
+    dueDate: dueDate,
+    importance: importance,
+    isDone: isDone,
+    hasChildren: hasChildren,
+  );
 
   /// Outra folha qualquer, para compor a fila de prioridade.
   TaskEntity other(String id, {required int minutes, required int dueInDays}) =>

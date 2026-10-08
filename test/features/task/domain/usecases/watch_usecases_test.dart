@@ -23,48 +23,58 @@ void main() {
       listId: 'inbox',
       createdAt: DateTime(2026, 7, 20),
     );
-    when(() => repo.watchTasks(includeDone: any(named: 'includeDone')))
-        .thenAnswer((_) => Stream.value(Right([task])));
+    when(
+      () => repo.watchTasks(includeDone: any(named: 'includeDone')),
+    ).thenAnswer((_) => Stream.value(Right([task])));
 
     final stream = WatchTasksUseCase(repo)(const WatchTasksParams());
 
     await expectLater(
       stream,
-      emits(predicate<Either<Failure, List<TaskEntity>>>(
-        (e) => e.getRight().toNullable()?.single == task,
-      )),
+      emits(
+        predicate<Either<Failure, List<TaskEntity>>>(
+          (e) => e.getRight().toNullable()?.single == task,
+        ),
+      ),
     );
   });
 
-  test('WatchTasksUseCase repassa includeDone do Params ao repositório',
-      () async {
-    final repo = _MockTaskRepository();
-    when(() => repo.watchTasks(includeDone: any(named: 'includeDone')))
-        .thenAnswer((_) => Stream.value(const Right(<TaskEntity>[])));
+  test(
+    'WatchTasksUseCase repassa includeDone do Params ao repositório',
+    () async {
+      final repo = _MockTaskRepository();
+      when(
+        () => repo.watchTasks(includeDone: any(named: 'includeDone')),
+      ).thenAnswer((_) => Stream.value(const Right(<TaskEntity>[])));
 
-    // Padrão inclui as concluídas.
-    await WatchTasksUseCase(repo)(const WatchTasksParams()).first;
-    verify(() => repo.watchTasks(includeDone: true)).called(1);
+      // Padrão inclui as concluídas.
+      await WatchTasksUseCase(repo)(const WatchTasksParams()).first;
+      verify(() => repo.watchTasks(includeDone: true)).called(1);
 
-    // Ocultando: passa includeDone: false.
-    await WatchTasksUseCase(repo)(const WatchTasksParams(includeDone: false))
-        .first;
-    verify(() => repo.watchTasks(includeDone: false)).called(1);
-  });
+      // Ocultando: passa includeDone: false.
+      await WatchTasksUseCase(repo)(
+        const WatchTasksParams(includeDone: false),
+      ).first;
+      verify(() => repo.watchTasks(includeDone: false)).called(1);
+    },
+  );
 
   test('WatchListsUseCase repassa o stream do repositório', () async {
     final repo = _MockTaskListRepository();
     const list = TaskListEntity(id: 'l1', name: 'Entrada', isDefault: true);
-    when(() => repo.watchLists())
-        .thenAnswer((_) => Stream.value(const Right([list])));
+    when(
+      () => repo.watchLists(),
+    ).thenAnswer((_) => Stream.value(const Right([list])));
 
     final stream = WatchListsUseCase(repo)(const NoParams());
 
     await expectLater(
       stream,
-      emits(predicate<Either<Failure, List<TaskListEntity>>>(
-        (e) => e.getRight().toNullable()?.single == list,
-      )),
+      emits(
+        predicate<Either<Failure, List<TaskListEntity>>>(
+          (e) => e.getRight().toNullable()?.single == list,
+        ),
+      ),
     );
   });
 }

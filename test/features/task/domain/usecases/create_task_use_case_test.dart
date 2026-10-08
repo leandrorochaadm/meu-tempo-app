@@ -31,30 +31,34 @@ void main() {
     );
 
     expect(result, isA<Left<Failure, TaskEntity>>());
-    result.getLeft().fold(() => fail('esperava Left'),
-        (f) => expect(f, isA<EmptyTitleFailure>()));
+    result.getLeft().fold(
+      () => fail('esperava Left'),
+      (f) => expect(f, isA<EmptyTitleFailure>()),
+    );
     verifyNever(() => repository.create(any()));
   });
 
-  test('aplica os defaults da criação rápida quando só o título é informado',
-      () async {
-    when(() => repository.create(any())).thenAnswer(
-      (inv) async => Right(inv.positionalArguments.first as TaskEntity),
-    );
+  test(
+    'aplica os defaults da criação rápida quando só o título é informado',
+    () async {
+      when(() => repository.create(any())).thenAnswer(
+        (inv) async => Right(inv.positionalArguments.first as TaskEntity),
+      );
 
-    await useCase(
-      CreateTaskParams(title: 'Estudar', listId: 'inbox', today: today),
-    );
+      await useCase(
+        CreateTaskParams(title: 'Estudar', listId: 'inbox', today: today),
+      );
 
-    final captured =
-        verify(() => repository.create(captureAny())).captured.single
-            as TaskEntity;
-    expect(captured.title, 'Estudar');
-    expect(captured.estimatedMinutes, AppDefaults.defaultEstimatedMinutes);
-    expect(captured.importance, ImportanceEnum.min);
-    expect(captured.dueDate, today);
-    expect(captured.listId, 'inbox');
-  });
+      final captured =
+          verify(() => repository.create(captureAny())).captured.single
+              as TaskEntity;
+      expect(captured.title, 'Estudar');
+      expect(captured.estimatedMinutes, AppDefaults.defaultEstimatedMinutes);
+      expect(captured.importance, ImportanceEnum.min);
+      expect(captured.dueDate, today);
+      expect(captured.listId, 'inbox');
+    },
+  );
 
   test('propaga Right do repositório no sucesso', () async {
     final task = TaskEntity(

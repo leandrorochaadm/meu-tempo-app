@@ -52,9 +52,9 @@ void main() {
     when(() => watchTasks(any())).thenAnswer(
       (_) => const Stream<Either<Failure, List<TaskEntity>>>.empty(),
     );
-    when(() => watchEntries(any())).thenAnswer(
-      (_) => Stream.value(Right(<TimeEntryEntity>[])),
-    );
+    when(
+      () => watchEntries(any()),
+    ).thenAnswer((_) => Stream.value(Right(<TimeEntryEntity>[])));
   });
 
   ReportBloc build() =>
@@ -63,7 +63,9 @@ void main() {
   blocTest<ReportBloc, ReportState>(
     'started emite Loaded com linhas agregadas a partir das entries',
     build: () {
-      when(() => watchEntries(any())).thenAnswer((_) => Stream.value(Right([
+      when(() => watchEntries(any())).thenAnswer(
+        (_) => Stream.value(
+          Right([
             TimeEntryEntity(
               id: 'e1',
               targetId: 't1',
@@ -73,24 +75,29 @@ void main() {
               origin: TimeEntryOriginEnum.timer,
               occurredAt: today,
             ),
-          ])));
+          ]),
+        ),
+      );
       return build();
     },
     act: (bloc) => bloc.add(const ReportStarted()),
     wait: const Duration(milliseconds: 10),
     expect: () => [
       const ReportLoading(),
-      isA<ReportLoaded>()
-          .having((s) => s.report.rows.first.spentMinutes, 'real', 30),
+      isA<ReportLoaded>().having(
+        (s) => s.report.rows.first.spentMinutes,
+        'real',
+        30,
+      ),
     ],
   );
 
   blocTest<ReportBloc, ReportState>(
     'entries com erro emite ReportError',
     build: () {
-      when(() => watchEntries(any())).thenAnswer(
-        (_) => Stream.value(const Left(ServerFailure())),
-      );
+      when(
+        () => watchEntries(any()),
+      ).thenAnswer((_) => Stream.value(const Left(ServerFailure())));
       return build();
     },
     act: (bloc) => bloc.add(const ReportStarted()),

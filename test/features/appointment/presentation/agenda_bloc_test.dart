@@ -97,9 +97,9 @@ void main() {
     setDone = _MockSetDone();
     when(() => setDone(any())).thenAnswer((_) async => const Right(unit));
     when(() => ensureInbox(any())).thenAnswer((_) async => const Right(inbox));
-    when(() => watchConfig(any())).thenAnswer(
-      (_) => const Stream<Either<Failure, DayConfigEntity>>.empty(),
-    );
+    when(
+      () => watchConfig(any()),
+    ).thenAnswer((_) => const Stream<Either<Failure, DayConfigEntity>>.empty());
     when(() => watchTasks(any())).thenAnswer(
       (_) => const Stream<Either<Failure, List<TaskEntity>>>.empty(),
     );
@@ -111,34 +111,35 @@ void main() {
   });
 
   AgendaBloc build() => AgendaBloc(
-        watchAppts,
-        create,
-        deleteAppt,
-        checkFits,
-        watchConfig,
-        watchTasks,
-        ensureInbox,
-        startTimer,
-        stopTimer,
-        watchActiveTimer,
-        setDone,
-      );
+    watchAppts,
+    create,
+    deleteAppt,
+    checkFits,
+    watchConfig,
+    watchTasks,
+    ensureInbox,
+    startTimer,
+    stopTimer,
+    watchActiveTimer,
+    setDone,
+  );
 
   AppointmentEntity appt(int start, {bool done = false}) => AppointmentEntity(
-        id: 'a$start',
-        title: 'a',
-        listId: 'inbox',
-        date: DateTime(2026, 7, 20),
-        startMinute: start,
-        durationMinutes: 60,
-        isDone: done,
-      );
+    id: 'a$start',
+    title: 'a',
+    listId: 'inbox',
+    date: DateTime(2026, 7, 20),
+    startMinute: start,
+    durationMinutes: 60,
+    isDone: done,
+  );
 
   blocTest<AgendaBloc, AgendaState>(
     'started emite Loaded com compromissos ordenados por horário',
     build: () {
-      when(() => watchAppts(any()))
-          .thenAnswer((_) => Stream.value(Right([appt(900), appt(540)])));
+      when(
+        () => watchAppts(any()),
+      ).thenAnswer((_) => Stream.value(Right([appt(900), appt(540)])));
       return build();
     },
     act: (bloc) => bloc.add(const AgendaStarted()),
@@ -157,17 +158,20 @@ void main() {
     'propaga activeAppointmentId e activeTimerStartedAt do cronômetro ativo',
     build: () {
       final startedAt = DateTime(2026, 7, 22, 9, 15);
-      when(() => watchAppts(any()))
-          .thenAnswer((_) => Stream.value(Right([appt(540)])));
+      when(
+        () => watchAppts(any()),
+      ).thenAnswer((_) => Stream.value(Right([appt(540)])));
       when(() => watchActiveTimer(any())).thenAnswer(
-        (_) => Stream.value(Right<Failure, ActiveTimerEntity?>(
-          ActiveTimerEntity(
-            targetId: 'a540',
-            targetType: TimerTargetTypeEnum.appointment,
-            listId: 'inbox',
-            startedAt: startedAt,
+        (_) => Stream.value(
+          Right<Failure, ActiveTimerEntity?>(
+            ActiveTimerEntity(
+              targetId: 'a540',
+              targetType: TimerTargetTypeEnum.appointment,
+              listId: 'inbox',
+              startedAt: startedAt,
+            ),
           ),
-        )),
+        ),
       );
       return build();
     },
@@ -183,17 +187,20 @@ void main() {
   blocTest<AgendaBloc, AgendaState>(
     'ignora startedAt quando o cronômetro ativo é de uma tarefa (não agenda)',
     build: () {
-      when(() => watchAppts(any()))
-          .thenAnswer((_) => Stream.value(Right([appt(540)])));
+      when(
+        () => watchAppts(any()),
+      ).thenAnswer((_) => Stream.value(Right([appt(540)])));
       when(() => watchActiveTimer(any())).thenAnswer(
-        (_) => Stream.value(Right<Failure, ActiveTimerEntity?>(
-          ActiveTimerEntity(
-            targetId: 't1',
-            targetType: TimerTargetTypeEnum.task,
-            listId: 'inbox',
-            startedAt: DateTime(2026, 7, 22, 9, 15),
+        (_) => Stream.value(
+          Right<Failure, ActiveTimerEntity?>(
+            ActiveTimerEntity(
+              targetId: 't1',
+              targetType: TimerTargetTypeEnum.task,
+              listId: 'inbox',
+              startedAt: DateTime(2026, 7, 22, 9, 15),
+            ),
           ),
-        )),
+        ),
       );
       return build();
     },
@@ -209,20 +216,22 @@ void main() {
   blocTest<AgendaBloc, AgendaState>(
     'AppointmentCreated delega ao CreateAppointmentUseCase',
     build: () {
-      when(() => watchAppts(any())).thenAnswer(
-        (_) => Stream.value(const Right(<AppointmentEntity>[])),
-      );
+      when(
+        () => watchAppts(any()),
+      ).thenAnswer((_) => Stream.value(const Right(<AppointmentEntity>[])));
       when(() => create(any())).thenAnswer((_) async => Right(appt(540)));
       return build();
     },
     act: (bloc) async {
       bloc.add(const AgendaStarted());
       await Future<void>.delayed(const Duration(milliseconds: 10));
-      bloc.add(const AppointmentCreated(
-        title: 'Reunião',
-        startMinute: 900,
-        durationMinutes: 60,
-      ));
+      bloc.add(
+        const AppointmentCreated(
+          title: 'Reunião',
+          startMinute: 900,
+          durationMinutes: 60,
+        ),
+      );
     },
     verify: (_) {
       final p =
@@ -241,16 +250,18 @@ void main() {
       );
       final now = DateTime.now();
       when(() => watchTasks(any())).thenAnswer(
-        (_) => Stream.value(Right([
-          TaskEntity(
-            id: 't1',
-            title: 't1',
-            listId: 'inbox',
-            createdAt: now,
-            estimatedMinutes: 90,
-            dueDate: now,
-          ),
-        ])),
+        (_) => Stream.value(
+          Right([
+            TaskEntity(
+              id: 't1',
+              title: 't1',
+              listId: 'inbox',
+              createdAt: now,
+              estimatedMinutes: 90,
+              dueDate: now,
+            ),
+          ]),
+        ),
       );
       return build();
     },
@@ -258,8 +269,7 @@ void main() {
     wait: const Duration(milliseconds: 10),
     expect: () => [
       const AgendaLoading(),
-      isA<AgendaLoaded>()
-          .having((s) => s.fit.plannedMinutes, 'planejado', 90),
+      isA<AgendaLoaded>().having((s) => s.fit.plannedMinutes, 'planejado', 90),
     ],
   );
 
@@ -280,16 +290,20 @@ void main() {
     wait: const Duration(milliseconds: 10),
     expect: () => [
       const AgendaLoading(),
-      isA<AgendaLoaded>()
-          .having((s) => s.fit.availableMinutes, 'disponível', 300),
+      isA<AgendaLoaded>().having(
+        (s) => s.fit.availableMinutes,
+        'disponível',
+        300,
+      ),
     ],
   );
 
   blocTest<AgendaBloc, AgendaState>(
     'AppointmentDeleted delega ao DeleteAppointmentUseCase',
     build: () {
-      when(() => watchAppts(any()))
-          .thenAnswer((_) => Stream.value(Right([appt(540)])));
+      when(
+        () => watchAppts(any()),
+      ).thenAnswer((_) => Stream.value(Right([appt(540)])));
       when(() => deleteAppt(any())).thenAnswer((_) async => const Right(unit));
       return build();
     },
@@ -299,8 +313,9 @@ void main() {
       bloc.add(const AppointmentDeleted('a540'));
     },
     verify: (_) {
-      final p = verify(() => deleteAppt(captureAny())).captured.single
-          as DeleteAppointmentParams;
+      final p =
+          verify(() => deleteAppt(captureAny())).captured.single
+              as DeleteAppointmentParams;
       expect(p.appointmentId, 'a540');
     },
   );
@@ -308,8 +323,9 @@ void main() {
   blocTest<AgendaBloc, AgendaState>(
     'AppointmentTimerStarted inicia o cronômetro com targetType appointment',
     build: () {
-      when(() => watchAppts(any()))
-          .thenAnswer((_) => Stream.value(Right([appt(540)])));
+      when(
+        () => watchAppts(any()),
+      ).thenAnswer((_) => Stream.value(Right([appt(540)])));
       return build();
     },
     act: (bloc) async {
@@ -318,8 +334,9 @@ void main() {
       bloc.add(const AppointmentTimerStarted('a540'));
     },
     verify: (_) {
-      final p = verify(() => startTimer(captureAny())).captured.single
-          as StartTimerParams;
+      final p =
+          verify(() => startTimer(captureAny())).captured.single
+              as StartTimerParams;
       expect(p.targetId, 'a540');
       expect(p.targetType, TimerTargetTypeEnum.appointment);
       expect(p.listId, 'inbox');
@@ -332,8 +349,9 @@ void main() {
           ? 'AppointmentDoneToggled(done: true) conclui pelo SetAppointmentDoneUseCase'
           : 'AppointmentDoneToggled(done: false) reabre',
       build: () {
-        when(() => watchAppts(any()))
-            .thenAnswer((_) => Stream.value(Right([appt(540)])));
+        when(
+          () => watchAppts(any()),
+        ).thenAnswer((_) => Stream.value(Right([appt(540)])));
         return build();
       },
       act: (bloc) async {
@@ -353,10 +371,12 @@ void main() {
   blocTest<AgendaBloc, AgendaState>(
     'falha ao concluir emite erro e reemite a agenda',
     build: () {
-      when(() => watchAppts(any()))
-          .thenAnswer((_) => Stream.value(Right([appt(540)])));
-      when(() => setDone(any()))
-          .thenAnswer((_) async => const Left(NotFoundFailure()));
+      when(
+        () => watchAppts(any()),
+      ).thenAnswer((_) => Stream.value(Right([appt(540)])));
+      when(
+        () => setDone(any()),
+      ).thenAnswer((_) async => const Left(NotFoundFailure()));
       return build();
     },
     act: (bloc) async {
@@ -368,8 +388,7 @@ void main() {
     skip: 2,
     expect: () => [
       const AgendaError('Este compromisso não existe mais.'),
-      isA<AgendaLoaded>()
-          .having((s) => s.appointments.single.id, 'id', 'a540'),
+      isA<AgendaLoaded>().having((s) => s.appointments.single.id, 'id', 'a540'),
     ],
   );
 
@@ -481,8 +500,9 @@ void main() {
   blocTest<AgendaBloc, AgendaState>(
     'compromisso concluído chega ao estado com isDone',
     build: () {
-      when(() => watchAppts(any()))
-          .thenAnswer((_) => Stream.value(Right([appt(540, done: true)])));
+      when(
+        () => watchAppts(any()),
+      ).thenAnswer((_) => Stream.value(Right([appt(540, done: true)])));
       return build();
     },
     act: (bloc) => bloc.add(const AgendaStarted()),

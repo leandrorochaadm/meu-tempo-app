@@ -39,8 +39,9 @@ void main() {
     });
 
     test('erro do datasource vira Left(ServerFailure)', () async {
-      when(() => dataSource.setSelectedListId(any()))
-          .thenThrow(Exception('boom'));
+      when(
+        () => dataSource.setSelectedListId(any()),
+      ).thenThrow(Exception('boom'));
       final result = await repository.setSelectedListId('lista-2');
       expect(result, const Left<Failure, Unit>(ServerFailure()));
     });

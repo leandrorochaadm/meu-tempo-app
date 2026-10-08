@@ -50,15 +50,16 @@ void main() {
       );
 
   Widget harness() => MaterialApp(
-        theme: AppTheme.dark,
-        home: BlocProvider<ReportBloc>.value(
-          value: bloc,
-          child: const ReportPage(),
-        ),
-      );
+    theme: AppTheme.dark,
+    home: BlocProvider<ReportBloc>.value(
+      value: bloc,
+      child: const ReportPage(),
+    ),
+  );
 
-  testWidgets('renderiza o rótulo do período e a linha da lista',
-      (tester) async {
+  testWidgets('renderiza o rótulo do período e a linha da lista', (
+    tester,
+  ) async {
     setView(tester);
     when(() => bloc.state).thenReturn(loaded());
 
@@ -145,8 +146,9 @@ void main() {
     expect(forward.onPressed, isNotNull);
   });
 
-  testWidgets('tocar numa lista navega para o detalhe com os parâmetros',
-      (tester) async {
+  testWidgets('tocar numa lista navega para o detalhe com os parâmetros', (
+    tester,
+  ) async {
     setView(tester);
     when(() => bloc.state).thenReturn(loaded());
 
@@ -162,9 +164,8 @@ void main() {
         ),
         GoRoute(
           path: '/report/detail',
-          builder: (_, state) => Scaffold(
-            body: Text('DETALHE ${state.uri.query}'),
-          ),
+          builder: (_, state) =>
+              Scaffold(body: Text('DETALHE ${state.uri.query}')),
         ),
       ],
     );

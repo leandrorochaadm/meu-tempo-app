@@ -21,35 +21,37 @@ void main() {
 
   setUp(() {
     timerRepo = _MockTimerRepo();
-    when(() => timerRepo.replaceActiveIfUnchanged(
-          expected: any(named: 'expected'),
-          replacement: any(named: 'replacement'),
-        )).thenAnswer((_) async => const Right(true));
+    when(
+      () => timerRepo.replaceActiveIfUnchanged(
+        expected: any(named: 'expected'),
+        replacement: any(named: 'replacement'),
+      ),
+    ).thenAnswer((_) async => const Right(true));
     useCase = ResumeTimerUseCase(timerRepo);
   });
 
   ActiveTimerEntity active({
     String id = 't1',
     TimerStatusEnum status = TimerStatusEnum.paused,
-  }) =>
-      ActiveTimerEntity(
-        targetId: id,
-        targetType: TimerTargetTypeEnum.task,
-        listId: 'l1',
-        startedAt: now.subtract(const Duration(minutes: 25)),
-        status: status,
-      );
+  }) => ActiveTimerEntity(
+    targetId: id,
+    targetType: TimerTargetTypeEnum.task,
+    listId: 'l1',
+    startedAt: now.subtract(const Duration(minutes: 25)),
+    status: status,
+  );
 
   void stubActive(ActiveTimerEntity? timer) =>
       when(() => timerRepo.getActive()).thenAnswer((_) async => Right(timer));
 
   ResumeTimerParams params() => ResumeTimerParams(targetId: 't1', now: now);
 
-  void expectNoReplace() =>
-      verifyNever(() => timerRepo.replaceActiveIfUnchanged(
-            expected: any(named: 'expected'),
-            replacement: any(named: 'replacement'),
-          ));
+  void expectNoReplace() => verifyNever(
+    () => timerRepo.replaceActiveIfUnchanged(
+      expected: any(named: 'expected'),
+      replacement: any(named: 'replacement'),
+    ),
+  );
 
   group('ResumeTimerUseCase', () {
     test('continua o pausado: mesmo alvo rodando a partir de agora', () async {
@@ -59,10 +61,12 @@ void main() {
       final result = await useCase(params());
 
       expect(result, const Right<Failure, Unit>(unit));
-      final captured = verify(() => timerRepo.replaceActiveIfUnchanged(
-            expected: captureAny(named: 'expected'),
-            replacement: captureAny(named: 'replacement'),
-          )).captured;
+      final captured = verify(
+        () => timerRepo.replaceActiveIfUnchanged(
+          expected: captureAny(named: 'expected'),
+          replacement: captureAny(named: 'replacement'),
+        ),
+      ).captured;
       expect(captured[0], paused);
       final replacement = captured[1] as ActiveTimerEntity;
       expect(replacement.status, TimerStatusEnum.running);
@@ -101,10 +105,12 @@ void main() {
 
     test('corrida perdida: Right(unit)', () async {
       stubActive(active());
-      when(() => timerRepo.replaceActiveIfUnchanged(
-            expected: any(named: 'expected'),
-            replacement: any(named: 'replacement'),
-          )).thenAnswer((_) async => const Right(false));
+      when(
+        () => timerRepo.replaceActiveIfUnchanged(
+          expected: any(named: 'expected'),
+          replacement: any(named: 'replacement'),
+        ),
+      ).thenAnswer((_) async => const Right(false));
 
       final result = await useCase(params());
 
@@ -112,8 +118,9 @@ void main() {
     });
 
     test('falha ao ler devolve Left', () async {
-      when(() => timerRepo.getActive())
-          .thenAnswer((_) async => const Left(ServerFailure()));
+      when(
+        () => timerRepo.getActive(),
+      ).thenAnswer((_) async => const Left(ServerFailure()));
 
       final result = await useCase(params());
 
@@ -122,10 +129,12 @@ void main() {
 
     test('falha na troca devolve Left', () async {
       stubActive(active());
-      when(() => timerRepo.replaceActiveIfUnchanged(
-            expected: any(named: 'expected'),
-            replacement: any(named: 'replacement'),
-          )).thenAnswer((_) async => const Left(NetworkFailure()));
+      when(
+        () => timerRepo.replaceActiveIfUnchanged(
+          expected: any(named: 'expected'),
+          replacement: any(named: 'replacement'),
+        ),
+      ).thenAnswer((_) async => const Left(NetworkFailure()));
 
       final result = await useCase(params());
 

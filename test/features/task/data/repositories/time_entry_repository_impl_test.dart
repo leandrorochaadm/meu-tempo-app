@@ -47,8 +47,9 @@ void main() {
 
   group('watchByTarget', () {
     test('converte Model → Entity no sucesso', () async {
-      when(() => dataSource.watchByTarget('t1'))
-          .thenAnswer((_) => Stream.value([model]));
+      when(
+        () => dataSource.watchByTarget('t1'),
+      ).thenAnswer((_) => Stream.value([model]));
 
       final result = await repository.watchByTarget('t1').first;
 
@@ -59,13 +60,16 @@ void main() {
     });
 
     test('mapeia AppException → Failure', () async {
-      when(() => dataSource.watchByTarget('t1'))
-          .thenThrow(const ServerException());
+      when(
+        () => dataSource.watchByTarget('t1'),
+      ).thenThrow(const ServerException());
 
       final result = await repository.watchByTarget('t1').first;
 
-      expect(result,
-          const Left<Failure, List<TimeEntryEntity>>(ServerFailure()));
+      expect(
+        result,
+        const Left<Failure, List<TimeEntryEntity>>(ServerFailure()),
+      );
     });
   });
 

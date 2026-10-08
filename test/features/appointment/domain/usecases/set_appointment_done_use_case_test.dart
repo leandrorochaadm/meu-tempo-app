@@ -17,8 +17,9 @@ void main() {
   });
 
   test('concluir chama setDone(id, true) e devolve Right', () async {
-    when(() => repository.setDone('a1', true))
-        .thenAnswer((_) async => const Right(unit));
+    when(
+      () => repository.setDone('a1', true),
+    ).thenAnswer((_) async => const Right(unit));
 
     final result = await useCase(
       const SetAppointmentDoneParams(appointmentId: 'a1', done: true),
@@ -29,8 +30,9 @@ void main() {
   });
 
   test('reabrir chama setDone(id, false) e devolve Right', () async {
-    when(() => repository.setDone('a1', false))
-        .thenAnswer((_) async => const Right(unit));
+    when(
+      () => repository.setDone('a1', false),
+    ).thenAnswer((_) async => const Right(unit));
 
     final result = await useCase(
       const SetAppointmentDoneParams(appointmentId: 'a1', done: false),
@@ -41,8 +43,9 @@ void main() {
   });
 
   test('repassa o Failure do repositório', () async {
-    when(() => repository.setDone('a1', true))
-        .thenAnswer((_) async => const Left(ServerFailure()));
+    when(
+      () => repository.setDone('a1', true),
+    ).thenAnswer((_) async => const Left(ServerFailure()));
 
     final result = await useCase(
       const SetAppointmentDoneParams(appointmentId: 'a1', done: true),
@@ -52,8 +55,9 @@ void main() {
   });
 
   test('compromisso inexistente devolve NotFoundFailure', () async {
-    when(() => repository.setDone('x', true))
-        .thenAnswer((_) async => const Left(NotFoundFailure()));
+    when(
+      () => repository.setDone('x', true),
+    ).thenAnswer((_) async => const Left(NotFoundFailure()));
 
     final result = await useCase(
       const SetAppointmentDoneParams(appointmentId: 'x', done: true),
@@ -69,9 +73,11 @@ void main() {
     );
     expect(
       const SetAppointmentDoneParams(appointmentId: 'a1', done: true),
-      isNot(equals(
-        const SetAppointmentDoneParams(appointmentId: 'a1', done: false),
-      )),
+      isNot(
+        equals(
+          const SetAppointmentDoneParams(appointmentId: 'a1', done: false),
+        ),
+      ),
     );
   });
 }

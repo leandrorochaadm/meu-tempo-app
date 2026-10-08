@@ -6,7 +6,8 @@ import 'package:meu_tempo/features/task/domain/services/priority_calculator.dart
 void main() {
   final today = DateTime(2026, 7, 25);
 
-  TaskEntity leaf({DateTime? dueDate, ImportanceEnum? importance}) => TaskEntity(
+  TaskEntity leaf({DateTime? dueDate, ImportanceEnum? importance}) =>
+      TaskEntity(
         id: 't1',
         title: 'Tarefa',
         listId: 'l1',
@@ -16,8 +17,10 @@ void main() {
         importance: importance ?? ImportanceEnum.max,
       );
 
-  int priorityForDueIn(int days) =>
-      PriorityCalculator.of(leaf(dueDate: today.add(Duration(days: days))), today);
+  int priorityForDueIn(int days) => PriorityCalculator.of(
+    leaf(dueDate: today.add(Duration(days: days))),
+    today,
+  );
 
   // 60 min = faixa média (peso 3) × (5 − 1) = 12 é o fator fixo; varia a urgência.
   const factor = 12;
@@ -51,14 +54,14 @@ void main() {
 
   group('faixa de esforço', () {
     TaskEntity leafOf(int minutes) => TaskEntity(
-          id: 't1',
-          title: 'Tarefa',
-          listId: 'l1',
-          createdAt: today,
-          dueDate: today,
-          estimatedMinutes: minutes,
-          importance: ImportanceEnum.max,
-        );
+      id: 't1',
+      title: 'Tarefa',
+      listId: 'l1',
+      createdAt: today,
+      dueDate: today,
+      estimatedMinutes: minutes,
+      importance: ImportanceEnum.max,
+    );
 
     test('o tempo entra pelo peso da faixa, não em minutos crus', () {
       // (5−1) × urgência 6 = 24 é o fator fixo; varia só o peso da faixa.

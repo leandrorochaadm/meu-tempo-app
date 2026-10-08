@@ -6,12 +6,12 @@ void main() {
   final now = DateTime(2026, 7, 20);
 
   TaskEntity task(String id, {String? parentId}) => TaskEntity(
-        id: id,
-        title: id,
-        listId: 'l',
-        createdAt: now,
-        parentId: parentId,
-      );
+    id: id,
+    title: id,
+    listId: 'l',
+    createdAt: now,
+    parentId: parentId,
+  );
 
   test('folha raiz → rótulo vazio', () {
     final byId = {'a': task('a')};

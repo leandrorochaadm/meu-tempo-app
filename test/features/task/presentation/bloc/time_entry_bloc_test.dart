@@ -20,8 +20,7 @@ class _MockUpdate extends Mock implements UpdateTimeEntryUseCase {}
 
 class _MockDelete extends Mock implements DeleteTimeEntryUseCase {}
 
-class _FakeWatchParams extends Fake
-    implements WatchTimeEntriesByTargetParams {}
+class _FakeWatchParams extends Fake implements WatchTimeEntriesByTargetParams {}
 
 class _FakeRegisterParams extends Fake implements RegisterManualTimeParams {}
 
@@ -75,16 +74,16 @@ void main() {
     },
     act: (bloc) => bloc.add(started),
     expect: () => [
-      isA<TimeEntryLoaded>()
-          .having((s) => s.entries.single, 'registro', entry),
+      isA<TimeEntryLoaded>().having((s) => s.entries.single, 'registro', entry),
     ],
   );
 
   blocTest<TimeEntryBloc, TimeEntryState>(
     'Started sem registros emite Empty',
     build: () {
-      when(() => watch(any()))
-          .thenAnswer((_) => Stream.value(const Right(<TimeEntryEntity>[])));
+      when(
+        () => watch(any()),
+      ).thenAnswer((_) => Stream.value(const Right(<TimeEntryEntity>[])));
       return build();
     },
     act: (bloc) => bloc.add(started),
@@ -94,8 +93,9 @@ void main() {
   blocTest<TimeEntryBloc, TimeEntryState>(
     'stream com erro emite Error',
     build: () {
-      when(() => watch(any()))
-          .thenAnswer((_) => Stream.value(const Left(ServerFailure())));
+      when(
+        () => watch(any()),
+      ).thenAnswer((_) => Stream.value(const Left(ServerFailure())));
       return build();
     },
     act: (bloc) => bloc.add(started),
@@ -105,8 +105,9 @@ void main() {
   blocTest<TimeEntryBloc, TimeEntryState>(
     'TimeEntryAdded delega ao RegisterManualTimeUseCase',
     build: () {
-      when(() => watch(any()))
-          .thenAnswer((_) => Stream.value(const Right(<TimeEntryEntity>[])));
+      when(
+        () => watch(any()),
+      ).thenAnswer((_) => Stream.value(const Right(<TimeEntryEntity>[])));
       return build();
     },
     act: (bloc) async {
@@ -115,8 +116,9 @@ void main() {
       bloc.add(TimeEntryAdded(minutes: 45, occurredAt: occurredAt));
     },
     verify: (_) {
-      final p = verify(() => register(captureAny())).captured.single
-          as RegisterManualTimeParams;
+      final p =
+          verify(() => register(captureAny())).captured.single
+              as RegisterManualTimeParams;
       expect(p.targetId, 't1');
       expect(p.minutes, 45);
       expect(p.targetIsLeaf, isTrue);
@@ -126,22 +128,20 @@ void main() {
   blocTest<TimeEntryBloc, TimeEntryState>(
     'TimeEntryEdited delega ao UpdateTimeEntryUseCase',
     build: () {
-      when(() => watch(any()))
-          .thenAnswer((_) => Stream.value(Right([entry])));
+      when(() => watch(any())).thenAnswer((_) => Stream.value(Right([entry])));
       return build();
     },
     act: (bloc) async {
       bloc.add(started);
       await Future<void>.delayed(Duration.zero);
-      bloc.add(TimeEntryEdited(
-        original: entry,
-        minutes: 60,
-        occurredAt: occurredAt,
-      ));
+      bloc.add(
+        TimeEntryEdited(original: entry, minutes: 60, occurredAt: occurredAt),
+      );
     },
     verify: (_) {
-      final p = verify(() => update(captureAny())).captured.single
-          as UpdateTimeEntryParams;
+      final p =
+          verify(() => update(captureAny())).captured.single
+              as UpdateTimeEntryParams;
       expect(p.original.id, 'e1');
       expect(p.newMinutes, 60);
     },
@@ -150,8 +150,7 @@ void main() {
   blocTest<TimeEntryBloc, TimeEntryState>(
     'TimeEntryDeleted seguido de Undo recria o registro excluído',
     build: () {
-      when(() => watch(any()))
-          .thenAnswer((_) => Stream.value(Right([entry])));
+      when(() => watch(any())).thenAnswer((_) => Stream.value(Right([entry])));
       return build();
     },
     act: (bloc) async {
@@ -164,8 +163,9 @@ void main() {
     verify: (_) {
       verify(() => delete(any())).called(1);
       // O desfazer re-cria via RegisterManualTime com os mesmos minutos.
-      final p = verify(() => register(captureAny())).captured.single
-          as RegisterManualTimeParams;
+      final p =
+          verify(() => register(captureAny())).captured.single
+              as RegisterManualTimeParams;
       expect(p.minutes, 30);
       expect(p.targetId, 't1');
     },

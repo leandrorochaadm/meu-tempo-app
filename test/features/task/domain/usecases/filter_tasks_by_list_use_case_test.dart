@@ -7,12 +7,12 @@ void main() {
   final createdAt = DateTime(2026, 7, 20);
 
   TaskEntity task(String id, String listId, {String? parentId}) => TaskEntity(
-        id: id,
-        title: id,
-        listId: listId,
-        createdAt: createdAt,
-        parentId: parentId,
-      );
+    id: id,
+    title: id,
+    listId: listId,
+    createdAt: createdAt,
+    parentId: parentId,
+  );
 
   // Hierarquia: mãe(A) → filha(A) → neta(B), + solta(B).
   final mae = task('mae', 'A');
@@ -25,22 +25,28 @@ void main() {
     expect(useCase(tasks, null), tasks);
   });
 
-  test('filtra pela lista mantendo só as tarefas da lista e seus ancestrais',
-      () {
-    // Lista B: a neta (B) e a solta (B) entram; a mãe e a filha entram como
-    // ancestrais da neta (mesmo sendo da lista A). Nada mais.
-    final result = useCase(tasks, 'B');
-    expect(
-      result.map((t) => t.id).toSet(),
-      {'neta', 'solta', 'mae', 'filha'},
-    );
-  });
+  test(
+    'filtra pela lista mantendo só as tarefas da lista e seus ancestrais',
+    () {
+      // Lista B: a neta (B) e a solta (B) entram; a mãe e a filha entram como
+      // ancestrais da neta (mesmo sendo da lista A). Nada mais.
+      final result = useCase(tasks, 'B');
+      expect(result.map((t) => t.id).toSet(), {
+        'neta',
+        'solta',
+        'mae',
+        'filha',
+      });
+    },
+  );
 
-  test('lista A não puxa a neta (que é de B) — sem descendentes de outra lista',
-      () {
-    final result = useCase(tasks, 'A');
-    expect(result.map((t) => t.id).toSet(), {'mae', 'filha'});
-  });
+  test(
+    'lista A não puxa a neta (que é de B) — sem descendentes de outra lista',
+    () {
+      final result = useCase(tasks, 'A');
+      expect(result.map((t) => t.id).toSet(), {'mae', 'filha'});
+    },
+  );
 
   test('lista sem nenhuma tarefa retorna vazio', () {
     expect(useCase(tasks, 'inexistente'), isEmpty);
