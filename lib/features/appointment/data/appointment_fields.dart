@@ -5,4 +5,5 @@ class AppointmentFields {
   static const String date = 'date';
   static const String startMinute = 'startMinute';
   static const String spentMinutes = 'spentMinutes';
+  static const String isDone = 'isDone';
 }

@@ -50,4 +50,39 @@ void main() {
 
     expect(result, const Left<Failure, List<AppointmentEntity>>(ServerFailure()));
   });
+
+  test('watchAll repassa isDone do model para a entity', () async {
+    final done = AppointmentModel(
+      id: 'a1',
+      title: 'Reunião',
+      listId: 'prof',
+      date: DateTime(2026, 7, 10),
+      startMinute: 900,
+      durationMinutes: 60,
+      isDone: true,
+    );
+    when(() => dataSource.watchAll()).thenAnswer((_) => Stream.value([done]));
+
+    final result = await repository.watchAll().first;
+
+    expect(result.getRight().toNullable()!.single.isDone, isTrue);
+  });
+
+  test('setDone delega ao datasource e devolve Right(unit)', () async {
+    when(() => dataSource.setDone('a1', true)).thenAnswer((_) async {});
+
+    final result = await repository.setDone('a1', true);
+
+    expect(result, const Right<Failure, Unit>(unit));
+    verify(() => dataSource.setDone('a1', true)).called(1);
+  });
+
+  test('setDone mapeia NotFoundException → NotFoundFailure', () async {
+    when(() => dataSource.setDone('a1', true))
+        .thenThrow(const NotFoundException());
+
+    final result = await repository.setDone('a1', true);
+
+    expect(result, const Left<Failure, Unit>(NotFoundFailure()));
+  });
 }

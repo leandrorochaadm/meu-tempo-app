@@ -29,6 +29,8 @@ import 'package:meu_tempo/features/appointment/domain/usecases/delete_appointmen
     as _i502;
 import 'package:meu_tempo/features/appointment/domain/usecases/register_appointment_time_use_case.dart'
     as _i543;
+import 'package:meu_tempo/features/appointment/domain/usecases/set_appointment_done_use_case.dart'
+    as _i348;
 import 'package:meu_tempo/features/appointment/domain/usecases/watch_all_appointments_use_case.dart'
     as _i897;
 import 'package:meu_tempo/features/appointment/domain/usecases/watch_appointments_for_day_use_case.dart'
@@ -283,6 +285,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i502.DeleteAppointmentUseCase>(
       () => _i502.DeleteAppointmentUseCase(gh<_i259.AppointmentRepository>()),
+    );
+    gh.lazySingleton<_i348.SetAppointmentDoneUseCase>(
+      () => _i348.SetAppointmentDoneUseCase(gh<_i259.AppointmentRepository>()),
     );
     gh.lazySingleton<_i897.WatchAllAppointmentsUseCase>(
       () =>

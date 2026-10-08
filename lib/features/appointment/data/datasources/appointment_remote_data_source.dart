@@ -13,6 +13,9 @@ abstract class AppointmentRemoteDataSource {
   Future<AppointmentModel> create(AppointmentModel a);
   Future<void> delete(String id);
   Future<void> addSpentMinutes(String id, int minutes);
+
+  /// Grava o estado de conclusão do compromisso (`true` conclui, `false` reabre).
+  Future<void> setDone(String id, bool value);
 }
 
 @LazySingleton(as: AppointmentRemoteDataSource)
@@ -90,6 +93,15 @@ class AppointmentRemoteDataSourceImpl implements AppointmentRemoteDataSource {
       await _collection.doc(id).update({
         AppointmentFields.spentMinutes: FieldValue.increment(minutes),
       });
+    } on FirebaseException catch (e) {
+      throw mapFirestoreException(e);
+    }
+  }
+
+  @override
+  Future<void> setDone(String id, bool value) async {
+    try {
+      await _collection.doc(id).update({AppointmentFields.isDone: value});
     } on FirebaseException catch (e) {
       throw mapFirestoreException(e);
     }

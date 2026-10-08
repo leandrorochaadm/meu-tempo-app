@@ -3,6 +3,8 @@ import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:meu_tempo/core/constants/firestore_paths.dart';
+import 'package:meu_tempo/core/error/exceptions.dart';
+import 'package:meu_tempo/features/appointment/data/appointment_fields.dart';
 import 'package:meu_tempo/features/appointment/data/datasources/appointment_remote_data_source.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -68,5 +70,59 @@ void main() {
     final models = await dataSource.watchAll().first;
 
     expect(models.map((m) => m.id), ['meu']);
+  });
+
+  test('watchAll lê compromisso sem isDone como não concluído', () async {
+    await seed('a1', 'Antigo', DateTime(2026, 7, 10));
+
+    final models = await dataSource.watchAll().first;
+
+    expect(models.single.isDone, isFalse);
+  });
+
+  test('setDone(true) conclui o compromisso', () async {
+    await seed('a1', 'Reunião', DateTime(2026, 7, 10));
+
+    await dataSource.setDone('a1', true);
+
+    final doc = await collection().doc('a1').get();
+    expect(doc.data()![AppointmentFields.isDone], isTrue);
+  });
+
+  test('setDone(false) reabre o compromisso', () async {
+    await seed('a1', 'Reunião', DateTime(2026, 7, 10));
+
+    await dataSource.setDone('a1', true);
+    await dataSource.setDone('a1', false);
+
+    final doc = await collection().doc('a1').get();
+    expect(doc.data()![AppointmentFields.isDone], isFalse);
+    final models = await dataSource.watchAll().first;
+    expect(models.single.isDone, isFalse);
+  });
+
+  test('setDone em compromisso inexistente lança NotFoundException', () async {
+    expect(
+      () => dataSource.setDone('nao-existe', true),
+      throwsA(isA<NotFoundException>()),
+    );
+  });
+
+  test('setDone só grava na coleção do usuário logado', () async {
+    await firestore
+        .collection(FirestorePaths.appointments('outro'))
+        .doc('a1')
+        .set({'title': 'Alheio'});
+
+    await expectLater(
+      () => dataSource.setDone('a1', true),
+      throwsA(isA<NotFoundException>()),
+    );
+
+    final doc = await firestore
+        .collection(FirestorePaths.appointments('outro'))
+        .doc('a1')
+        .get();
+    expect(doc.data()!.containsKey(AppointmentFields.isDone), isFalse);
   });
 }

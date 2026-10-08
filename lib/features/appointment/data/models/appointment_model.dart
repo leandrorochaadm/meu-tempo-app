@@ -16,6 +16,7 @@ class AppointmentModel {
     required this.startMinute,
     required this.durationMinutes,
     this.spentMinutes = 0,
+    this.isDone = false,
   });
 
   @JsonKey(includeToJson: false)
@@ -27,6 +28,9 @@ class AppointmentModel {
   final int startMinute;
   final int durationMinutes;
   final int spentMinutes;
+
+  /// Doc antigo sem o campo é lido como não concluído (default do construtor).
+  final bool isDone;
 
   factory AppointmentModel.fromDoc(String id, Map<String, dynamic> data) =>
       AppointmentModel.fromJson({...data, 'id': id});
@@ -44,6 +48,7 @@ class AppointmentModel {
         startMinute: startMinute,
         durationMinutes: durationMinutes,
         spentMinutes: spentMinutes,
+        isDone: isDone,
       );
 
   factory AppointmentModel.fromEntity(AppointmentEntity e) => AppointmentModel(
@@ -54,5 +59,6 @@ class AppointmentModel {
         startMinute: e.startMinute,
         durationMinutes: e.durationMinutes,
         spentMinutes: e.spentMinutes,
+        isDone: e.isDone,
       );
 }

@@ -63,12 +63,14 @@ tarefa com tempo absurdo (tipo 24 horas para uma tarefa de 30 min).
      compromisso: a tela bloqueada passa a mostrar o compromisso (a tarefa
      pausa sozinha, como já acontece no app). Ao parar o compromisso, ele
      aparece na agenda com o sinal de "feito".
+   > 🟡 Parcial — plano 02; falta: 03, 05, 10, 11
 5. **Reabrir no app**: tarefa ou compromisso concluído pode ser reaberto
    dentro do app; ao reabrir uma filha, a mãe e a avó reabrem junto.
    - _Pronto quando:_ concluo a última filha de uma mãe e a mãe conclui
      sozinha. Reabro essa filha no app: ela volta para a listagem por
      prioridade, a mãe volta a ficar aberta e a barra de progresso cai. Reabro
      um compromisso concluído: o sinal de "feito" some da agenda.
+   > 🟡 Parcial — plano 02; falta: 03
 
 ### Desejável
 
@@ -108,9 +110,11 @@ _Ainda não conversado._
 - **Compromisso também pode ser concluído** (novidade: hoje só tarefa conclui).
   Ao parar um compromisso, ele fica marcado como concluído, também dentro do
   app. Já incluído na v1 (requisitos, req. 14) em 07/10/2026.
+  > 🟡 Parcial — plano 02; falta: 03, 05
 - **Reabrir**: tarefa ou compromisso concluído pode ser reaberto dentro do app
   (novidade; hoje só existe "desfazer" logo após concluir). Ao reabrir uma
   filha, a **mãe e a avó** que tinham concluído sozinhas **reabrem junto**.
+  > 🟡 Parcial — plano 02; falta: 03
 - Na agenda, o compromisso concluído **continua igual, com um sinal de
   "feito"** ao lado.
 - **Tocar no cronômetro** (fora dos botões) abre o app direto na tarefa ou

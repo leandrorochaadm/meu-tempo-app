@@ -22,4 +22,10 @@ abstract class AppointmentRepository {
     String appointmentId,
     int minutes,
   );
+
+  /// Conclui (`true`) ou reabre (`false`) o compromisso.
+  ///
+  /// Só altera compromisso existente: se [appointmentId] não existir (ex.: foi
+  /// apagado), devolve `Left(NotFoundFailure())` e **não** cria documento.
+  Future<Either<Failure, Unit>> setDone(String appointmentId, bool value);
 }

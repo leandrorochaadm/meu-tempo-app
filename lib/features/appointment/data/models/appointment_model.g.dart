@@ -15,6 +15,7 @@ AppointmentModel _$AppointmentModelFromJson(Map<String, dynamic> json) =>
       startMinute: (json['startMinute'] as num).toInt(),
       durationMinutes: (json['durationMinutes'] as num).toInt(),
       spentMinutes: (json['spentMinutes'] as num?)?.toInt() ?? 0,
+      isDone: json['isDone'] as bool? ?? false,
     );
 
 Map<String, dynamic> _$AppointmentModelToJson(AppointmentModel instance) =>
@@ -25,4 +26,5 @@ Map<String, dynamic> _$AppointmentModelToJson(AppointmentModel instance) =>
       'startMinute': instance.startMinute,
       'durationMinutes': instance.durationMinutes,
       'spentMinutes': instance.spentMinutes,
+      'isDone': instance.isDone,
     };

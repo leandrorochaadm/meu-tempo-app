@@ -86,4 +86,18 @@ class AppointmentRepositoryImpl implements AppointmentRepository {
       return Left(e.toFailure());
     }
   }
+
+  @override
+  Future<Either<Failure, Unit>> setDone(
+    String appointmentId,
+    bool value,
+  ) async {
+    try {
+      await _dataSource.setDone(appointmentId, value);
+      return const Right(unit);
+    } on AppException catch (e, s) {
+      AppLogger.logError('setDone appointment falhou', error: e, stackTrace: s);
+      return Left(e.toFailure());
+    }
+  }
 }
