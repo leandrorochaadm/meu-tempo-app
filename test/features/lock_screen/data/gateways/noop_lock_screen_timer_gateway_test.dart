@@ -34,6 +34,15 @@ void main() {
     );
   });
 
+  test('pedir permissão devolve unsupported', () async {
+    expect(
+      await gateway.requestPermission(),
+      const Right<Failure, LockScreenPermissionStatusEnum>(
+        LockScreenPermissionStatusEnum.unsupported,
+      ),
+    );
+  });
+
   test('abrir Ajustes dá certo sem fazer nada', () async {
     expect(
       await gateway.openNotificationSettings(),

@@ -17,6 +17,11 @@ abstract class LockScreenTimerGateway {
 
   Future<Either<Failure, LockScreenPermissionStatusEnum>> getPermissionStatus();
 
+  /// Asks the system for the notification permission (phone dialog) and
+  /// returns the status after the answer. Without a possible dialog (browser),
+  /// returns the current status.
+  Future<Either<Failure, LockScreenPermissionStatusEnum>> requestPermission();
+
   /// Opens the phone settings where the user turns notifications on.
   Future<Either<Failure, Unit>> openNotificationSettings();
 

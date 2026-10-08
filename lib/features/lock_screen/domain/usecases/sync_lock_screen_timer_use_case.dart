@@ -22,7 +22,10 @@ class SyncLockScreenTimerParams extends Equatable {
 /// with a timer (running or paused) → show/update; without → remove (rule
 /// "Stopped: disappears from the lock screen and the shade"). Only one shows
 /// at a time: showing another target replaces the previous one (gateway
-/// contract).
+/// contract). Rule "permission asked on the first start": before showing a
+/// **running** timer, if the permission was never asked, asks and waits for the
+/// answer. A failure reading or asking never blocks the `show` (the service
+/// works even when denied; only the notification stays hidden).
 @lazySingleton
 class SyncLockScreenTimerUseCase
     implements UseCase<Unit, SyncLockScreenTimerParams> {
@@ -31,8 +34,15 @@ class SyncLockScreenTimerUseCase
   final LockScreenTimerGateway _gateway;
 
   @override
-  Future<Either<Failure, Unit>> call(SyncLockScreenTimerParams params) {
+  Future<Either<Failure, Unit>> call(SyncLockScreenTimerParams params) async {
     final timer = params.timer;
-    return timer == null ? _gateway.clear() : _gateway.show(timer);
+    if (timer == null) return _gateway.clear();
+    if (timer.isRunning) {
+      final status = await _gateway.getPermissionStatus();
+      if (status.getRight().toNullable()?.shouldRequest ?? false) {
+        await _gateway.requestPermission();
+      }
+    }
+    return _gateway.show(timer);
   }
 }

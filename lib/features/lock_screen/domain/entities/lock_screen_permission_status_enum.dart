@@ -7,6 +7,9 @@ enum LockScreenPermissionStatusEnum {
   /// User denied or turned off in settings: the timer does not show.
   denied('denied'),
 
+  /// The app has not asked for the permission yet; the first start asks.
+  notRequested('not_requested'),
+
   /// Platform without a lock screen (browser): nothing to ask for.
   unsupported('unsupported');
 
@@ -18,6 +21,9 @@ enum LockScreenPermissionStatusEnum {
   /// Only **denied** notifications block the timer (the app then shows the
   /// permission banner). In the browser the banner never shows.
   bool get blocksLockScreen => this == denied;
+
+  /// Never asked: the first running timer asks before showing.
+  bool get shouldRequest => this == notRequested;
 
   /// Unknown or missing value returns [unsupported]: without certainty that
   /// notifications are denied, the app does not nag with the banner.

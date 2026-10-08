@@ -25,6 +25,13 @@ class FakeLockScreenTimerGateway implements LockScreenTimerGateway {
   /// How many times the permission was read.
   int permissionChecks = 0;
 
+  /// Result returned by `requestPermission`.
+  Either<Failure, LockScreenPermissionStatusEnum> requestPermissionResult =
+      const Right(LockScreenPermissionStatusEnum.granted);
+
+  /// How many times the permission was requested.
+  int permissionRequests = 0;
+
   /// Result returned by `openNotificationSettings`.
   Either<Failure, Unit> openSettingsResult = const Right(unit);
 
@@ -51,6 +58,13 @@ class FakeLockScreenTimerGateway implements LockScreenTimerGateway {
   getPermissionStatus() async {
     permissionChecks++;
     return permissionResult;
+  }
+
+  @override
+  Future<Either<Failure, LockScreenPermissionStatusEnum>>
+  requestPermission() async {
+    permissionRequests++;
+    return requestPermissionResult;
   }
 
   @override
