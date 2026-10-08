@@ -10,15 +10,20 @@ import '../../features/config/presentation/bloc/settings_bloc.dart';
 import '../../features/config/presentation/pages/settings_page.dart';
 import '../../features/list/presentation/bloc/list_manager_bloc.dart';
 import '../../features/list/presentation/pages/lists_page.dart';
+import '../../features/lock_screen/presentation/widgets/lock_screen_permission_banner_host.dart';
+import '../../features/lock_screen/presentation/widgets/lock_screen_tap_navigator.dart';
 import '../../features/report/domain/entities/report_period_enum.dart';
 import '../../features/report/presentation/bloc/report_bloc.dart';
 import '../../features/report/presentation/bloc/report_detail_bloc.dart';
 import '../../features/report/presentation/pages/report_detail_page.dart';
 import '../../features/report/presentation/pages/report_page.dart';
 import '../../features/task/domain/entities/task_entity.dart';
+import '../../features/task/domain/entities/timer_target_type_enum.dart';
+import '../../features/task/presentation/bloc/edit_task_by_id_bloc.dart';
 import '../../features/task/presentation/bloc/task_list_bloc.dart';
 import '../../features/task/presentation/bloc/time_entry_bloc.dart';
 import '../../features/task/presentation/pages/edit_task_args.dart';
+import '../../features/task/presentation/pages/edit_task_by_id_page.dart';
 import '../../features/task/presentation/pages/edit_task_page.dart';
 import '../../features/task/presentation/pages/task_list_page.dart';
 import '../../features/task/presentation/pages/time_entry_page.dart';
@@ -140,6 +145,33 @@ class AppRouter {
           );
         },
       ),
+      GoRoute(
+        path: Routes.timerTarget,
+        builder: (context, state) {
+          final q = state.uri.queryParameters;
+          final type =
+              TimerTargetTypeEnum.fromApi(q[TimerTargetQueryParams.type]);
+          final id = q[TimerTargetQueryParams.id] ?? '';
+          // Incomplete address or from another version: back to home.
+          if (type == null || id.isEmpty) {
+            return BlocProvider(
+              create: (_) => getIt<TaskListBloc>(),
+              child: const TaskListPage(),
+            );
+          }
+          return switch (type) {
+            TimerTargetTypeEnum.task => BlocProvider(
+                create: (_) => getIt<EditTaskByIdBloc>(),
+                child: EditTaskByIdPage(taskId: id),
+              ),
+            // The agenda only shows today (no navigation by day).
+            TimerTargetTypeEnum.appointment => BlocProvider(
+                create: (_) => getIt<AgendaBloc>(),
+                child: const AgendaPage(),
+              ),
+          };
+        },
+      ),
         ],
       ),
     ],
@@ -147,7 +179,8 @@ class AppRouter {
 }
 
 /// Casca das telas autenticadas: empilha a barra do cronômetro no rodapé, acima
-/// da área segura, com o conteúdo da rota preenchendo o restante.
+/// da área segura, com o conteúdo da rota preenchendo o restante. Também liga
+/// a faixa de avisos desligados e o toque no cronômetro da tela bloqueada.
 class AppShell extends StatelessWidget {
   const AppShell({super.key, required this.child});
 
@@ -155,11 +188,15 @@ class AppShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Expanded(child: child),
-        const ActiveTimerBar(),
-      ],
+    return LockScreenTapNavigator(
+      child: LockScreenPermissionBannerHost(
+        child: Column(
+          children: [
+            Expanded(child: child),
+            const ActiveTimerBar(),
+          ],
+        ),
+      ),
     );
   }
 }

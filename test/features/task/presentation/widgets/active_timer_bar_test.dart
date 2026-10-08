@@ -10,6 +10,8 @@ import 'package:meu_tempo/core/theme/app_theme.dart';
 import 'package:meu_tempo/features/task/presentation/pages/edit_task_page.dart';
 import 'package:meu_tempo/features/auth/domain/entities/user_entity.dart';
 import 'package:meu_tempo/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:meu_tempo/features/lock_screen/presentation/bloc/lock_screen_permission_bloc.dart';
+import 'package:meu_tempo/features/lock_screen/presentation/bloc/lock_screen_tap_bloc.dart';
 import 'package:meu_tempo/features/task/domain/entities/active_task_details.dart';
 import 'package:meu_tempo/features/task/domain/entities/importance_enum.dart';
 import 'package:meu_tempo/features/task/domain/entities/task_edit_context.dart';
@@ -21,11 +23,21 @@ import 'package:mocktail/mocktail.dart';
 class _MockActiveTimerBloc extends MockBloc<ActiveTimerEvent, ActiveTimerState>
     implements ActiveTimerBloc {}
 
+class _MockLockScreenPermissionBloc
+    extends MockBloc<LockScreenPermissionEvent, LockScreenPermissionState>
+    implements LockScreenPermissionBloc {}
+
+class _MockLockScreenTapBloc
+    extends MockBloc<LockScreenTapEvent, LockScreenTapState>
+    implements LockScreenTapBloc {}
+
 class _MockAuthBloc extends MockBloc<AuthEvent, AuthState> implements AuthBloc {}
 
 void main() {
   late _MockActiveTimerBloc timerBloc;
   late _MockAuthBloc authBloc;
+  late _MockLockScreenPermissionBloc permissionBloc;
+  late _MockLockScreenTapBloc tapBloc;
 
   final leaf = TaskEntity(
     id: 't1',
@@ -64,6 +76,11 @@ void main() {
   setUp(() {
     timerBloc = _MockActiveTimerBloc();
     authBloc = _MockAuthBloc();
+    permissionBloc = _MockLockScreenPermissionBloc();
+    tapBloc = _MockLockScreenTapBloc();
+    when(() => permissionBloc.state)
+        .thenReturn(const LockScreenPermissionBannerHidden());
+    when(() => tapBloc.state).thenReturn(const LockScreenTapIdle());
     when(() => authBloc.state).thenReturn(
       const AuthAuthenticated(UserEntity(uid: 'u1', email: 'a@b.com')),
     );
@@ -156,6 +173,8 @@ void main() {
       providers: [
         BlocProvider<AuthBloc>.value(value: authBloc),
         BlocProvider<ActiveTimerBloc>.value(value: timerBloc),
+        BlocProvider<LockScreenPermissionBloc>.value(value: permissionBloc),
+        BlocProvider<LockScreenTapBloc>.value(value: tapBloc),
       ],
       child: MaterialApp.router(theme: AppTheme.dark, routerConfig: router),
     );

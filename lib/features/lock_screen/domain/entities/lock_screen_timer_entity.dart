@@ -57,6 +57,18 @@ class LockScreenTimerEntity extends Equatable {
       ? const [LockScreenActionEnum.pause, LockScreenActionEnum.stopConfirmed]
       : const [LockScreenActionEnum.resume, LockScreenActionEnum.stopConfirmed];
 
+  /// Rule "on start" (permission banner): this timer began a new session
+  /// compared to [previous] — what was showing before (`null` = nothing).
+  /// Counts as a start: coming from nothing, from another target (the previous
+  /// one paused itself) or from paused (play in the app). Pausing, adding time
+  /// and renaming do not count.
+  bool startsSessionAfter(LockScreenTimerEntity? previous) =>
+      isRunning &&
+      (previous == null ||
+          !previous.isRunning ||
+          previous.targetId != targetId ||
+          previous.sessionStartedAt != sessionStartedAt);
+
   @override
   List<Object?> get props => [
         targetId,

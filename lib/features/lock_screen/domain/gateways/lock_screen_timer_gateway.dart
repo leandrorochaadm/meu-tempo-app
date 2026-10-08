@@ -20,6 +20,11 @@ abstract class LockScreenTimerGateway {
   /// Opens the phone settings where the user turns notifications on.
   Future<Either<Failure, Unit>> openNotificationSettings();
 
-  /// Taps on the timer outside the buttons.
+  /// Taps on the timer outside the buttons (open the app on the target).
+  ///
+  /// Single subscriber: the `LockScreenTapBloc`, at app start. The native
+  /// implementation must **keep the tap that opened the app** and deliver it to
+  /// that first subscriber — otherwise a tap with the app closed would open
+  /// only the home screen.
   Stream<LockScreenTapEntity> watchTaps();
 }

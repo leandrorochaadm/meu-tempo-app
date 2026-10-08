@@ -85,14 +85,28 @@ import 'package:meu_tempo/features/lock_screen/data/lock_screen_gateway_module.d
     as _i752;
 import 'package:meu_tempo/features/lock_screen/domain/gateways/lock_screen_timer_gateway.dart'
     as _i684;
+import 'package:meu_tempo/features/lock_screen/domain/usecases/get_lock_screen_permission_status_use_case.dart'
+    as _i142;
 import 'package:meu_tempo/features/lock_screen/domain/usecases/handle_lock_screen_action_use_case.dart'
     as _i98;
+import 'package:meu_tempo/features/lock_screen/domain/usecases/open_notification_settings_use_case.dart'
+    as _i77;
 import 'package:meu_tempo/features/lock_screen/domain/usecases/sync_lock_screen_timer_use_case.dart'
     as _i485;
+import 'package:meu_tempo/features/lock_screen/domain/usecases/watch_lock_screen_permission_warnings_use_case.dart'
+    as _i382;
+import 'package:meu_tempo/features/lock_screen/domain/usecases/watch_lock_screen_taps_use_case.dart'
+    as _i482;
+import 'package:meu_tempo/features/lock_screen/domain/usecases/watch_lock_screen_timer_starts_use_case.dart'
+    as _i28;
 import 'package:meu_tempo/features/lock_screen/domain/usecases/watch_lock_screen_timer_use_case.dart'
     as _i188;
+import 'package:meu_tempo/features/lock_screen/presentation/bloc/lock_screen_permission_bloc.dart'
+    as _i740;
 import 'package:meu_tempo/features/lock_screen/presentation/bloc/lock_screen_sync_bloc.dart'
     as _i580;
+import 'package:meu_tempo/features/lock_screen/presentation/bloc/lock_screen_tap_bloc.dart'
+    as _i397;
 import 'package:meu_tempo/features/report/domain/usecases/get_list_report_use_case.dart'
     as _i67;
 import 'package:meu_tempo/features/report/domain/usecases/get_task_report_use_case.dart'
@@ -153,6 +167,8 @@ import 'package:meu_tempo/features/task/domain/usecases/get_prioritized_leaves_u
     as _i1067;
 import 'package:meu_tempo/features/task/domain/usecases/get_task_edit_context_use_case.dart'
     as _i843;
+import 'package:meu_tempo/features/task/domain/usecases/get_task_edit_target_use_case.dart'
+    as _i337;
 import 'package:meu_tempo/features/task/domain/usecases/get_task_list_filter_use_case.dart'
     as _i247;
 import 'package:meu_tempo/features/task/domain/usecases/move_task_use_case.dart'
@@ -187,6 +203,8 @@ import 'package:meu_tempo/features/task/domain/usecases/watch_time_entries_use_c
     as _i892;
 import 'package:meu_tempo/features/task/presentation/bloc/active_timer_bloc.dart'
     as _i282;
+import 'package:meu_tempo/features/task/presentation/bloc/edit_task_by_id_bloc.dart'
+    as _i49;
 import 'package:meu_tempo/features/task/presentation/bloc/task_list_bloc.dart'
     as _i35;
 import 'package:meu_tempo/features/task/presentation/bloc/time_entry_bloc.dart'
@@ -267,9 +285,23 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i460.SharedPreferences>(),
       ),
     );
+    gh.lazySingleton<_i142.GetLockScreenPermissionStatusUseCase>(
+      () => _i142.GetLockScreenPermissionStatusUseCase(
+        gh<_i684.LockScreenTimerGateway>(),
+      ),
+    );
+    gh.lazySingleton<_i77.OpenNotificationSettingsUseCase>(
+      () => _i77.OpenNotificationSettingsUseCase(
+        gh<_i684.LockScreenTimerGateway>(),
+      ),
+    );
     gh.lazySingleton<_i485.SyncLockScreenTimerUseCase>(
       () =>
           _i485.SyncLockScreenTimerUseCase(gh<_i684.LockScreenTimerGateway>()),
+    );
+    gh.lazySingleton<_i482.WatchLockScreenTapsUseCase>(
+      () =>
+          _i482.WatchLockScreenTapsUseCase(gh<_i684.LockScreenTimerGateway>()),
     );
     gh.lazySingleton<_i592.TaskRemoteDataSource>(
       () => _i592.TaskRemoteDataSourceImpl(
@@ -307,6 +339,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i73.ResumeTimerUseCase>(
       () => _i73.ResumeTimerUseCase(gh<_i381.TimerRepository>()),
+    );
+    gh.factory<_i397.LockScreenTapBloc>(
+      () => _i397.LockScreenTapBloc(gh<_i482.WatchLockScreenTapsUseCase>()),
     );
     gh.lazySingleton<_i397.WatchActiveTimerUseCase>(
       () => _i397.WatchActiveTimerUseCase(gh<_i381.TimerRepository>()),
@@ -421,6 +456,11 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i559.WatchConfigUseCase>(
       () => _i559.WatchConfigUseCase(gh<_i330.ConfigRepository>()),
     );
+    gh.lazySingleton<_i28.WatchLockScreenTimerStartsUseCase>(
+      () => _i28.WatchLockScreenTimerStartsUseCase(
+        gh<_i188.WatchLockScreenTimerUseCase>(),
+      ),
+    );
     gh.lazySingleton<_i197.PauseTimerUseCase>(
       () => _i197.PauseTimerUseCase(
         gh<_i381.TimerRepository>(),
@@ -439,6 +479,16 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i131.RecordTimerSessionUseCase>(),
       ),
     );
+    gh.lazySingleton<_i337.GetTaskEditTargetUseCase>(
+      () => _i337.GetTaskEditTargetUseCase(
+        gh<_i521.TaskRepository>(),
+        gh<_i219.TaskListRepository>(),
+        gh<_i843.GetTaskEditContextUseCase>(),
+      ),
+    );
+    gh.factory<_i49.EditTaskByIdBloc>(
+      () => _i49.EditTaskByIdBloc(gh<_i337.GetTaskEditTargetUseCase>()),
+    );
     gh.lazySingleton<_i1025.RegisterManualTimeUseCase>(
       () => _i1025.RegisterManualTimeUseCase(
         gh<_i521.TaskRepository>(),
@@ -452,6 +502,12 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i892.WatchTimeEntriesUseCase>(
       () => _i892.WatchTimeEntriesUseCase(gh<_i706.TimeEntryRepository>()),
+    );
+    gh.lazySingleton<_i382.WatchLockScreenPermissionWarningsUseCase>(
+      () => _i382.WatchLockScreenPermissionWarningsUseCase(
+        gh<_i28.WatchLockScreenTimerStartsUseCase>(),
+        gh<_i142.GetLockScreenPermissionStatusUseCase>(),
+      ),
     );
     gh.lazySingleton<_i650.AddSubtaskUseCase>(
       () => _i650.AddSubtaskUseCase(gh<_i521.TaskRepository>()),
@@ -532,6 +588,13 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i830.SettingsBloc(
         gh<_i559.WatchConfigUseCase>(),
         gh<_i949.SetAvailableMinutesUseCase>(),
+      ),
+    );
+    gh.factory<_i740.LockScreenPermissionBloc>(
+      () => _i740.LockScreenPermissionBloc(
+        gh<_i382.WatchLockScreenPermissionWarningsUseCase>(),
+        gh<_i142.GetLockScreenPermissionStatusUseCase>(),
+        gh<_i77.OpenNotificationSettingsUseCase>(),
       ),
     );
     gh.factory<_i990.AgendaBloc>(

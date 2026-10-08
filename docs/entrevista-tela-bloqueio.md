@@ -127,6 +127,7 @@ _Ainda não conversado._
   > ✅ Implementado — plano 03
 - **Tocar no cronômetro** (fora dos botões) abre o app direto na tarefa ou
   compromisso que está rodando.
+  > 🟡 Parcial — plano 08; falta: 10, 11
 - **Dois celulares** (iPhone e Android com a mesma conta): a tela bloqueada de
   um não acompanha o outro na hora. Ao abrir o app, o celular acerta a própria
   tela bloqueada com o cronômetro que está de fato rodando.
@@ -149,6 +150,7 @@ _Ainda não conversado._
   nos Ajustes) → o cronômetro não aparece na tela bloqueada. Ao dar start, o
   app mostra uma faixa: "Ative os avisos para ver o cronômetro com o celular
   bloqueado", com um botão que leva aos Ajustes do celular.
+  > 🟡 Parcial — plano 08; falta: 10, 11
 - **Tarefa sem tempo estimado** e **compromisso** → o app **não avisa**; só
   fica visível na tela bloqueada e na cortina de avisos.
 

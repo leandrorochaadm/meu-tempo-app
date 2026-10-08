@@ -66,6 +66,45 @@ void main() {
     expect(timer(status: TimerStatusEnum.paused).isRunning, isFalse);
   });
 
+  group('startsSessionAfter', () {
+    final paused = timer(status: TimerStatusEnum.paused, spent: 65);
+    final resumed = timer(spent: 65, startedAt: DateTime(2026, 10, 7, 11));
+    final other = LockScreenTimerEntity(
+      targetId: 'a1',
+      targetType: TimerTargetTypeEnum.appointment,
+      title: 'Dentista',
+      listName: 'Pessoal',
+      status: TimerStatusEnum.running,
+      spentMinutes: 0,
+      sessionStartedAt: DateTime(2026, 10, 7, 11),
+    );
+
+    test('running with nothing before is a start', () {
+      expect(timer().startsSessionAfter(null), isTrue);
+    });
+
+    test('paused is never a start', () {
+      expect(paused.startsSessionAfter(null), isFalse);
+      expect(paused.startsSessionAfter(timer()), isFalse);
+    });
+
+    test('resuming (paused → running) is a start', () {
+      expect(resumed.startsSessionAfter(paused), isTrue);
+    });
+
+    test('another target is a start', () {
+      expect(other.startsSessionAfter(timer()), isTrue);
+    });
+
+    test('same session is not a start (added time or rename)', () {
+      expect(timer(spent: 45).startsSessionAfter(timer()), isFalse);
+    });
+
+    test('same target with a new session is a start', () {
+      expect(resumed.startsSessionAfter(timer()), isTrue);
+    });
+  });
+
   test('igualdade por valor (status e spentMinutes entram)', () {
     expect(timer(), equals(timer()));
     expect(timer(spent: 40), isNot(equals(timer(spent: 65))));

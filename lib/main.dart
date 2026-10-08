@@ -12,7 +12,9 @@ import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'core/ui/app_error_screen.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
+import 'features/lock_screen/presentation/bloc/lock_screen_permission_bloc.dart';
 import 'features/lock_screen/presentation/bloc/lock_screen_sync_bloc.dart';
+import 'features/lock_screen/presentation/bloc/lock_screen_tap_bloc.dart';
 import 'features/lock_screen/presentation/widgets/lock_screen_sync_listener.dart';
 import 'features/task/presentation/bloc/active_timer_bloc.dart';
 import 'firebase_options.dart';
@@ -74,6 +76,17 @@ class MeuTempoApp extends StatelessWidget {
         // (empty implementation on web).
         BlocProvider<LockScreenSyncBloc>(
           create: (_) => getIt<LockScreenSyncBloc>(),
+        ),
+        // "Ative os avisos..." banner — switched on/off by the AppShell.
+        BlocProvider<LockScreenPermissionBloc>(
+          create: (_) => getIt<LockScreenPermissionBloc>(),
+        ),
+        // Taps on the lock screen timer: subscribes right at app start (not
+        // lazy) so the tap that opened the app is not lost.
+        BlocProvider<LockScreenTapBloc>(
+          lazy: false,
+          create: (_) =>
+              getIt<LockScreenTapBloc>()..add(const LockScreenTapStarted()),
         ),
       ],
       child: LockScreenSyncListener(

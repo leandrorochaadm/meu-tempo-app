@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:fpdart/fpdart.dart';
 import 'package:meu_tempo/core/error/failures.dart';
 import 'package:meu_tempo/features/lock_screen/domain/entities/lock_screen_permission_status_enum.dart';
@@ -16,6 +18,22 @@ class FakeLockScreenTimerGateway implements LockScreenTimerGateway {
   /// Result returned by `clear`.
   Either<Failure, Unit> clearResult = const Right(unit);
 
+  /// Result returned by `getPermissionStatus` (default: browser).
+  Either<Failure, LockScreenPermissionStatusEnum> permissionResult =
+      const Right(LockScreenPermissionStatusEnum.unsupported);
+
+  /// How many times the permission was read.
+  int permissionChecks = 0;
+
+  /// Result returned by `openNotificationSettings`.
+  Either<Failure, Unit> openSettingsResult = const Right(unit);
+
+  /// How many times the settings were opened.
+  int openSettingsCalls = 0;
+
+  /// Simulated taps from the native side (`taps.add(...)`).
+  final taps = StreamController<LockScreenTapEntity>.broadcast();
+
   @override
   Future<Either<Failure, Unit>> show(LockScreenTimerEntity timer) async {
     pushes.add(timer);
@@ -30,13 +48,19 @@ class FakeLockScreenTimerGateway implements LockScreenTimerGateway {
 
   @override
   Future<Either<Failure, LockScreenPermissionStatusEnum>>
-      getPermissionStatus() async =>
-          const Right(LockScreenPermissionStatusEnum.unsupported);
+      getPermissionStatus() async {
+    permissionChecks++;
+    return permissionResult;
+  }
 
   @override
-  Future<Either<Failure, Unit>> openNotificationSettings() async =>
-      const Right(unit);
+  Future<Either<Failure, Unit>> openNotificationSettings() async {
+    openSettingsCalls++;
+    return openSettingsResult;
+  }
 
   @override
-  Stream<LockScreenTapEntity> watchTaps() => const Stream.empty();
+  Stream<LockScreenTapEntity> watchTaps() => taps.stream;
+
+  Future<void> dispose() => taps.close();
 }

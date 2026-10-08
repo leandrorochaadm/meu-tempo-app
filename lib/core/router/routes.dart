@@ -1,3 +1,5 @@
+import '../../features/task/domain/entities/timer_target_type_enum.dart';
+
 /// Nomes de rota centralizados (proibido path literal espalhado).
 class Routes {
   const Routes._();
@@ -19,4 +21,28 @@ class Routes {
   /// Registros de tempo de uma folha (CRUD) — recebe a `TaskEntity` folha via
   /// `state.extra`.
   static const String timeEntry = '/task/time-entries';
+
+  /// Opens the timer target — tap on the lock screen and deep link. Takes `type`
+  /// (`TimerTargetTypeEnum.apiValue`) and `id` as query params (survives a
+  /// browser refresh). Task → edit; appointment → agenda. Build the address
+  /// with [timerTargetLocation].
+  static const String timerTarget = '/timer-target';
+
+  /// Full address of [timerTarget] for the target [type]/[id].
+  static String timerTargetLocation(TimerTargetTypeEnum type, String id) =>
+      Uri(
+        path: timerTarget,
+        queryParameters: {
+          TimerTargetQueryParams.type: type.apiValue,
+          TimerTargetQueryParams.id: id,
+        },
+      ).toString();
+}
+
+/// Query param names of [Routes.timerTarget].
+class TimerTargetQueryParams {
+  const TimerTargetQueryParams._();
+
+  static const String type = 'type';
+  static const String id = 'id';
 }
