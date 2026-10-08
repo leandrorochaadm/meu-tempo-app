@@ -54,15 +54,14 @@ class LockScreenPermissionBloc
   Future<void> _onEvent(
     LockScreenPermissionEvent event,
     Emitter<LockScreenPermissionState> emit,
-  ) =>
-      switch (event) {
-        LockScreenPermissionStarted() => _subscribe(),
-        LockScreenPermissionAppResumed() => _onAppResumed(emit),
-        LockScreenPermissionStopped() => _onStopped(emit),
-        LockScreenPermissionSettingsRequested() => _openSettings(),
-        LockScreenPermissionBannerDismissed() => _hide(emit),
-        final _LockScreenPermissionWarned warned => _onWarned(warned, emit),
-      };
+  ) => switch (event) {
+    LockScreenPermissionStarted() => _subscribe(),
+    LockScreenPermissionAppResumed() => _onAppResumed(emit),
+    LockScreenPermissionStopped() => _onStopped(emit),
+    LockScreenPermissionSettingsRequested() => _openSettings(),
+    LockScreenPermissionBannerDismissed() => _hide(emit),
+    final _LockScreenPermissionWarned warned => _onWarned(warned, emit),
+  };
 
   Future<void> _subscribe() async {
     await _cancelSub();
@@ -96,14 +95,11 @@ class LockScreenPermissionBloc
     await _subscribe();
     if (state is! LockScreenPermissionBannerVisible) return;
     final result = await _getPermissionStatus(const NoParams());
-    result.match(
-      _logPermissionFailure,
-      (status) {
-        if (!status.blocksLockScreen) {
-          emit(const LockScreenPermissionBannerHidden());
-        }
-      },
-    );
+    result.match(_logPermissionFailure, (status) {
+      if (!status.blocksLockScreen) {
+        emit(const LockScreenPermissionBannerHidden());
+      }
+    });
   }
 
   Future<void> _onStopped(Emitter<LockScreenPermissionState> emit) async {
@@ -128,9 +124,9 @@ class LockScreenPermissionBloc
   /// Failure reading the permission (on a start or coming back from the
   /// settings): log only, the banner neither shows nor hides.
   void _logPermissionFailure(Failure failure) => AppLogger.logWarning(
-        'Não foi possível ler a permissão de avisos (${failure.runtimeType}).',
-        name: _logName,
-      );
+    'Não foi possível ler a permissão de avisos (${failure.runtimeType}).',
+    name: _logName,
+  );
 
   Future<void> _cancelSub() async {
     _generation++;

@@ -8,16 +8,15 @@ LockScreenTimerEntity timer({
   TimerStatusEnum status = TimerStatusEnum.running,
   int spent = 40,
   DateTime? startedAt,
-}) =>
-    LockScreenTimerEntity(
-      targetId: 't1',
-      targetType: TimerTargetTypeEnum.task,
-      title: 'Tela de login',
-      listName: 'Trabalho',
-      status: status,
-      spentMinutes: spent,
-      sessionStartedAt: startedAt ?? DateTime(2026, 10, 7, 10),
-    );
+}) => LockScreenTimerEntity(
+  targetId: 't1',
+  targetType: TimerTargetTypeEnum.task,
+  title: 'Tela de login',
+  listName: 'Trabalho',
+  status: status,
+  spentMinutes: spent,
+  sessionStartedAt: startedAt ?? DateTime(2026, 10, 7, 10),
+);
 
 void main() {
   test('rodando: relógio inclui o tempo já gasto', () {
@@ -33,7 +32,9 @@ void main() {
 
   test('pausado: relógio parado no tempo já gasto', () {
     expect(
-      timer(status: TimerStatusEnum.paused).elapsedAt(DateTime(2026, 10, 7, 12)),
+      timer(
+        status: TimerStatusEnum.paused,
+      ).elapsedAt(DateTime(2026, 10, 7, 12)),
       const Duration(minutes: 40),
     );
   });
@@ -108,9 +109,6 @@ void main() {
   test('igualdade por valor (status e spentMinutes entram)', () {
     expect(timer(), equals(timer()));
     expect(timer(spent: 40), isNot(equals(timer(spent: 65))));
-    expect(
-      timer(),
-      isNot(equals(timer(status: TimerStatusEnum.paused))),
-    );
+    expect(timer(), isNot(equals(timer(status: TimerStatusEnum.paused))));
   });
 }

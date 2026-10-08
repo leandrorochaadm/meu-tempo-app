@@ -66,8 +66,9 @@ void main() {
   }
 
   test('start with notifications off warns', () async {
-    gateway.permissionResult =
-        const Right(LockScreenPermissionStatusEnum.denied);
+    gateway.permissionResult = const Right(
+      LockScreenPermissionStatusEnum.denied,
+    );
 
     await start();
 
@@ -76,8 +77,9 @@ void main() {
   });
 
   test('start with notifications on does not warn', () async {
-    gateway.permissionResult =
-        const Right(LockScreenPermissionStatusEnum.granted);
+    gateway.permissionResult = const Right(
+      LockScreenPermissionStatusEnum.granted,
+    );
 
     await start();
 
@@ -85,8 +87,9 @@ void main() {
   });
 
   test('in the browser (unsupported) never warns', () async {
-    gateway.permissionResult =
-        const Right(LockScreenPermissionStatusEnum.unsupported);
+    gateway.permissionResult = const Right(
+      LockScreenPermissionStatusEnum.unsupported,
+    );
 
     await start();
 
@@ -102,11 +105,13 @@ void main() {
   });
 
   test('reads the permission on every start', () async {
-    gateway.permissionResult =
-        const Right(LockScreenPermissionStatusEnum.denied);
+    gateway.permissionResult = const Right(
+      LockScreenPermissionStatusEnum.denied,
+    );
     await start();
-    gateway.permissionResult =
-        const Right(LockScreenPermissionStatusEnum.granted);
+    gateway.permissionResult = const Right(
+      LockScreenPermissionStatusEnum.granted,
+    );
     await start();
 
     expect(emitted, [const Right(unit)]);

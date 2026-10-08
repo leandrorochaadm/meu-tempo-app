@@ -19,6 +19,5 @@ class GetLockScreenPermissionStatusUseCase
   @override
   Future<Either<Failure, LockScreenPermissionStatusEnum>> call(
     NoParams params,
-  ) =>
-      _gateway.getPermissionStatus();
+  ) => _gateway.getPermissionStatus();
 }

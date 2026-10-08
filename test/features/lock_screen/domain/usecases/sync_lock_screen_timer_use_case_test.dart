@@ -38,8 +38,7 @@ void main() {
   });
 
   test('with a timer: shows it on the lock screen', () async {
-    final result =
-        await useCase(SyncLockScreenTimerParams(timer: taskRunning));
+    final result = await useCase(SyncLockScreenTimerParams(timer: taskRunning));
 
     expect(result, const Right<Failure, Unit>(unit));
     expect(gateway.pushes, [taskRunning]);
@@ -60,8 +59,7 @@ void main() {
   test('phone failure on show is returned', () async {
     gateway.showResult = const Left(LockScreenPlatformFailure());
 
-    final result =
-        await useCase(SyncLockScreenTimerParams(timer: taskRunning));
+    final result = await useCase(SyncLockScreenTimerParams(timer: taskRunning));
 
     expect(result, const Left<Failure, Unit>(LockScreenPlatformFailure()));
   });

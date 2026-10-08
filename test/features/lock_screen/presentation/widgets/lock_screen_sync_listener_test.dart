@@ -30,14 +30,17 @@ void main() {
   });
 
   Widget harness() => MultiBlocProvider(
-        providers: [
-          BlocProvider<AuthBloc>.value(value: authBloc),
-          BlocProvider<LockScreenSyncBloc>.value(value: syncBloc),
-        ],
-        child: const LockScreenSyncListener(child: SizedBox.shrink()),
-      );
+    providers: [
+      BlocProvider<AuthBloc>.value(value: authBloc),
+      BlocProvider<LockScreenSyncBloc>.value(value: syncBloc),
+    ],
+    child: const LockScreenSyncListener(child: SizedBox.shrink()),
+  );
 
-  Future<void> setLifecycle(WidgetTester tester, AppLifecycleState state) async {
+  Future<void> setLifecycle(
+    WidgetTester tester,
+    AppLifecycleState state,
+  ) async {
     await tester.binding.defaultBinaryMessenger.handlePlatformMessage(
       SystemChannels.lifecycle.name,
       SystemChannels.lifecycle.codec.encodeMessage(state.toString()),
@@ -59,8 +62,11 @@ void main() {
   }
 
   testWidgets('signed in on mount: starts mirroring', (tester) async {
-    whenListen(authBloc, const Stream<AuthState>.empty(),
-        initialState: const AuthAuthenticated(_user));
+    whenListen(
+      authBloc,
+      const Stream<AuthState>.empty(),
+      initialState: const AuthAuthenticated(_user),
+    );
 
     await tester.pumpWidget(harness());
 
@@ -68,8 +74,11 @@ void main() {
   });
 
   testWidgets('signed out on mount: clears the lock screen', (tester) async {
-    whenListen(authBloc, const Stream<AuthState>.empty(),
-        initialState: const AuthUnauthenticated());
+    whenListen(
+      authBloc,
+      const Stream<AuthState>.empty(),
+      initialState: const AuthUnauthenticated(),
+    );
 
     await tester.pumpWidget(harness());
 
@@ -77,8 +86,11 @@ void main() {
   });
 
   testWidgets('session still resolving: does nothing', (tester) async {
-    whenListen(authBloc, const Stream<AuthState>.empty(),
-        initialState: const AuthInitial());
+    whenListen(
+      authBloc,
+      const Stream<AuthState>.empty(),
+      initialState: const AuthInitial(),
+    );
 
     await tester.pumpWidget(harness());
 
@@ -86,8 +98,11 @@ void main() {
   });
 
   testWidgets('signed in: starts mirroring', (tester) async {
-    whenListen(authBloc, Stream<AuthState>.value(const AuthAuthenticated(_user)),
-        initialState: const AuthInitial());
+    whenListen(
+      authBloc,
+      Stream<AuthState>.value(const AuthAuthenticated(_user)),
+      initialState: const AuthInitial(),
+    );
 
     await tester.pumpWidget(harness());
     await tester.pump();
@@ -96,8 +111,11 @@ void main() {
   });
 
   testWidgets('signed out: clears the lock screen', (tester) async {
-    whenListen(authBloc, Stream<AuthState>.value(const AuthUnauthenticated()),
-        initialState: const AuthAuthenticated(_user));
+    whenListen(
+      authBloc,
+      Stream<AuthState>.value(const AuthUnauthenticated()),
+      initialState: const AuthAuthenticated(_user),
+    );
 
     await tester.pumpWidget(harness());
     await tester.pump();
@@ -107,8 +125,11 @@ void main() {
   });
 
   testWidgets('error on sign-out does not stop mirroring', (tester) async {
-    whenListen(authBloc, Stream<AuthState>.value(const AuthError('x')),
-        initialState: const AuthAuthenticated(_user));
+    whenListen(
+      authBloc,
+      Stream<AuthState>.value(const AuthError('x')),
+      initialState: const AuthAuthenticated(_user),
+    );
 
     await tester.pumpWidget(harness());
     await tester.pump();
@@ -117,8 +138,11 @@ void main() {
   });
 
   testWidgets('sign-in in progress dispatches nothing', (tester) async {
-    whenListen(authBloc, Stream<AuthState>.value(const AuthLoading()),
-        initialState: const AuthUnauthenticated());
+    whenListen(
+      authBloc,
+      Stream<AuthState>.value(const AuthLoading()),
+      initialState: const AuthUnauthenticated(),
+    );
 
     await tester.pumpWidget(harness());
     await tester.pump();
@@ -128,8 +152,11 @@ void main() {
   });
 
   testWidgets('returning to the foreground reconciles', (tester) async {
-    whenListen(authBloc, const Stream<AuthState>.empty(),
-        initialState: const AuthAuthenticated(_user));
+    whenListen(
+      authBloc,
+      const Stream<AuthState>.empty(),
+      initialState: const AuthAuthenticated(_user),
+    );
 
     await tester.pumpWidget(harness());
     await goToBackground(tester);
@@ -139,8 +166,11 @@ void main() {
   });
 
   testWidgets('going to the background dispatches nothing', (tester) async {
-    whenListen(authBloc, const Stream<AuthState>.empty(),
-        initialState: const AuthAuthenticated(_user));
+    whenListen(
+      authBloc,
+      const Stream<AuthState>.empty(),
+      initialState: const AuthAuthenticated(_user),
+    );
 
     await tester.pumpWidget(harness());
     await goToBackground(tester);
@@ -153,8 +183,11 @@ void main() {
   });
 
   testWidgets('unmounting disposes the lifecycle listener', (tester) async {
-    whenListen(authBloc, const Stream<AuthState>.empty(),
-        initialState: const AuthAuthenticated(_user));
+    whenListen(
+      authBloc,
+      const Stream<AuthState>.empty(),
+      initialState: const AuthAuthenticated(_user),
+    );
 
     await tester.pumpWidget(harness());
     await tester.pumpWidget(const SizedBox.shrink());

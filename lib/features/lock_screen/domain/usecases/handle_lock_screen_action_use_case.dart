@@ -48,13 +48,13 @@ class HandleLockScreenActionUseCase
   Future<Either<Failure, Unit>> call(HandleLockScreenActionParams params) =>
       switch (params.action) {
         LockScreenActionEnum.pause => _pauseTimer(
-            PauseTimerParams(targetId: params.targetId, now: params.now),
-          ),
+          PauseTimerParams(targetId: params.targetId, now: params.now),
+        ),
         LockScreenActionEnum.resume => _resumeTimer(
-            ResumeTimerParams(targetId: params.targetId, now: params.now),
-          ),
+          ResumeTimerParams(targetId: params.targetId, now: params.now),
+        ),
         LockScreenActionEnum.stopConfirmed => _finishTimer(
-            FinishTimerParams(targetId: params.targetId, now: params.now),
-          ),
+          FinishTimerParams(targetId: params.targetId, now: params.now),
+        ),
       };
 }

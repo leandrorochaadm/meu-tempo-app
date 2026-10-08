@@ -269,8 +269,7 @@ void main() {
       LockScreenSyncVisible(taskRunning),
       LockScreenSyncVisible(appointmentRunning),
     ],
-    verify: (_) =>
-        expect(gateway.pushes, [taskRunning, appointmentRunning]),
+    verify: (_) => expect(gateway.pushes, [taskRunning, appointmentRunning]),
   );
 
   blocTest<LockScreenSyncBloc, LockScreenSyncState>(

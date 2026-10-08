@@ -20,8 +20,8 @@ class NoopLockScreenTimerGateway implements LockScreenTimerGateway {
 
   @override
   Future<Either<Failure, LockScreenPermissionStatusEnum>>
-      getPermissionStatus() async =>
-          const Right(LockScreenPermissionStatusEnum.unsupported);
+  getPermissionStatus() async =>
+      const Right(LockScreenPermissionStatusEnum.unsupported);
 
   @override
   Future<Either<Failure, Unit>> openNotificationSettings() async =>

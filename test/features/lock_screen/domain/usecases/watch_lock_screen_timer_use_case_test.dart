@@ -61,50 +61,48 @@ void main() {
 
   Right<Failure, ActiveTimerEntity?> activeTask({
     TimerStatusEnum status = TimerStatusEnum.running,
-  }) =>
-      Right(
-        ActiveTimerEntity(
-          targetId: 't1',
-          targetType: TimerTargetTypeEnum.task,
-          listId: 'work',
-          startedAt: start,
-          status: status,
-        ),
-      );
+  }) => Right(
+    ActiveTimerEntity(
+      targetId: 't1',
+      targetType: TimerTargetTypeEnum.task,
+      listId: 'work',
+      startedAt: start,
+      status: status,
+    ),
+  );
 
   Right<Failure, ActiveTimerEntity?> activeAppointment() => Right(
-        ActiveTimerEntity(
-          targetId: 'a1',
-          targetType: TimerTargetTypeEnum.appointment,
-          listId: 'personal',
-          startedAt: start,
-        ),
-      );
+    ActiveTimerEntity(
+      targetId: 'a1',
+      targetType: TimerTargetTypeEnum.appointment,
+      listId: 'personal',
+      startedAt: start,
+    ),
+  );
 
   LockScreenTimerEntity taskEntity({
     int spent = 40,
     TimerStatusEnum status = TimerStatusEnum.running,
     String listName = 'Trabalho',
-  }) =>
-      LockScreenTimerEntity(
-        targetId: 't1',
-        targetType: TimerTargetTypeEnum.task,
-        title: 'Tela de login',
-        listName: listName,
-        status: status,
-        spentMinutes: spent,
-        sessionStartedAt: start,
-      );
+  }) => LockScreenTimerEntity(
+    targetId: 't1',
+    targetType: TimerTargetTypeEnum.task,
+    title: 'Tela de login',
+    listName: listName,
+    status: status,
+    spentMinutes: spent,
+    sessionStartedAt: start,
+  );
 
   LockScreenTimerEntity appointmentEntity() => LockScreenTimerEntity(
-        targetId: 'a1',
-        targetType: TimerTargetTypeEnum.appointment,
-        title: 'Dentista',
-        listName: 'Pessoal',
-        status: TimerStatusEnum.running,
-        spentMinutes: 10,
-        sessionStartedAt: start,
-      );
+    targetId: 'a1',
+    targetType: TimerTargetTypeEnum.appointment,
+    title: 'Dentista',
+    listName: 'Pessoal',
+    status: TimerStatusEnum.running,
+    spentMinutes: 10,
+    sessionStartedAt: start,
+  );
 
   void wire({void Function()? onCancel}) {
     timerCtrl = StreamController.broadcast(onCancel: onCancel);
@@ -120,12 +118,17 @@ void main() {
     listRepo = _MockTaskListRepo();
     wire();
     when(() => timerRepo.watchActive()).thenAnswer((_) => timerCtrl.stream);
-    when(() => taskRepo.watchTasks(includeDone: true))
-        .thenAnswer((_) => tasksCtrl.stream);
+    when(
+      () => taskRepo.watchTasks(includeDone: true),
+    ).thenAnswer((_) => tasksCtrl.stream);
     when(() => apptRepo.watchAll()).thenAnswer((_) => apptsCtrl.stream);
     when(() => listRepo.watchLists()).thenAnswer((_) => listsCtrl.stream);
-    useCase =
-        WatchLockScreenTimerUseCase(timerRepo, taskRepo, apptRepo, listRepo);
+    useCase = WatchLockScreenTimerUseCase(
+      timerRepo,
+      taskRepo,
+      apptRepo,
+      listRepo,
+    );
   });
 
   tearDown(() async {
@@ -266,9 +269,7 @@ void main() {
       useCase(const NoParams()),
       emitsInOrder([
         Right<Failure, LockScreenTimerEntity?>(taskEntity()),
-        Right<Failure, LockScreenTimerEntity?>(
-          taskEntity(listName: 'Serviço'),
-        ),
+        Right<Failure, LockScreenTimerEntity?>(taskEntity(listName: 'Serviço')),
       ]),
     );
     timerCtrl.add(activeTask());

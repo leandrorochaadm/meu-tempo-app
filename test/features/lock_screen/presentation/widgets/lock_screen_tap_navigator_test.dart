@@ -39,8 +39,11 @@ void main() {
   setUp(() {
     authBloc = _MockAuthBloc();
     bloc = _MockTapBloc();
-    whenListen(authBloc, const Stream<AuthState>.empty(),
-        initialState: const AuthAuthenticated(_user));
+    whenListen(
+      authBloc,
+      const Stream<AuthState>.empty(),
+      initialState: const AuthAuthenticated(_user),
+    );
   });
 
   Widget harness() {
@@ -73,9 +76,11 @@ void main() {
   }
 
   testWidgets('task tap opens the target route', (tester) async {
-    whenListen(bloc, Stream<LockScreenTapState>.value(
-      const LockScreenTapPending(taskTap),
-    ), initialState: const LockScreenTapIdle());
+    whenListen(
+      bloc,
+      Stream<LockScreenTapState>.value(const LockScreenTapPending(taskTap)),
+      initialState: const LockScreenTapIdle(),
+    );
 
     await tester.pumpWidget(harness());
     await tester.pumpAndSettle();
@@ -85,9 +90,13 @@ void main() {
   });
 
   testWidgets('appointment tap opens the target route', (tester) async {
-    whenListen(bloc, Stream<LockScreenTapState>.value(
-      const LockScreenTapPending(appointmentTap),
-    ), initialState: const LockScreenTapIdle());
+    whenListen(
+      bloc,
+      Stream<LockScreenTapState>.value(
+        const LockScreenTapPending(appointmentTap),
+      ),
+      initialState: const LockScreenTapIdle(),
+    );
 
     await tester.pumpWidget(harness());
     await tester.pumpAndSettle();
@@ -96,8 +105,11 @@ void main() {
   });
 
   testWidgets('tap pending on mount (app opened by the tap)', (tester) async {
-    whenListen(bloc, const Stream<LockScreenTapState>.empty(),
-        initialState: const LockScreenTapPending(taskTap));
+    whenListen(
+      bloc,
+      const Stream<LockScreenTapState>.empty(),
+      initialState: const LockScreenTapPending(taskTap),
+    );
 
     await tester.pumpWidget(harness());
     await tester.pumpAndSettle();
@@ -106,8 +118,11 @@ void main() {
   });
 
   testWidgets('no tap does not navigate', (tester) async {
-    whenListen(bloc, const Stream<LockScreenTapState>.empty(),
-        initialState: const LockScreenTapIdle());
+    whenListen(
+      bloc,
+      const Stream<LockScreenTapState>.empty(),
+      initialState: const LockScreenTapIdle(),
+    );
 
     await tester.pumpWidget(harness());
     await tester.pumpAndSettle();
@@ -116,14 +131,21 @@ void main() {
     verifyNever(() => bloc.add(any()));
   });
 
-  testWidgets('tap with the login resolving waits for the session',
-      (tester) async {
+  testWidgets('tap with the login resolving waits for the session', (
+    tester,
+  ) async {
     final authController = StreamController<AuthState>();
     addTearDown(authController.close);
-    whenListen(authBloc, authController.stream,
-        initialState: const AuthInitial());
-    whenListen(bloc, const Stream<LockScreenTapState>.empty(),
-        initialState: const LockScreenTapPending(taskTap));
+    whenListen(
+      authBloc,
+      authController.stream,
+      initialState: const AuthInitial(),
+    );
+    whenListen(
+      bloc,
+      const Stream<LockScreenTapState>.empty(),
+      initialState: const LockScreenTapPending(taskTap),
+    );
 
     await tester.pumpWidget(harness());
     await tester.pumpAndSettle();
@@ -139,10 +161,16 @@ void main() {
   });
 
   testWidgets('signed out does not open', (tester) async {
-    whenListen(authBloc, const Stream<AuthState>.empty(),
-        initialState: const AuthUnauthenticated());
-    whenListen(bloc, const Stream<LockScreenTapState>.empty(),
-        initialState: const LockScreenTapPending(taskTap));
+    whenListen(
+      authBloc,
+      const Stream<AuthState>.empty(),
+      initialState: const AuthUnauthenticated(),
+    );
+    whenListen(
+      bloc,
+      const Stream<LockScreenTapState>.empty(),
+      initialState: const LockScreenTapPending(taskTap),
+    );
 
     await tester.pumpWidget(harness());
     await tester.pumpAndSettle();

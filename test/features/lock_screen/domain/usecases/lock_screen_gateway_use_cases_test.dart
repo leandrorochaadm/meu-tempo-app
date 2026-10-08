@@ -26,33 +26,39 @@ void main() {
   setUp(() => gateway = FakeLockScreenTimerGateway());
   tearDown(() => gateway.dispose());
 
-  test('GetLockScreenPermissionStatusUseCase returns what the phone reports',
-      () async {
-    gateway.permissionResult =
-        const Right(LockScreenPermissionStatusEnum.denied);
+  test(
+    'GetLockScreenPermissionStatusUseCase returns what the phone reports',
+    () async {
+      gateway.permissionResult = const Right(
+        LockScreenPermissionStatusEnum.denied,
+      );
 
-    final result = await GetLockScreenPermissionStatusUseCase(gateway)(
-      const NoParams(),
-    );
+      final result = await GetLockScreenPermissionStatusUseCase(gateway)(
+        const NoParams(),
+      );
 
-    expect(result, const Right(LockScreenPermissionStatusEnum.denied));
-    expect(gateway.permissionChecks, 1);
-  });
+      expect(result, const Right(LockScreenPermissionStatusEnum.denied));
+      expect(gateway.permissionChecks, 1);
+    },
+  );
 
-  test('GetLockScreenPermissionStatusUseCase passes the failure along',
-      () async {
-    gateway.permissionResult = const Left(LockScreenPlatformFailure());
+  test(
+    'GetLockScreenPermissionStatusUseCase passes the failure along',
+    () async {
+      gateway.permissionResult = const Left(LockScreenPlatformFailure());
 
-    final result = await GetLockScreenPermissionStatusUseCase(gateway)(
-      const NoParams(),
-    );
+      final result = await GetLockScreenPermissionStatusUseCase(gateway)(
+        const NoParams(),
+      );
 
-    expect(result, const Left(LockScreenPlatformFailure()));
-  });
+      expect(result, const Left(LockScreenPlatformFailure()));
+    },
+  );
 
   test('OpenNotificationSettingsUseCase opens the settings', () async {
-    final result =
-        await OpenNotificationSettingsUseCase(gateway)(const NoParams());
+    final result = await OpenNotificationSettingsUseCase(gateway)(
+      const NoParams(),
+    );
 
     expect(result, const Right(unit));
     expect(gateway.openSettingsCalls, 1);
@@ -61,8 +67,9 @@ void main() {
   test('OpenNotificationSettingsUseCase passes the failure along', () async {
     gateway.openSettingsResult = const Left(LockScreenPlatformFailure());
 
-    final result =
-        await OpenNotificationSettingsUseCase(gateway)(const NoParams());
+    final result = await OpenNotificationSettingsUseCase(gateway)(
+      const NoParams(),
+    );
 
     expect(result, const Left(LockScreenPlatformFailure()));
   });

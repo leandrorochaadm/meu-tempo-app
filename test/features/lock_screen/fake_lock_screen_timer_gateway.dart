@@ -48,7 +48,7 @@ class FakeLockScreenTimerGateway implements LockScreenTimerGateway {
 
   @override
   Future<Either<Failure, LockScreenPermissionStatusEnum>>
-      getPermissionStatus() async {
+  getPermissionStatus() async {
     permissionChecks++;
     return permissionResult;
   }

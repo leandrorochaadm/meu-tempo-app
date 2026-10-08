@@ -30,7 +30,8 @@ class WatchLockScreenTimerStartsUseCase
     return _watchLockScreenTimer(params).expand((result) {
       if (result.isLeft()) return const <LockScreenTimerEntity>[];
       final current = result.getRight().toNullable();
-      final isStart = hasBaseline &&
+      final isStart =
+          hasBaseline &&
           current != null &&
           current.startsSessionAfter(previous);
       hasBaseline = true;

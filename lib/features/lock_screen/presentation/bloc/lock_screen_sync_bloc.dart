@@ -28,7 +28,7 @@ part 'lock_screen_sync_state.dart';
 class LockScreenSyncBloc
     extends Bloc<LockScreenSyncEvent, LockScreenSyncState> {
   LockScreenSyncBloc(this._watchLockScreenTimer, this._syncLockScreenTimer)
-      : super(const LockScreenSyncStopped()) {
+    : super(const LockScreenSyncStopped()) {
     on<LockScreenSyncEvent>(_onEvent, transformer: _sequential());
   }
 
@@ -51,14 +51,12 @@ class LockScreenSyncBloc
   Future<void> _onEvent(
     LockScreenSyncEvent event,
     Emitter<LockScreenSyncState> emit,
-  ) =>
-      switch (event) {
-        LockScreenSyncStarted() => _subscribe(),
-        LockScreenSyncAppResumed() => _onAppResumed(),
-        LockScreenSyncSignedOut() => _onSignedOut(emit),
-        final _LockScreenSyncTimerChanged changed =>
-          _onTimerChanged(changed, emit),
-      };
+  ) => switch (event) {
+    LockScreenSyncStarted() => _subscribe(),
+    LockScreenSyncAppResumed() => _onAppResumed(),
+    LockScreenSyncSignedOut() => _onSignedOut(emit),
+    final _LockScreenSyncTimerChanged changed => _onTimerChanged(changed, emit),
+  };
 
   /// (Re)subscribes from scratch. The first emission of a new subscription is
   /// always relayed to the gateway: that is what "fixes" the lock screen when

@@ -47,10 +47,10 @@ void main() {
   });
 
   LockScreenPermissionBloc build() => LockScreenPermissionBloc(
-        watchWarnings,
-        GetLockScreenPermissionStatusUseCase(gateway),
-        OpenNotificationSettingsUseCase(gateway),
-      );
+    watchWarnings,
+    GetLockScreenPermissionStatusUseCase(gateway),
+    OpenNotificationSettingsUseCase(gateway),
+  );
 
   const wait = Duration(milliseconds: 10);
 
@@ -163,8 +163,9 @@ void main() {
       await flush();
       sources.last.add(const Right(unit));
       await flush();
-      gateway.permissionResult =
-          const Right(LockScreenPermissionStatusEnum.granted);
+      gateway.permissionResult = const Right(
+        LockScreenPermissionStatusEnum.granted,
+      );
       bloc.add(const LockScreenPermissionAppResumed());
     },
     wait: wait,

@@ -53,8 +53,7 @@ void main() {
     final result = await useCase(params(LockScreenActionEnum.resume));
 
     expect(result, const Right<Failure, Unit>(unit));
-    verify(() => resume(ResumeTimerParams(targetId: 't1', now: now)))
-        .called(1);
+    verify(() => resume(ResumeTimerParams(targetId: 't1', now: now))).called(1);
     verifyNever(() => pause(any()));
     verifyNever(() => finish(any()));
   });
@@ -63,15 +62,15 @@ void main() {
     final result = await useCase(params(LockScreenActionEnum.stopConfirmed));
 
     expect(result, const Right<Failure, Unit>(unit));
-    verify(() => finish(FinishTimerParams(targetId: 't1', now: now)))
-        .called(1);
+    verify(() => finish(FinishTimerParams(targetId: 't1', now: now))).called(1);
     verifyNever(() => pause(any()));
     verifyNever(() => resume(any()));
   });
 
   test('falha do UseCase de destino é devolvida', () async {
-    when(() => finish(any()))
-        .thenAnswer((_) async => const Left(NetworkFailure()));
+    when(
+      () => finish(any()),
+    ).thenAnswer((_) async => const Left(NetworkFailure()));
 
     final result = await useCase(params(LockScreenActionEnum.stopConfirmed));
 

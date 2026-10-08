@@ -57,16 +57,15 @@ class LockScreenTimerResolver {
     required String listId,
     required int spentMinutes,
     required List<TaskListEntity> lists,
-  }) =>
-      LockScreenTimerEntity(
-        targetId: active.targetId,
-        targetType: active.targetType,
-        title: title,
-        listName: _listName(listId, lists),
-        status: active.status,
-        spentMinutes: spentMinutes,
-        sessionStartedAt: active.startedAt,
-      );
+  }) => LockScreenTimerEntity(
+    targetId: active.targetId,
+    targetType: active.targetType,
+    title: title,
+    listName: _listName(listId, lists),
+    status: active.status,
+    spentMinutes: spentMinutes,
+    sessionStartedAt: active.startedAt,
+  );
 
   /// Empty when the list is not found.
   static String _listName(String listId, List<TaskListEntity> lists) {

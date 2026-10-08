@@ -71,12 +71,12 @@ class LockScreenTimerEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        targetId,
-        targetType,
-        title,
-        listName,
-        status,
-        spentMinutes,
-        sessionStartedAt,
-      ];
+    targetId,
+    targetType,
+    title,
+    listName,
+    status,
+    spentMinutes,
+    sessionStartedAt,
+  ];
 }

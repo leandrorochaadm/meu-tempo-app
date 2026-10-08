@@ -54,7 +54,7 @@ class WatchLockScreenTimerUseCase
     Either<Failure, List<AppointmentEntity>>? appointments;
     Either<Failure, List<TaskListEntity>>? lists;
     late final StreamController<Either<Failure, LockScreenTimerEntity?>>
-        controller;
+    controller;
 
     void recompute() {
       final result = _combine(timer, tasks, appointments, lists);
@@ -64,36 +64,24 @@ class WatchLockScreenTimerUseCase
     controller = StreamController<Either<Failure, LockScreenTimerEntity?>>(
       onListen: () {
         subscriptions.addAll([
-          _timerRepository.watchActive().listen(
-            (value) {
-              timer = value;
-              recompute();
-            },
-            onError: controller.addError,
-          ),
+          _timerRepository.watchActive().listen((value) {
+            timer = value;
+            recompute();
+          }, onError: controller.addError),
           // Includes done tasks: the target must be found even if it was
           // completed from the app.
-          _taskRepository.watchTasks(includeDone: true).listen(
-            (value) {
-              tasks = value;
-              recompute();
-            },
-            onError: controller.addError,
-          ),
-          _appointmentRepository.watchAll().listen(
-            (value) {
-              appointments = value;
-              recompute();
-            },
-            onError: controller.addError,
-          ),
-          _taskListRepository.watchLists().listen(
-            (value) {
-              lists = value;
-              recompute();
-            },
-            onError: controller.addError,
-          ),
+          _taskRepository.watchTasks(includeDone: true).listen((value) {
+            tasks = value;
+            recompute();
+          }, onError: controller.addError),
+          _appointmentRepository.watchAll().listen((value) {
+            appointments = value;
+            recompute();
+          }, onError: controller.addError),
+          _taskListRepository.watchLists().listen((value) {
+            lists = value;
+            recompute();
+          }, onError: controller.addError),
         ]);
       },
       onPause: () {

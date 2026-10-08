@@ -46,12 +46,14 @@ class LockScreenTapBloc extends Bloc<LockScreenTapEvent, LockScreenTapState> {
   void _onReceived(
     _LockScreenTapReceived event,
     Emitter<LockScreenTapState> emit,
-  ) =>
-      emit(LockScreenTapPending(event.tap));
+  ) => emit(LockScreenTapPending(event.tap));
 
   /// Only clears if the pending one is still the same tap (a new tap that
   /// arrived in the meantime stays pending).
-  void _onHandled(LockScreenTapHandled event, Emitter<LockScreenTapState> emit) {
+  void _onHandled(
+    LockScreenTapHandled event,
+    Emitter<LockScreenTapState> emit,
+  ) {
     if (state == LockScreenTapPending(event.tap)) {
       emit(const LockScreenTapIdle());
     }

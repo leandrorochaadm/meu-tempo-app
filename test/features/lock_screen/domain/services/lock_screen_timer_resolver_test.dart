@@ -35,14 +35,13 @@ void main() {
     TimerTargetTypeEnum type, {
     String listId = 'work',
     TimerStatusEnum status = TimerStatusEnum.running,
-  }) =>
-      ActiveTimerEntity(
-        targetId: id,
-        targetType: type,
-        listId: listId,
-        startedAt: start,
-        status: status,
-      );
+  }) => ActiveTimerEntity(
+    targetId: id,
+    targetType: type,
+    listId: listId,
+    startedAt: start,
+    status: status,
+  );
 
   test('tarefa: nome, lista e tempo já gasto', () {
     final result = LockScreenTimerResolver.fromTask(
@@ -128,11 +127,9 @@ void main() {
       isDone: true,
     );
     expect(
-      LockScreenTimerResolver.fromTask(
-        active('t1', TimerTargetTypeEnum.task),
-        [done],
-        lists,
-      ),
+      LockScreenTimerResolver.fromTask(active('t1', TimerTargetTypeEnum.task), [
+        done,
+      ], lists),
       isNotNull,
     );
   });
