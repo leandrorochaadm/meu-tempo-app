@@ -97,7 +97,7 @@ class _ActiveTimerBarState extends State<ActiveTimerBar> {
             switchOutCurve: motion.curve,
             transitionBuilder: (child, animation) => SizeTransition(
               sizeFactor: animation,
-              axisAlignment: -1,
+              alignment: AlignmentDirectional.topStart,
               child: FadeTransition(opacity: animation, child: child),
             ),
             child: switch (state) {
