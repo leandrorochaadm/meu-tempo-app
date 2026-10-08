@@ -64,6 +64,29 @@ class TimerRepositoryImpl implements TimerRepository {
   }
 
   @override
+  Future<Either<Failure, bool>> replaceActiveIfUnchanged({
+    required ActiveTimerEntity expected,
+    required ActiveTimerEntity replacement,
+  }) async {
+    try {
+      final replaced = await _dataSource.replaceActiveIf(
+        // Igualdade por valor (Equatable) — "é o mesmo cronômetro que o
+        // UseCase leu"; a decisão de negócio fica no UseCase.
+        matches: (current) => current?.toEntity() == expected,
+        replacement: ActiveTimerModel.fromEntity(replacement),
+      );
+      return Right(replaced);
+    } on AppException catch (e, s) {
+      AppLogger.logError(
+        'replaceActiveIfUnchanged falhou',
+        error: e,
+        stackTrace: s,
+      );
+      return Left(e.toFailure());
+    }
+  }
+
+  @override
   Future<Either<Failure, Unit>> clear() async {
     try {
       await _dataSource.clear();

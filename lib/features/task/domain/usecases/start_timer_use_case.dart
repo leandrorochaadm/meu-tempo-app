@@ -4,15 +4,12 @@ import 'package:injectable/injectable.dart';
 
 import '../../../../core/error/failures.dart';
 import '../../../../core/usecase/usecase.dart';
-import '../../../appointment/domain/repositories/appointment_repository.dart';
 import '../entities/active_timer_entity.dart';
-import '../entities/time_entry_entity.dart';
-import '../entities/time_entry_origin_enum.dart';
+import '../entities/timer_status_enum.dart';
 import '../entities/timer_target_type_enum.dart';
-import '../repositories/task_repository.dart';
-import '../repositories/time_entry_repository.dart';
 import '../repositories/timer_repository.dart';
 import '../task_failures.dart';
+import 'record_timer_session_use_case.dart';
 
 class StartTimerParams extends Equatable {
   const StartTimerParams({
@@ -39,21 +36,16 @@ class StartTimerParams extends Equatable {
 }
 
 /// Inicia o cronômetro numa folha ou compromisso. **Só 1 ativo por vez:** se já
-/// houver outro rodando, ele é pausado, seu tempo decorrido é somado ao alvo
-/// certo (tarefa ou compromisso) e um registro de tempo datado é gravado.
+/// houver outro (rodando ou pausado), ele é encerrado; a sessão do que estava
+/// rodando é somada ao alvo certo (tarefa ou compromisso) com um registro de
+/// tempo datado. Dar start no mesmo alvo pausado volta a contar (equivale a
+/// continuar).
 @lazySingleton
 class StartTimerUseCase implements UseCase<Unit, StartTimerParams> {
-  const StartTimerUseCase(
-    this._timerRepository,
-    this._taskRepository,
-    this._appointmentRepository,
-    this._timeEntryRepository,
-  );
+  const StartTimerUseCase(this._timerRepository, this._recordSession);
 
   final TimerRepository _timerRepository;
-  final TaskRepository _taskRepository;
-  final AppointmentRepository _appointmentRepository;
-  final TimeEntryRepository _timeEntryRepository;
+  final RecordTimerSessionUseCase _recordSession;
 
   @override
   Future<Either<Failure, Unit>> call(StartTimerParams params) async {
@@ -71,11 +63,12 @@ class StartTimerUseCase implements UseCase<Unit, StartTimerParams> {
 
     final active = claimed.getRight().toNullable();
     if (active != null) {
-      // Pausa o anterior, somando o tempo decorrido ao alvo correto.
-      final elapsed = active.elapsedMinutes(params.now);
-      if (elapsed > 0) {
-        await _recordElapsed(active, elapsed, params.now);
-      }
+      // Encerra o anterior somando a sessão ao alvo certo. Pausado não soma
+      // (elapsedMinutes = 0). Falha ao somar não impede o novo start: o
+      // anterior já foi reivindicado e o usuário precisa do cronômetro novo.
+      await _recordSession(
+        RecordTimerSessionParams(session: active, now: params.now),
+      );
     }
 
     return _timerRepository.setActive(ActiveTimerEntity(
@@ -83,28 +76,7 @@ class StartTimerUseCase implements UseCase<Unit, StartTimerParams> {
       targetType: params.targetType,
       listId: params.listId,
       startedAt: params.now,
-    ));
-  }
-
-  /// Soma [elapsed] ao alvo do cronômetro [active] e grava o registro datado.
-  Future<void> _recordElapsed(
-    ActiveTimerEntity active,
-    int elapsed,
-    DateTime now,
-  ) async {
-    if (active.targetType == TimerTargetTypeEnum.task) {
-      await _taskRepository.addSpentMinutes(active.targetId, elapsed);
-    } else {
-      await _appointmentRepository.addSpentMinutes(active.targetId, elapsed);
-    }
-    await _timeEntryRepository.add(TimeEntryEntity(
-      id: '',
-      targetId: active.targetId,
-      targetType: active.targetType,
-      listId: active.listId,
-      minutes: elapsed,
-      origin: TimeEntryOriginEnum.timer,
-      occurredAt: now,
+      status: TimerStatusEnum.running,
     ));
   }
 }

@@ -17,6 +17,7 @@ ActiveTimerModel _$ActiveTimerModelFromJson(Map<String, dynamic> json) =>
         json['targetType'],
       ),
       listId: json['listId'] as String?,
+      status: json['status'] as String?,
     );
 
 Map<String, dynamic> _$ActiveTimerModelToJson(ActiveTimerModel instance) =>
@@ -25,6 +26,7 @@ Map<String, dynamic> _$ActiveTimerModelToJson(ActiveTimerModel instance) =>
       'startedAt': ?const TimestampConverter().toJson(instance.startedAt),
       'targetType': ?_$TimerTargetTypeEnumEnumMap[instance.targetType],
       'listId': ?instance.listId,
+      'status': ?instance.status,
     };
 
 const _$TimerTargetTypeEnumEnumMap = {

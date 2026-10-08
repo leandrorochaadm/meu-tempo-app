@@ -143,10 +143,16 @@ import 'package:meu_tempo/features/task/domain/usecases/get_task_list_filter_use
     as _i247;
 import 'package:meu_tempo/features/task/domain/usecases/move_task_use_case.dart'
     as _i213;
+import 'package:meu_tempo/features/task/domain/usecases/pause_timer_use_case.dart'
+    as _i197;
+import 'package:meu_tempo/features/task/domain/usecases/record_timer_session_use_case.dart'
+    as _i131;
 import 'package:meu_tempo/features/task/domain/usecases/register_manual_time_use_case.dart'
     as _i1025;
 import 'package:meu_tempo/features/task/domain/usecases/restore_tasks_use_case.dart'
     as _i942;
+import 'package:meu_tempo/features/task/domain/usecases/resume_timer_use_case.dart'
+    as _i73;
 import 'package:meu_tempo/features/task/domain/usecases/save_task_list_filter_use_case.dart'
     as _i32;
 import 'package:meu_tempo/features/task/domain/usecases/seed_first_access_use_case.dart'
@@ -277,6 +283,9 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i820.TaskListFilterLocalDataSource>(),
       ),
     );
+    gh.lazySingleton<_i73.ResumeTimerUseCase>(
+      () => _i73.ResumeTimerUseCase(gh<_i381.TimerRepository>()),
+    );
     gh.lazySingleton<_i397.WatchActiveTimerUseCase>(
       () => _i397.WatchActiveTimerUseCase(gh<_i381.TimerRepository>()),
     );
@@ -334,6 +343,13 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i689.WatchListsUseCase>(
       () => _i689.WatchListsUseCase(gh<_i219.TaskListRepository>()),
     );
+    gh.lazySingleton<_i131.RecordTimerSessionUseCase>(
+      () => _i131.RecordTimerSessionUseCase(
+        gh<_i521.TaskRepository>(),
+        gh<_i259.AppointmentRepository>(),
+        gh<_i706.TimeEntryRepository>(),
+      ),
+    );
     gh.lazySingleton<_i543.RegisterAppointmentTimeUseCase>(
       () => _i543.RegisterAppointmentTimeUseCase(
         gh<_i259.AppointmentRepository>(),
@@ -375,20 +391,22 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i559.WatchConfigUseCase>(
       () => _i559.WatchConfigUseCase(gh<_i330.ConfigRepository>()),
     );
+    gh.lazySingleton<_i197.PauseTimerUseCase>(
+      () => _i197.PauseTimerUseCase(
+        gh<_i381.TimerRepository>(),
+        gh<_i131.RecordTimerSessionUseCase>(),
+      ),
+    );
     gh.lazySingleton<_i210.StartTimerUseCase>(
       () => _i210.StartTimerUseCase(
         gh<_i381.TimerRepository>(),
-        gh<_i521.TaskRepository>(),
-        gh<_i259.AppointmentRepository>(),
-        gh<_i706.TimeEntryRepository>(),
+        gh<_i131.RecordTimerSessionUseCase>(),
       ),
     );
     gh.lazySingleton<_i726.StopTimerUseCase>(
       () => _i726.StopTimerUseCase(
         gh<_i381.TimerRepository>(),
-        gh<_i521.TaskRepository>(),
-        gh<_i259.AppointmentRepository>(),
-        gh<_i706.TimeEntryRepository>(),
+        gh<_i131.RecordTimerSessionUseCase>(),
       ),
     );
     gh.lazySingleton<_i1025.RegisterManualTimeUseCase>(

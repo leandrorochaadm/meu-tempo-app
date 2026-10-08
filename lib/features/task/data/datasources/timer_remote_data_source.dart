@@ -11,6 +11,14 @@ abstract class TimerRemoteDataSource {
   Future<ActiveTimerModel?> getActive();
   Future<void> setActive(ActiveTimerModel timer);
   Future<ActiveTimerModel?> claimActive();
+
+  /// Numa transação: lê o doc do cronômetro ativo e, se [matches] aceitar o
+  /// atual (`null` = sem cronômetro), grava [replacement] e devolve `true`;
+  /// senão não grava nada e devolve `false`.
+  Future<bool> replaceActiveIf({
+    required bool Function(ActiveTimerModel? current) matches,
+    required ActiveTimerModel replacement,
+  });
   Future<void> clear();
 }
 
@@ -77,6 +85,26 @@ class TimerRemoteDataSourceImpl implements TimerRemoteDataSource {
         if (model == null) return null;
         txn.delete(_doc);
         return model;
+      });
+    } on FirebaseException catch (e) {
+      throw mapFirestoreException(e);
+    }
+  }
+
+  @override
+  Future<bool> replaceActiveIf({
+    required bool Function(ActiveTimerModel? current) matches,
+    required ActiveTimerModel replacement,
+  }) async {
+    try {
+      // Mesma garantia do claimActive: se dois toques concorrem, o Firestore
+      // serializa — o segundo reexecuta, o predicado recusa o doc já trocado e
+      // nada é gravado de novo. O predicado precisa ser puro.
+      return await _firestore.runTransaction<bool>((txn) async {
+        final snap = await txn.get(_doc);
+        if (!matches(_parse(snap))) return false;
+        txn.set(_doc, replacement.toJson());
+        return true;
       });
     } on FirebaseException catch (e) {
       throw mapFirestoreException(e);

@@ -21,6 +21,16 @@ abstract class TimerRepository {
   /// vence o claim registra o tempo, evitando durações repetidas.
   Future<Either<Failure, ActiveTimerEntity?>> claimActive();
 
+  /// Troca o cronômetro ativo por [replacement] **só se** ele ainda for igual a
+  /// [expected] (mesmo alvo, tipo, lista, início e status), de forma atômica.
+  /// Devolve `true` se trocou; `false` se o cronômetro mudou ou sumiu no meio
+  /// (outro toque ou outro celular venceu) — nesse caso nada é gravado. É a
+  /// base da idempotência de pausar e continuar.
+  Future<Either<Failure, bool>> replaceActiveIfUnchanged({
+    required ActiveTimerEntity expected,
+    required ActiveTimerEntity replacement,
+  });
+
   /// Limpa o cronômetro ativo.
   Future<Either<Failure, Unit>> clear();
 }

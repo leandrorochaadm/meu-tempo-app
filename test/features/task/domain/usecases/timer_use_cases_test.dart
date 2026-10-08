@@ -4,11 +4,13 @@ import 'package:meu_tempo/core/error/failures.dart';
 import 'package:meu_tempo/features/appointment/domain/repositories/appointment_repository.dart';
 import 'package:meu_tempo/features/task/domain/entities/active_timer_entity.dart';
 import 'package:meu_tempo/features/task/domain/entities/time_entry_entity.dart';
+import 'package:meu_tempo/features/task/domain/entities/timer_status_enum.dart';
 import 'package:meu_tempo/features/task/domain/entities/timer_target_type_enum.dart';
 import 'package:meu_tempo/features/task/domain/repositories/task_repository.dart';
 import 'package:meu_tempo/features/task/domain/repositories/time_entry_repository.dart';
 import 'package:meu_tempo/features/task/domain/repositories/timer_repository.dart';
 import 'package:meu_tempo/features/task/domain/task_failures.dart';
+import 'package:meu_tempo/features/task/domain/usecases/record_timer_session_use_case.dart';
 import 'package:meu_tempo/features/task/domain/usecases/register_manual_time_use_case.dart';
 import 'package:meu_tempo/features/task/domain/usecases/start_timer_use_case.dart';
 import 'package:meu_tempo/features/task/domain/usecases/stop_timer_use_case.dart';
@@ -55,10 +57,11 @@ void main() {
         .thenAnswer((_) async => const Right(null));
   });
 
+  RecordTimerSessionUseCase recordUseCase() =>
+      RecordTimerSessionUseCase(taskRepo, apptRepo, entryRepo);
   StartTimerUseCase startUseCase() =>
-      StartTimerUseCase(timerRepo, taskRepo, apptRepo, entryRepo);
-  StopTimerUseCase stopUseCase() =>
-      StopTimerUseCase(timerRepo, taskRepo, apptRepo, entryRepo);
+      StartTimerUseCase(timerRepo, recordUseCase());
+  StopTimerUseCase stopUseCase() => StopTimerUseCase(timerRepo, recordUseCase());
   RegisterManualTimeUseCase manualUseCase() =>
       RegisterManualTimeUseCase(taskRepo, entryRepo);
 
@@ -146,6 +149,91 @@ void main() {
       verify(() => apptRepo.addSpentMinutes('appt', 10)).called(1);
       verifyNever(() => taskRepo.addSpentMinutes(any(), any()));
     });
+
+    test('anterior pausado não soma tempo e o novo começa rodando', () async {
+      final previous = ActiveTimerEntity(
+        targetId: 'old',
+        targetType: TimerTargetTypeEnum.task,
+        listId: 'lOld',
+        startedAt: now.subtract(const Duration(minutes: 25)),
+        status: TimerStatusEnum.paused,
+      );
+      when(() => timerRepo.claimActive())
+          .thenAnswer((_) async => Right(previous));
+
+      await startUseCase()(
+        StartTimerParams(
+          targetId: 'new',
+          targetType: TimerTargetTypeEnum.task,
+          targetIsLeaf: true,
+          listId: 'lNew',
+          now: now,
+        ),
+      );
+
+      verifyNever(() => taskRepo.addSpentMinutes(any(), any()));
+      verifyNever(() => entryRepo.add(any()));
+      final captured =
+          verify(() => timerRepo.setActive(captureAny())).captured.single
+              as ActiveTimerEntity;
+      expect(captured.status, TimerStatusEnum.running);
+    });
+
+    test('start no mesmo alvo pausado volta a contar', () async {
+      final previous = ActiveTimerEntity(
+        targetId: 't1',
+        targetType: TimerTargetTypeEnum.task,
+        listId: 'l1',
+        startedAt: now.subtract(const Duration(minutes: 25)),
+        status: TimerStatusEnum.paused,
+      );
+      when(() => timerRepo.claimActive())
+          .thenAnswer((_) async => Right(previous));
+
+      await startUseCase()(
+        StartTimerParams(
+          targetId: 't1',
+          targetType: TimerTargetTypeEnum.task,
+          targetIsLeaf: true,
+          listId: 'l1',
+          now: now,
+        ),
+      );
+
+      verifyNever(() => taskRepo.addSpentMinutes(any(), any()));
+      final captured =
+          verify(() => timerRepo.setActive(captureAny())).captured.single
+              as ActiveTimerEntity;
+      expect(captured.targetId, 't1');
+      expect(captured.startedAt, now);
+      expect(captured.status, TimerStatusEnum.running);
+    });
+
+    test('falha ao somar o anterior não impede o novo start', () async {
+      final previous = ActiveTimerEntity(
+        targetId: 'old',
+        targetType: TimerTargetTypeEnum.task,
+        listId: 'lOld',
+        startedAt: now.subtract(const Duration(minutes: 25)),
+      );
+      when(() => timerRepo.claimActive())
+          .thenAnswer((_) async => Right(previous));
+      when(() => taskRepo.addSpentMinutes(any(), any()))
+          .thenAnswer((_) async => const Left(ServerFailure()));
+
+      final result = await startUseCase()(
+        StartTimerParams(
+          targetId: 'new',
+          targetType: TimerTargetTypeEnum.task,
+          targetIsLeaf: true,
+          listId: 'lNew',
+          now: now,
+        ),
+      );
+
+      expect(result.isRight(), isTrue);
+      verify(() => timerRepo.setActive(any())).called(1);
+    });
   });
 
   group('StopTimerUseCase', () {
@@ -200,6 +288,42 @@ void main() {
 
       // Mesmo com 3 toques, o tempo entra só uma vez.
       verify(() => taskRepo.addSpentMinutes('t1', 40)).called(1);
+      verify(() => entryRepo.add(any())).called(1);
+    });
+
+    test('parar um pausado limpa sem somar', () async {
+      final active = ActiveTimerEntity(
+        targetId: 't1',
+        targetType: TimerTargetTypeEnum.task,
+        listId: 'l1',
+        startedAt: now.subtract(const Duration(minutes: 40)),
+        status: TimerStatusEnum.paused,
+      );
+      when(() => timerRepo.claimActive())
+          .thenAnswer((_) async => Right(active));
+
+      final result = await stopUseCase()(StopTimerParams(now: now));
+
+      expect(result.isRight(), isTrue);
+      verifyNever(() => taskRepo.addSpentMinutes(any(), any()));
+      verifyNever(() => entryRepo.add(any()));
+    });
+
+    test('falha ao somar não muda o resultado (claim já limpou)', () async {
+      final active = ActiveTimerEntity(
+        targetId: 't1',
+        targetType: TimerTargetTypeEnum.task,
+        listId: 'l1',
+        startedAt: now.subtract(const Duration(minutes: 40)),
+      );
+      when(() => timerRepo.claimActive())
+          .thenAnswer((_) async => Right(active));
+      when(() => taskRepo.addSpentMinutes(any(), any()))
+          .thenAnswer((_) async => const Left(ServerFailure()));
+
+      final result = await stopUseCase()(StopTimerParams(now: now));
+
+      expect(result.isRight(), isTrue);
       verify(() => entryRepo.add(any())).called(1);
     });
   });

@@ -57,6 +57,7 @@ tarefa com tempo absurdo (tipo 24 horas para uma tarefa de 30 min).
      novo, toco em "parar": o botão vira "confirmar"; toco nele e a tarefa
      aparece concluída no app. Se eu não tocar em "confirmar" em 5 segundos, o
      botão volta a "parar" e nada muda.
+   > 🟡 Parcial — plano 04; falta: 05, 06, 09, 10, 11
 4. **Tarefas e compromissos**: tudo acima vale para os dois, do mesmo jeito.
    - _Pronto quando:_ repito os testes dos itens 1 e 3 com o compromisso
      "Dentista" e tudo funciona igual. E, com uma tarefa rodando, dou start no
@@ -96,6 +97,7 @@ _Ainda não conversado._
 - **Pausar** (na tela bloqueada ou na cortina de avisos): o cronômetro para de
   contar e o tempo continua somando quando der start de novo, como já funciona
   no app.
+  > 🟡 Parcial — plano 04; falta: 06, 09, 10, 11
 - **Parar**: interrompe o cronômetro **e** dá a tarefa ou o compromisso por
   **concluído**, **com confirmação em dois toques**: ao tocar em "parar", o
   botão vira "confirmar" por **5 segundos**; sem o segundo toque, volta a
@@ -104,6 +106,7 @@ _Ainda não conversado._
 - **Pausado**: continua aparecendo, parado, com um botão **continuar** (que
   volta a contar) e o botão **parar**. Não dá para arrastar para o lado: só
   sai da tela ao continuar, parar ou dar start em outra tarefa/compromisso.
+  > 🟡 Parcial — plano 04; falta: 05, 10, 11
 - **Parado** (concluído): some da tela bloqueada e da cortina.
 - Concluir pela tela bloqueada **não tem "desfazer"**: o segundo toque de
   confirmação já protege contra toque errado.
