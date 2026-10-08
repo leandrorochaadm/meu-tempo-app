@@ -480,19 +480,6 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i949.SetAvailableMinutesUseCase>(),
       ),
     );
-    gh.lazySingleton<_i268.CreateTaskAndStartTimerUseCase>(
-      () => _i268.CreateTaskAndStartTimerUseCase(
-        gh<_i658.CreateTaskUseCase>(),
-        gh<_i650.AddSubtaskUseCase>(),
-        gh<_i210.StartTimerUseCase>(),
-      ),
-    );
-    gh.lazySingleton<_i159.SeedFirstAccessUseCase>(
-      () => _i159.SeedFirstAccessUseCase(
-        gh<_i330.ConfigRepository>(),
-        gh<_i658.CreateTaskUseCase>(),
-      ),
-    );
     gh.factory<_i990.AgendaBloc>(
       () => _i990.AgendaBloc(
         gh<_i777.WatchAppointmentsForDayUseCase>(),
@@ -505,6 +492,20 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i210.StartTimerUseCase>(),
         gh<_i726.StopTimerUseCase>(),
         gh<_i397.WatchActiveTimerUseCase>(),
+        gh<_i348.SetAppointmentDoneUseCase>(),
+      ),
+    );
+    gh.lazySingleton<_i268.CreateTaskAndStartTimerUseCase>(
+      () => _i268.CreateTaskAndStartTimerUseCase(
+        gh<_i658.CreateTaskUseCase>(),
+        gh<_i650.AddSubtaskUseCase>(),
+        gh<_i210.StartTimerUseCase>(),
+      ),
+    );
+    gh.lazySingleton<_i159.SeedFirstAccessUseCase>(
+      () => _i159.SeedFirstAccessUseCase(
+        gh<_i330.ConfigRepository>(),
+        gh<_i658.CreateTaskUseCase>(),
       ),
     );
     gh.factory<_i35.TaskListBloc>(

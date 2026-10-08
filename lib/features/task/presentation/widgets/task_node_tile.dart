@@ -79,10 +79,12 @@ class TaskNodeTile extends StatelessWidget {
             Row(
               children: [
                 if (node.isLeaf)
-                  InkWell(
-                    onTap: () => onToggleDone(node, !task.isDone),
-                    customBorder: const CircleBorder(),
-                    child: Icon(
+                  // Concluir/reabrir a folha (req. 10): botão de 48 dp com dica,
+                  // para o toque no círculo verde ser visível como "Reabrir".
+                  IconButton(
+                    onPressed: () => onToggleDone(node, !task.isDone),
+                    tooltip: task.isDone ? 'Reabrir' : 'Concluir',
+                    icon: Icon(
                       task.isDone
                           ? Icons.check_circle_rounded
                           : Icons.circle_outlined,

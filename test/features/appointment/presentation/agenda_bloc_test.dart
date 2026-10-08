@@ -7,6 +7,7 @@ import 'package:meu_tempo/features/appointment/domain/entities/appointment_entit
 import 'package:meu_tempo/features/appointment/domain/usecases/check_fits_in_day_use_case.dart';
 import 'package:meu_tempo/features/appointment/domain/usecases/create_appointment_use_case.dart';
 import 'package:meu_tempo/features/appointment/domain/usecases/delete_appointment_use_case.dart';
+import 'package:meu_tempo/features/appointment/domain/usecases/set_appointment_done_use_case.dart';
 import 'package:meu_tempo/features/appointment/domain/usecases/watch_appointments_for_day_use_case.dart';
 import 'package:meu_tempo/features/appointment/presentation/bloc/agenda_bloc.dart';
 import 'package:meu_tempo/features/config/domain/entities/day_config_entity.dart';
@@ -40,6 +41,8 @@ class _MockStopTimer extends Mock implements StopTimerUseCase {}
 
 class _MockWatchActiveTimer extends Mock implements WatchActiveTimerUseCase {}
 
+class _MockSetDone extends Mock implements SetAppointmentDoneUseCase {}
+
 class _FakeDayParams extends Fake implements DayParams {}
 
 class _FakeStartParams extends Fake implements StartTimerParams {}
@@ -62,6 +65,7 @@ void main() {
   late _MockStartTimer startTimer;
   late _MockStopTimer stopTimer;
   late _MockWatchActiveTimer watchActiveTimer;
+  late _MockSetDone setDone;
   const checkFits = CheckFitsInDayUseCase();
 
   const inbox = TaskListEntity(id: 'inbox', name: 'Entrada', isDefault: true);
@@ -74,6 +78,9 @@ void main() {
     registerFallbackValue(_FakeDeleteParams());
     registerFallbackValue(_FakeStartParams());
     registerFallbackValue(_FakeStopParams());
+    registerFallbackValue(
+      const SetAppointmentDoneParams(appointmentId: 'x', done: false),
+    );
   });
 
   setUp(() {
@@ -86,6 +93,8 @@ void main() {
     startTimer = _MockStartTimer();
     stopTimer = _MockStopTimer();
     watchActiveTimer = _MockWatchActiveTimer();
+    setDone = _MockSetDone();
+    when(() => setDone(any())).thenAnswer((_) async => const Right(unit));
     when(() => ensureInbox(any())).thenAnswer((_) async => const Right(inbox));
     when(() => watchConfig(any())).thenAnswer(
       (_) => const Stream<Either<Failure, DayConfigEntity>>.empty(),
@@ -111,15 +120,17 @@ void main() {
         startTimer,
         stopTimer,
         watchActiveTimer,
+        setDone,
       );
 
-  AppointmentEntity appt(int start) => AppointmentEntity(
+  AppointmentEntity appt(int start, {bool done = false}) => AppointmentEntity(
         id: 'a$start',
         title: 'a',
         listId: 'inbox',
         date: DateTime(2026, 7, 20),
         startMinute: start,
         durationMinutes: 60,
+        isDone: done,
       );
 
   blocTest<AgendaBloc, AgendaState>(
@@ -311,6 +322,67 @@ void main() {
       expect(p.targetId, 'a540');
       expect(p.targetType, TimerTargetTypeEnum.appointment);
       expect(p.listId, 'inbox');
+    },
+  );
+
+  for (final done in [true, false]) {
+    blocTest<AgendaBloc, AgendaState>(
+      done
+          ? 'AppointmentDoneToggled(done: true) conclui pelo SetAppointmentDoneUseCase'
+          : 'AppointmentDoneToggled(done: false) reabre',
+      build: () {
+        when(() => watchAppts(any()))
+            .thenAnswer((_) => Stream.value(Right([appt(540)])));
+        return build();
+      },
+      act: (bloc) async {
+        bloc.add(const AgendaStarted());
+        await Future<void>.delayed(const Duration(milliseconds: 10));
+        bloc.add(AppointmentDoneToggled(appointmentId: 'a540', done: done));
+      },
+      verify: (_) {
+        expect(
+          verify(() => setDone(captureAny())).captured.single,
+          SetAppointmentDoneParams(appointmentId: 'a540', done: done),
+        );
+      },
+    );
+  }
+
+  blocTest<AgendaBloc, AgendaState>(
+    'falha ao concluir emite erro e reemite a agenda',
+    build: () {
+      when(() => watchAppts(any()))
+          .thenAnswer((_) => Stream.value(Right([appt(540)])));
+      when(() => setDone(any()))
+          .thenAnswer((_) async => const Left(NotFoundFailure()));
+      return build();
+    },
+    act: (bloc) async {
+      bloc.add(const AgendaStarted());
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+      bloc.add(const AppointmentDoneToggled(appointmentId: 'a540', done: true));
+    },
+    wait: const Duration(milliseconds: 10),
+    skip: 2,
+    expect: () => [
+      const AgendaError('Este compromisso não existe mais.'),
+      isA<AgendaLoaded>()
+          .having((s) => s.appointments.single.id, 'id', 'a540'),
+    ],
+  );
+
+  blocTest<AgendaBloc, AgendaState>(
+    'compromisso concluído chega ao estado com isDone',
+    build: () {
+      when(() => watchAppts(any()))
+          .thenAnswer((_) => Stream.value(Right([appt(540, done: true)])));
+      return build();
+    },
+    act: (bloc) => bloc.add(const AgendaStarted()),
+    wait: const Duration(milliseconds: 10),
+    verify: (bloc) {
+      expect((bloc.state as AgendaLoaded).appointments.single.isDone, isTrue);
     },
   );
 }

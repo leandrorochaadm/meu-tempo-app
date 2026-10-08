@@ -23,6 +23,7 @@ import '../../domain/failures.dart';
 import '../../domain/usecases/check_fits_in_day_use_case.dart';
 import '../../domain/usecases/create_appointment_use_case.dart';
 import '../../domain/usecases/delete_appointment_use_case.dart';
+import '../../domain/usecases/set_appointment_done_use_case.dart';
 import '../../domain/usecases/watch_appointments_for_day_use_case.dart';
 
 part 'agenda_event.dart';
@@ -43,6 +44,7 @@ class AgendaBloc extends Bloc<AgendaEvent, AgendaState> {
     this._startTimer,
     this._stopTimer,
     this._watchActiveTimer,
+    this._setAppointmentDone,
   ) : super(const AgendaLoading()) {
     on<AgendaStarted>(_onStarted);
     on<AgendaAppointmentsUpdated>(_onAppointmentsUpdated);
@@ -53,6 +55,7 @@ class AgendaBloc extends Bloc<AgendaEvent, AgendaState> {
     on<AppointmentDeleted>(_onDeleted);
     on<AppointmentTimerStarted>(_onTimerStarted);
     on<AppointmentTimerStopped>(_onTimerStopped);
+    on<AppointmentDoneToggled>(_onDoneToggled);
   }
 
   final WatchAppointmentsForDayUseCase _watchAppointments;
@@ -65,6 +68,7 @@ class AgendaBloc extends Bloc<AgendaEvent, AgendaState> {
   final StartTimerUseCase _startTimer;
   final StopTimerUseCase _stopTimer;
   final WatchActiveTimerUseCase _watchActiveTimer;
+  final SetAppointmentDoneUseCase _setAppointmentDone;
 
   StreamSubscription<Either<Failure, List<AppointmentEntity>>>? _apptSub;
   StreamSubscription<Either<Failure, DayConfigEntity>>? _configSub;
@@ -221,6 +225,28 @@ class AgendaBloc extends Bloc<AgendaEvent, AgendaState> {
     result.match((f) => emit(AgendaError(_mapFailure(f))), (_) {});
   }
 
+  Future<void> _onDoneToggled(
+    AppointmentDoneToggled e,
+    Emitter<AgendaState> emit,
+  ) async {
+    final result = await _setAppointmentDone(SetAppointmentDoneParams(
+      appointmentId: e.appointmentId,
+      done: e.done,
+    ));
+    _handleWrite(result, emit);
+  }
+
+  /// Erro de escrita é **evento de UI, não estado de tela**: emite o erro (a
+  /// página mostra snackbar) e reemite o `AgendaLoaded`, senão a agenda sumiria
+  /// da tela — nada reemite sozinho quando a falha não gera novo snapshot.
+  /// Sucesso reflete pelo stream de compromissos.
+  void _handleWrite<T>(Either<Failure, T> result, Emitter<AgendaState> emit) {
+    result.match((f) {
+      emit(AgendaError(_mapFailure(f)));
+      _emit(emit);
+    }, (_) {});
+  }
+
   /// Descobre a lista de um compromisso carregado (lookup, não regra).
   String _listIdOf(String appointmentId) {
     for (final a in _appointments) {
@@ -232,6 +258,7 @@ class AgendaBloc extends Bloc<AgendaEvent, AgendaState> {
   String _mapFailure(Failure failure) => switch (failure) {
         EmptyAppointmentTitleFailure() => 'Digite um título.',
         InvalidAppointmentDurationFailure() => 'Informe uma duração válida.',
+        NotFoundFailure() => 'Este compromisso não existe mais.',
         NetworkFailure() => 'Sem conexão. Verifique a internet.',
         _ => 'Algo deu errado. Tente novamente.',
       };

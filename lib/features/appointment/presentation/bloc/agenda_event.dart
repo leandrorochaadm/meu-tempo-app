@@ -77,3 +77,17 @@ class AppointmentTimerStarted extends AgendaEvent {
 class AppointmentTimerStopped extends AgendaEvent {
   const AppointmentTimerStopped();
 }
+
+/// Concluir (`done: true`) ou reabrir (`done: false`) um compromisso.
+class AppointmentDoneToggled extends AgendaEvent {
+  const AppointmentDoneToggled({
+    required this.appointmentId,
+    required this.done,
+  });
+
+  final String appointmentId;
+  final bool done;
+
+  @override
+  List<Object?> get props => [appointmentId, done];
+}

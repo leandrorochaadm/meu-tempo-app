@@ -70,7 +70,7 @@ tarefa com tempo absurdo (tipo 24 horas para uma tarefa de 30 min).
      sozinha. Reabro essa filha no app: ela volta para a listagem por
      prioridade, a mãe volta a ficar aberta e a barra de progresso cai. Reabro
      um compromisso concluído: o sinal de "feito" some da agenda.
-   > 🟡 Parcial — plano 02; falta: 03
+   > ✅ Implementado — planos 02, 03
 
 ### Desejável
 
@@ -114,9 +114,10 @@ _Ainda não conversado._
 - **Reabrir**: tarefa ou compromisso concluído pode ser reaberto dentro do app
   (novidade; hoje só existe "desfazer" logo após concluir). Ao reabrir uma
   filha, a **mãe e a avó** que tinham concluído sozinhas **reabrem junto**.
-  > 🟡 Parcial — plano 02; falta: 03
+  > ✅ Implementado — planos 02, 03
 - Na agenda, o compromisso concluído **continua igual, com um sinal de
   "feito"** ao lado.
+  > ✅ Implementado — plano 03
 - **Tocar no cronômetro** (fora dos botões) abre o app direto na tarefa ou
   compromisso que está rodando.
 - **Dois celulares** (iPhone e Android com a mesma conta): a tela bloqueada de

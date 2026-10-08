@@ -49,12 +49,28 @@ void main() {
         level: 0,
       );
 
+  TaskNode doneLeafNode() => TaskNode(
+        task: TaskEntity(
+          id: 'leaf',
+          title: 'Folha',
+          listId: 'l1',
+          createdAt: today,
+          estimatedMinutes: 60,
+          dueDate: today,
+          spentMinutes: 30,
+          isDone: true,
+        ),
+        level: 0,
+      );
+
   late bool doneTapped;
+  bool? doneValue;
   late bool editTapped;
   late bool deleteTapped;
 
   setUp(() {
     doneTapped = false;
+    doneValue = null;
     editTapped = false;
     deleteTapped = false;
   });
@@ -68,7 +84,10 @@ void main() {
             onAddSubtask: (_) {},
             onToggleTimer: (_, _) {},
             onAddTime: (_, _) {},
-            onToggleDone: (_, _) => doneTapped = true,
+            onToggleDone: (_, done) {
+              doneTapped = true;
+              doneValue = done;
+            },
             onDelete: (_) => deleteTapped = true,
             onEdit: (_) => editTapped = true,
             onMove: (_) {},
@@ -83,6 +102,56 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(doneTapped, isTrue);
+  });
+
+  group('concluir e reabrir a folha', () {
+    testWidgets('folha aberta oferece Concluir e envia done = true',
+        (tester) async {
+      await tester.pumpWidget(harness(leafNode()));
+
+      await tester.tap(find.byTooltip('Concluir'));
+
+      expect(doneValue, isTrue);
+    });
+
+    testWidgets('folha concluída oferece Reabrir e envia done = false',
+        (tester) async {
+      await tester.pumpWidget(harness(doneLeafNode()));
+
+      expect(find.byTooltip('Reabrir'), findsOneWidget);
+      await tester.tap(find.byTooltip('Reabrir'));
+
+      expect(doneValue, isFalse);
+    });
+
+    testWidgets('arrastar a folha concluída para a direita reabre',
+        (tester) async {
+      await tester.pumpWidget(harness(doneLeafNode()));
+
+      await tester.drag(find.text('Folha'), const Offset(500, 0));
+      await tester.pumpAndSettle();
+
+      expect(doneValue, isFalse);
+    });
+
+    testWidgets('botão de concluir tem alvo de toque de 48 dp',
+        (tester) async {
+      await tester.pumpWidget(harness(leafNode()));
+
+      expect(
+        tester
+            .getSize(find.widgetWithIcon(IconButton, Icons.circle_outlined))
+            .height,
+        greaterThanOrEqualTo(48),
+      );
+    });
+
+    testWidgets('mãe não tem botão de concluir/reabrir', (tester) async {
+      await tester.pumpWidget(harness(parentNode()));
+
+      expect(find.byTooltip('Concluir'), findsNothing);
+      expect(find.byTooltip('Reabrir'), findsNothing);
+    });
   });
 
   testWidgets('mãe: arrastar para a direita NÃO conclui (gate isLeaf)',

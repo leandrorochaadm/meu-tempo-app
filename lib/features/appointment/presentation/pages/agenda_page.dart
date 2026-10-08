@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/theme_context_extensions.dart';
 import '../../../../core/ui/app_empty_state.dart';
 import '../../../../core/ui/app_list_skeleton.dart';
+import '../../../../core/ui/app_undo_snackbar.dart';
 import '../../../../core/ui/task_running_badge.dart';
 import '../../../../core/utils/formatters/duration_formatter.dart';
 import '../../../../core/utils/formatters/time_formatter.dart';
@@ -38,6 +39,21 @@ class _AgendaPageState extends State<AgendaPage> {
         startMinute: result.startMinute,
         durationMinutes: result.durationMinutes,
       ));
+    }
+  }
+
+  /// Concluir oferece "Desfazer" (req. 13), igual à tarefa; reabrir não.
+  void _toggleDone(AppointmentEntity appointment, bool done) {
+    final bloc = context.read<AgendaBloc>()
+      ..add(AppointmentDoneToggled(appointmentId: appointment.id, done: done));
+    if (done) {
+      AppUndoSnackBar.show(
+        context,
+        message: '"${appointment.title}" concluído',
+        onUndo: () => bloc.add(
+          AppointmentDoneToggled(appointmentId: appointment.id, done: false),
+        ),
+      );
     }
   }
 
@@ -100,6 +116,10 @@ class _AgendaPageState extends State<AgendaPage> {
                                                   appointments[i].id)
                                               : const AppointmentTimerStopped(),
                                         ),
+                                onToggleDone: () => _toggleDone(
+                                  appointments[i],
+                                  !appointments[i].isDone,
+                                ),
                                 onDelete: () => context.read<AgendaBloc>().add(
                                     AppointmentDeleted(appointments[i].id)),
                               );
@@ -165,6 +185,7 @@ class _AppointmentTile extends StatelessWidget {
     required this.isActive,
     required this.activeStartedAt,
     required this.onToggleTimer,
+    required this.onToggleDone,
     required this.onDelete,
   });
 
@@ -175,6 +196,9 @@ class _AppointmentTile extends StatelessWidget {
   /// caso não esteja) — alimenta o contador ao vivo hh:mm:ss do selo.
   final DateTime? activeStartedAt;
   final void Function(bool start) onToggleTimer;
+
+  /// Conclui o compromisso aberto ou reabre o concluído.
+  final VoidCallback onToggleDone;
   final VoidCallback onDelete;
 
   @override
@@ -182,6 +206,7 @@ class _AppointmentTile extends StatelessWidget {
     final colors = context.colors;
     final accent = isActive ? colors.timerActive : colors.info;
     final spent = appointment.spentMinutes;
+    final done = appointment.isDone;
     return Container(
       padding: EdgeInsets.symmetric(
         horizontal: context.space.lg,
@@ -201,7 +226,26 @@ class _AppointmentTile extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(appointment.title, style: context.text.titleMedium),
+                // Concluído continua igual, com o sinal de "feito" ao lado.
+                Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        appointment.title,
+                        style: context.text.titleMedium,
+                      ),
+                    ),
+                    if (done) ...[
+                      SizedBox(width: context.space.xs),
+                      Icon(
+                        Icons.task_alt_rounded,
+                        color: colors.success,
+                        size: 18,
+                        semanticLabel: 'Feito',
+                      ),
+                    ],
+                  ],
+                ),
                 SizedBox(height: context.space.xs),
                 if (isActive && activeStartedAt != null) ...[
                   TaskRunningBadge(startedAt: activeStartedAt!),
@@ -216,6 +260,16 @@ class _AppointmentTile extends StatelessWidget {
                 ),
               ],
             ),
+          ),
+          IconButton(
+            onPressed: onToggleDone,
+            icon: Icon(
+              done
+                  ? Icons.replay_rounded
+                  : Icons.check_circle_outline_rounded,
+              color: done ? colors.textMuted : colors.success,
+            ),
+            tooltip: done ? 'Reabrir' : 'Concluir',
           ),
           IconButton(
             onPressed: () => onToggleTimer(!isActive),
