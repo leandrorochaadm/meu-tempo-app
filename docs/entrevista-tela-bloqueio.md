@@ -79,10 +79,10 @@ tarefa com tempo absurdo (tipo 24 horas para uma tarefa de 30 min).
 
 1. **Aviso de tempo estourado**: quando passar do tempo estimado, o app avisa
    e repete o aviso **a cada 1 hora** até pausar ou parar.
-   > 🟡 Parcial — plano 12; falta: 13
+   > ✅ Implementado — planos 12, 13
 2. **Sem estimado, sem aviso**: tarefa sem tempo estimado e compromisso não
    recebem aviso; só ficam visíveis.
-   > 🟡 Parcial — plano 12; falta: 13
+   > ✅ Implementado — planos 12, 13
 
 ### Futuro
 
@@ -147,9 +147,9 @@ _Ainda não conversado._
 - **Cronômetro passou do tempo estimado** → o app **avisa** o usuário.
   Isso mudou a regra antiga da v1 ("o app não avisa"); a v1 já foi atualizada
   em 07/10/2026.
-  > 🟡 Parcial — plano 12; falta: 13
+  > ✅ Implementado — planos 12, 13
 - O aviso **se repete a cada 1 hora** até o usuário pausar ou parar.
-  > 🟡 Parcial — plano 12; falta: 13
+  > ✅ Implementado — planos 12, 13
 - **No navegador**, o aviso só aparece **com o app aberto**, dentro da própria tela.
   > ✅ Implementado — plano 12
 - **Avisos do celular desligados** (o usuário negou a permissão ou desligou
@@ -159,7 +159,7 @@ _Ainda não conversado._
   > 🟡 Parcial — planos 08, 10, 11; falta: alvo no Xcode e validação no iPhone (passos manuais do plano 11)
 - **Tarefa sem tempo estimado** e **compromisso** → o app **não avisa**; só
   fica visível na tela bloqueada e na cortina de avisos.
-  > 🟡 Parcial — plano 12; falta: 13
+  > ✅ Implementado — planos 12, 13
 
 ## Informações e volume
 
@@ -179,6 +179,7 @@ _Ainda não conversado._
   existir, mas não cobre tarefa sem tempo estimado nem compromisso; nesses
   casos, depois de 8 horas volta a ser como hoje (corrigir à mão). Também
   aceito. No Android não há esse limite.
+  > 🟡 Parcial — planos 11, 13; falta: alvo no Xcode e validação no iPhone (passos manuais do plano 11)
 - Para mostrar o cronômetro com a tela bloqueada, o Meu Tempo passa a ter um
   **aplicativo instalado** no iPhone e no Android. A versão aberta pelo
   **navegador continua**, mas nela o cronômetro **não** aparece na tela
