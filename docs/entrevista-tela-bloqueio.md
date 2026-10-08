@@ -43,7 +43,7 @@ tarefa com tempo absurdo (tipo 24 horas para uma tarefa de 30 min).
      celular: o cronômetro aparece na tela bloqueada. Ao desbloquear e puxar a
      cortina, ele está lá, fixo e contando. **Continua aparecendo mesmo se eu
      fechar o app de vez** (arrastar para fora).
-   > 🟡 Parcial — plano 07; falta: 09, 10, 11
+   > 🟡 Parcial — planos 07, 09; falta: 10, 11
 2. **O que aparece**: nome, lista e tempo correndo — igual para tarefa e
    compromisso.
    - _Pronto quando:_ dou start na tarefa "Tela de login" da lista "Trabalho" e
@@ -59,7 +59,7 @@ tarefa com tempo absurdo (tipo 24 horas para uma tarefa de 30 min).
      novo, toco em "parar": o botão vira "confirmar"; toco nele e a tarefa
      aparece concluída no app. Se eu não tocar em "confirmar" em 5 segundos, o
      botão volta a "parar" e nada muda.
-   > 🟡 Parcial — planos 04, 05, 06; falta: 09, 10, 11
+   > 🟡 Parcial — planos 04, 05, 06, 09; falta: 10, 11
 4. **Tarefas e compromissos**: tudo acima vale para os dois, do mesmo jeito.
    - _Pronto quando:_ repito os testes dos itens 1 e 3 com o compromisso
      "Dentista" e tudo funciona igual. E, com uma tarefa rodando, dou start no
@@ -114,6 +114,7 @@ _Ainda não conversado._
   > 🟡 Parcial — plano 05; falta: 10, 11
 - Concluir pela tela bloqueada **não tem "desfazer"**: o segundo toque de
   confirmação já protege contra toque errado.
+  > 🟡 Parcial — plano 09; falta: 10, 11
 - **Compromisso também pode ser concluído** (novidade: hoje só tarefa conclui).
   Ao parar um compromisso, ele fica marcado como concluído, também dentro do
   app. Já incluído na v1 (requisitos, req. 14) em 07/10/2026.
