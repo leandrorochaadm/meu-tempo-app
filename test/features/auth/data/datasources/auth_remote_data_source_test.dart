@@ -15,7 +15,6 @@ class _MockFirebaseApp extends Mock implements FirebaseApp {}
 
 void main() {
   late _MockFirebaseAuth auth;
-  late AuthRemoteDataSourceImpl dataSource;
 
   setUpAll(() => registerFallbackValue(_FakeAuthProvider()));
 
@@ -38,57 +37,107 @@ void main() {
 
   setUp(() {
     auth = _MockFirebaseAuth();
-    dataSource = AuthRemoteDataSourceImpl(auth);
     stubAuthDomain('outro-dominio.example');
   });
 
-  test('usa redirect quando o app roda no mesmo domínio do authDomain',
-      () async {
-    stubAuthDomain(Uri.base.host);
-    when(() => auth.signInWithRedirect(any())).thenAnswer((_) async {});
+  group('web', () {
+    late AuthRemoteDataSourceImpl dataSource;
 
-    await dataSource.signInWithGoogle();
+    setUp(() => dataSource = AuthRemoteDataSourceImpl(auth, isWeb: true));
 
-    verify(() => auth.signInWithRedirect(any())).called(1);
-    verifyNever(() => auth.signInWithPopup(any()));
+    test('usa redirect quando o app roda no mesmo domínio do authDomain',
+        () async {
+      stubAuthDomain(Uri.base.host);
+      when(() => auth.signInWithRedirect(any())).thenAnswer((_) async {});
+
+      await dataSource.signInWithGoogle();
+
+      verify(() => auth.signInWithRedirect(any())).called(1);
+      verifyNever(() => auth.signInWithPopup(any()));
+    });
+
+    test('usa popup quando a origem difere do authDomain', () async {
+      when(() => auth.signInWithPopup(any()))
+          .thenAnswer((_) async => _MockUserCredential());
+
+      await dataSource.signInWithGoogle();
+
+      verify(() => auth.signInWithPopup(any())).called(1);
+    });
+
+    test('mapeia popup fechado pelo usuário para SignInCancelledException',
+        () {
+      when(() => auth.signInWithPopup(any()))
+          .thenThrow(FirebaseAuthException(code: 'popup-closed-by-user'));
+
+      expect(
+        () => dataSource.signInWithGoogle(),
+        throwsA(isA<SignInCancelledException>()),
+      );
+    });
+
+    test('mapeia FirebaseAuthException de rede para NetworkException', () {
+      when(() => auth.signInWithPopup(any()))
+          .thenThrow(FirebaseAuthException(code: 'network-request-failed'));
+
+      expect(
+        () => dataSource.signInWithGoogle(),
+        throwsA(isA<NetworkException>()),
+      );
+    });
+
+    test('mapeia FirebaseAuthException desconhecida para AuthException', () {
+      when(() => auth.signInWithPopup(any()))
+          .thenThrow(FirebaseAuthException(code: 'internal-error'));
+
+      expect(
+        () => dataSource.signInWithGoogle(),
+        throwsA(isA<AuthException>()),
+      );
+    });
   });
 
-  test('usa popup quando a origem difere do authDomain', () async {
-    when(() => auth.signInWithPopup(any()))
-        .thenAnswer((_) async => _MockUserCredential());
+  group('nativo', () {
+    late AuthRemoteDataSourceImpl nativeDataSource;
 
-    await dataSource.signInWithGoogle();
-
-    verify(() => auth.signInWithPopup(any())).called(1);
-  });
-
-  test('mapeia popup fechado pelo usuário para SignInCancelledException', () {
-    when(() => auth.signInWithPopup(any()))
-        .thenThrow(FirebaseAuthException(code: 'popup-closed-by-user'));
-
-    expect(
-      () => dataSource.signInWithGoogle(),
-      throwsA(isA<SignInCancelledException>()),
+    setUp(
+      () => nativeDataSource = AuthRemoteDataSourceImpl(auth, isWeb: false),
     );
-  });
 
-  test('mapeia FirebaseAuthException de rede para NetworkException', () {
-    when(() => auth.signInWithPopup(any()))
-        .thenThrow(FirebaseAuthException(code: 'network-request-failed'));
+    test('usa signInWithProvider e nunca redirect nem popup', () async {
+      when(() => auth.signInWithProvider(any()))
+          .thenAnswer((_) async => _MockUserCredential());
 
-    expect(
-      () => dataSource.signInWithGoogle(),
-      throwsA(isA<NetworkException>()),
-    );
-  });
+      await nativeDataSource.signInWithGoogle();
 
-  test('mapeia FirebaseAuthException desconhecida para AuthException', () {
-    when(() => auth.signInWithPopup(any()))
-        .thenThrow(FirebaseAuthException(code: 'internal-error'));
+      verify(() => auth.signInWithProvider(any())).called(1);
+      verifyNever(() => auth.signInWithRedirect(any()));
+      verifyNever(() => auth.signInWithPopup(any()));
+    });
 
-    expect(
-      () => dataSource.signInWithGoogle(),
-      throwsA(isA<AuthException>()),
-    );
+    for (final code in ['web-context-canceled', 'web-context-cancelled']) {
+      test('mapeia $code (aba do Google fechada) para SignInCancelledException',
+          () {
+        when(() => auth.signInWithProvider(any()))
+            .thenThrow(FirebaseAuthException(code: code));
+
+        expect(
+          () => nativeDataSource.signInWithGoogle(),
+          throwsA(isA<SignInCancelledException>()),
+        );
+      });
+    }
+
+    for (final code in ['network-request-failed', 'web-network-request-failed']) {
+      test('mapeia $code (sem rede) para NetworkException', () {
+        when(() => auth.signInWithProvider(any()))
+            .thenThrow(FirebaseAuthException(code: code));
+
+        expect(
+          () => nativeDataSource.signInWithGoogle(),
+          throwsA(isA<NetworkException>()),
+        );
+      });
+    }
   });
 }

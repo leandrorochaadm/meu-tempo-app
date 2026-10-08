@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:injectable/injectable.dart';
 
 import '../../../../core/error/exceptions.dart';
@@ -6,9 +7,14 @@ import '../models/user_model.dart';
 
 /// Acesso ao Firebase Auth. Lança [AppException] em caso de erro.
 abstract class AuthRemoteDataSource {
-  /// Inicia o login SSO Google. Usa **redirect** quando o app é servido no
-  /// mesmo domínio do `authDomain` (produção) e **popup** caso contrário
-  /// (dev em localhost). Em qualquer caso o usuário chega pelo [authState].
+  /// Inicia o login SSO Google.
+  ///
+  /// - **Nativo (Android/iOS):** `signInWithProvider`, que abre o Google numa
+  ///   aba do sistema e volta ao app.
+  /// - **Web:** **redirect** quando o app é servido no mesmo domínio do
+  ///   `authDomain` (produção) e **popup** caso contrário (dev em localhost).
+  ///
+  /// Em qualquer caso o usuário chega pelo [authState].
   Future<void> signInWithGoogle();
   Future<void> signOut();
   Stream<UserModel?> authState();
@@ -17,9 +23,14 @@ abstract class AuthRemoteDataSource {
 
 @LazySingleton(as: AuthRemoteDataSource)
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
-  AuthRemoteDataSourceImpl(this._auth);
+  AuthRemoteDataSourceImpl(this._auth, {@ignoreParam bool isWeb = kIsWeb})
+      : _isWeb = isWeb;
 
   final FirebaseAuth _auth;
+
+  /// Plataforma em que o app roda. Parâmetro só para teste: na VM dos testes
+  /// `kIsWeb` é sempre `false`, e o fluxo web precisa ser exercitado também.
+  final bool _isWeb;
 
   /// O `signInWithRedirect` só sobrevive ao retorno do Google quando o handler
   /// (`https://<authDomain>/__/auth/handler`) está na **mesma origem** da
@@ -36,7 +47,9 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   Future<void> signInWithGoogle() async {
     try {
       final provider = GoogleAuthProvider();
-      if (_sameOriginAsAuthDomain) {
+      if (!_isWeb) {
+        await _auth.signInWithProvider(provider);
+      } else if (_sameOriginAsAuthDomain) {
         await _auth.signInWithRedirect(provider);
       } else {
         await _auth.signInWithPopup(provider);

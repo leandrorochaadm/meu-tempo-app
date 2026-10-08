@@ -43,7 +43,9 @@ Nunca invente requisito. Se algo não está nos documentos, **pergunte** (ver sk
     direta, sem lojas. Detalhes e riscos em `docs/tecnico-time-control.md`.
   - **Recurso só nativo:** cronômetro na tela bloqueada/notificação. No web, o código de
     plataforma fica atrás de uma abstração com implementação vazia (`kIsWeb`).
-  - **Migração em andamento:** os alvos `android/` e `ios/` ainda não existem.
+  - **Alvos nativos criados:** `android/` e `ios/` com Firebase e login Google
+    (`signInWithProvider` no nativo; redirect/popup no web). Após rodar `flutterfire
+    configure`, restaurar o `authDomain` do web para `meu-tempo-dev.web.app`.
 - **Sempre online** — sem modo offline nesta versão.
 - **Backend: Firebase** — Auth (login por usuário) + Cloud Firestore (persistência na
   nuvem). **Dados isolados por usuário**: toda query filtra pelo `uid` do usuário logado.

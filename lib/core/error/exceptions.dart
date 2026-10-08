@@ -67,8 +67,14 @@ AppException mapFirebaseAuthException(FirebaseAuthException e) => switch (e.code
       'popup-closed-by-user' ||
       'cancelled-popup-request' ||
       'popup-blocked' ||
-      'user-cancelled' =>
+      'user-cancelled' ||
+      // Nativo: usuário fechou a aba do Google (Android | iOS).
+      'web-context-canceled' ||
+      'web-context-cancelled' =>
         const SignInCancelledException(),
-      'network-request-failed' => const NetworkException(),
+      'network-request-failed' ||
+      // iOS: sem rede dentro da tela do Google.
+      'web-network-request-failed' =>
+        const NetworkException(),
       _ => const AuthException(),
     };
