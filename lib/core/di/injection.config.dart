@@ -131,6 +131,8 @@ import 'package:meu_tempo/features/task/domain/usecases/edit_task_use_case.dart'
     as _i43;
 import 'package:meu_tempo/features/task/domain/usecases/filter_tasks_by_list_use_case.dart'
     as _i1069;
+import 'package:meu_tempo/features/task/domain/usecases/finish_timer_use_case.dart'
+    as _i805;
 import 'package:meu_tempo/features/task/domain/usecases/get_active_task_details_use_case.dart'
     as _i170;
 import 'package:meu_tempo/features/task/domain/usecases/get_default_creation_list_use_case.dart'
@@ -524,6 +526,14 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i159.SeedFirstAccessUseCase(
         gh<_i330.ConfigRepository>(),
         gh<_i658.CreateTaskUseCase>(),
+      ),
+    );
+    gh.lazySingleton<_i805.FinishTimerUseCase>(
+      () => _i805.FinishTimerUseCase(
+        gh<_i381.TimerRepository>(),
+        gh<_i131.RecordTimerSessionUseCase>(),
+        gh<_i623.CompleteTaskUseCase>(),
+        gh<_i348.SetAppointmentDoneUseCase>(),
       ),
     );
     gh.factory<_i35.TaskListBloc>(

@@ -16,6 +16,7 @@ import 'package:meu_tempo/features/list/domain/entities/task_list_entity.dart';
 import 'package:meu_tempo/features/list/domain/usecases/ensure_inbox_exists_use_case.dart';
 import 'package:meu_tempo/features/task/domain/entities/active_timer_entity.dart';
 import 'package:meu_tempo/features/task/domain/entities/task_entity.dart';
+import 'package:meu_tempo/features/task/domain/entities/timer_status_enum.dart';
 import 'package:meu_tempo/features/task/domain/entities/timer_target_type_enum.dart';
 import 'package:meu_tempo/features/task/domain/usecases/start_timer_use_case.dart';
 import 'package:meu_tempo/features/task/domain/usecases/stop_timer_use_case.dart';
@@ -369,6 +370,111 @@ void main() {
       const AgendaError('Este compromisso não existe mais.'),
       isA<AgendaLoaded>()
           .having((s) => s.appointments.single.id, 'id', 'a540'),
+    ],
+  );
+
+  final pausedAppointmentTimer = ActiveTimerEntity(
+    targetId: 'a540',
+    targetType: TimerTargetTypeEnum.appointment,
+    listId: 'inbox',
+    startedAt: DateTime(2026, 7, 22, 9, 15),
+    status: TimerStatusEnum.paused,
+  );
+
+  blocTest<AgendaBloc, AgendaState>(
+    'compromisso pausado não aparece como ativo',
+    build: () {
+      when(
+        () => watchAppts(any()),
+      ).thenAnswer((_) => Stream.value(Right([appt(540)])));
+      when(() => watchActiveTimer(any())).thenAnswer(
+        (_) => Stream.value(
+          Right<Failure, ActiveTimerEntity?>(pausedAppointmentTimer),
+        ),
+      );
+      return build();
+    },
+    act: (bloc) => bloc.add(const AgendaStarted()),
+    wait: const Duration(milliseconds: 10),
+    verify: (bloc) {
+      final state = bloc.state as AgendaLoaded;
+      expect(state.activeAppointmentId, isNull);
+      expect(state.activeTimerStartedAt, isNull);
+    },
+  );
+
+  blocTest<AgendaBloc, AgendaState>(
+    'play no compromisso pausado chama o StartTimerUseCase no mesmo alvo',
+    build: () {
+      when(
+        () => watchAppts(any()),
+      ).thenAnswer((_) => Stream.value(Right([appt(540)])));
+      when(() => watchActiveTimer(any())).thenAnswer(
+        (_) => Stream.value(
+          Right<Failure, ActiveTimerEntity?>(pausedAppointmentTimer),
+        ),
+      );
+      return build();
+    },
+    act: (bloc) async {
+      bloc.add(const AgendaStarted());
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+      bloc.add(const AppointmentTimerStarted('a540'));
+    },
+    verify: (_) {
+      final p =
+          verify(() => startTimer(captureAny())).captured.single
+              as StartTimerParams;
+      expect(p.targetId, 'a540');
+      expect(p.targetType, TimerTargetTypeEnum.appointment);
+    },
+  );
+
+  blocTest<AgendaBloc, AgendaState>(
+    'falha ao iniciar o cronômetro emite erro e reemite a agenda',
+    build: () {
+      when(
+        () => watchAppts(any()),
+      ).thenAnswer((_) => Stream.value(Right([appt(540)])));
+      when(
+        () => startTimer(any()),
+      ).thenAnswer((_) async => const Left(NetworkFailure()));
+      return build();
+    },
+    act: (bloc) async {
+      bloc.add(const AgendaStarted());
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+      bloc.add(const AppointmentTimerStarted('a540'));
+    },
+    wait: const Duration(milliseconds: 10),
+    skip: 2,
+    expect: () => [
+      const AgendaError('Sem conexão. Verifique a internet.'),
+      isA<AgendaLoaded>(),
+    ],
+  );
+
+  blocTest<AgendaBloc, AgendaState>(
+    'falha ao parar o cronômetro emite erro e reemite a agenda',
+    build: () {
+      when(
+        () => watchAppts(any()),
+      ).thenAnswer((_) => Stream.value(Right([appt(540)])));
+      when(
+        () => stopTimer(any()),
+      ).thenAnswer((_) async => const Left(NetworkFailure()));
+      return build();
+    },
+    act: (bloc) async {
+      bloc.add(const AgendaStarted());
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+      bloc.add(const AppointmentTimerStopped());
+    },
+    wait: const Duration(milliseconds: 10),
+    skip: 2,
+    expect: () => [
+      const AgendaError('Sem conexão. Verifique a internet.'),
+      isA<AgendaLoaded>(),
     ],
   );
 

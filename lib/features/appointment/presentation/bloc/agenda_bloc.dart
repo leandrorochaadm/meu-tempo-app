@@ -81,8 +81,8 @@ class AgendaBloc extends Bloc<AgendaEvent, AgendaState> {
   List<TaskEntity> _tasks = const [];
   int _availableMinutes = 480;
 
-  /// Id do compromisso com cronômetro ativo (`null` quando o ativo é de tarefa
-  /// ou não há cronômetro).
+  /// Id do compromisso com cronômetro rodando (`null` quando o ativo é de
+  /// tarefa, está pausado ou não há cronômetro).
   String? _activeAppointmentId;
 
   /// Início da sessão do cronômetro quando o ativo é um compromisso.
@@ -119,10 +119,13 @@ class AgendaBloc extends Bloc<AgendaEvent, AgendaState> {
     Emitter<AgendaState> emit,
   ) {
     final active = e.result.getRight().toNullable();
-    final isAppointment =
-        active != null && active.targetType == TimerTargetTypeEnum.appointment;
-    _activeAppointmentId = isAppointment ? active.targetId : null;
-    _activeStartedAt = isAppointment ? active.startedAt : null;
+    // Só o compromisso com cronômetro contando é "ativo". Pausado aparece
+    // parado (com play), e o play retoma o mesmo alvo pelo StartTimerUseCase.
+    final isRunningAppointment = active != null &&
+        active.isRunning &&
+        active.targetType == TimerTargetTypeEnum.appointment;
+    _activeAppointmentId = isRunningAppointment ? active.targetId : null;
+    _activeStartedAt = isRunningAppointment ? active.startedAt : null;
     _emit(emit);
   }
 
@@ -214,7 +217,7 @@ class AgendaBloc extends Bloc<AgendaEvent, AgendaState> {
       listId: listId,
       now: DateTime.now(),
     ));
-    result.match((f) => emit(AgendaError(_mapFailure(f))), (_) {});
+    _handleWrite(result, emit);
   }
 
   Future<void> _onTimerStopped(
@@ -222,7 +225,7 @@ class AgendaBloc extends Bloc<AgendaEvent, AgendaState> {
     Emitter<AgendaState> emit,
   ) async {
     final result = await _stopTimer(StopTimerParams(now: DateTime.now()));
-    result.match((f) => emit(AgendaError(_mapFailure(f))), (_) {});
+    _handleWrite(result, emit);
   }
 
   Future<void> _onDoneToggled(

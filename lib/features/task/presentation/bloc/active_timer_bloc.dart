@@ -126,11 +126,14 @@ class ActiveTimerBloc extends Bloc<ActiveTimerEvent, ActiveTimerState> {
   }
 
   /// Deriva o estado da barra a partir dos três fluxos. A barra só aparece para
-  /// uma folha de tarefa cujo cronômetro está rodando e que foi resolvida na
-  /// lista atual de tarefas.
+  /// uma folha de tarefa cujo cronômetro está **rodando** e que foi resolvida
+  /// na lista atual de tarefas. Pausado = não rodando: a barra some e o play do
+  /// item retoma o mesmo alvo (StartTimerUseCase).
   void _recompute(Emitter<ActiveTimerState> emit) {
     final active = _active;
-    if (active == null || active.targetType != TimerTargetTypeEnum.task) {
+    if (active == null ||
+        !active.isRunning ||
+        active.targetType != TimerTargetTypeEnum.task) {
       emit(const ActiveTimerHidden());
       return;
     }

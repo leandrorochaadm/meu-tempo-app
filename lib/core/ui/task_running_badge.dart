@@ -7,8 +7,10 @@ import '../utils/formatters/duration_formatter.dart';
 
 /// Selo do cronômetro ativo numa folha/compromisso — exibe o tempo da **sessão
 /// atual** ao vivo (hh:mm:ss), atualizado a cada segundo, com um pulso suave no
-/// ícone (estado "vivo"). Só é montado quando a contagem está em andamento; o
-/// [Timer] e a animação existem apenas enquanto o selo está na árvore. O
+/// ícone (estado "vivo"). Só é montado quando a contagem está em andamento — cronômetro
+/// **pausado** não monta o selo (os blocs entregam `activeStartedAt = null`
+/// para o pausado). O [Timer] e a animação existem apenas enquanto o selo está
+/// na árvore. O
 /// espaçamento após o selo é responsabilidade de quem o posiciona.
 class TaskRunningBadge extends StatefulWidget {
   const TaskRunningBadge({super.key, required this.startedAt});

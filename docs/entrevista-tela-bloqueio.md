@@ -57,14 +57,14 @@ tarefa com tempo absurdo (tipo 24 horas para uma tarefa de 30 min).
      novo, toco em "parar": o botão vira "confirmar"; toco nele e a tarefa
      aparece concluída no app. Se eu não tocar em "confirmar" em 5 segundos, o
      botão volta a "parar" e nada muda.
-   > 🟡 Parcial — plano 04; falta: 05, 06, 09, 10, 11
+   > 🟡 Parcial — planos 04, 05; falta: 06, 09, 10, 11
 4. **Tarefas e compromissos**: tudo acima vale para os dois, do mesmo jeito.
    - _Pronto quando:_ repito os testes dos itens 1 e 3 com o compromisso
      "Dentista" e tudo funciona igual. E, com uma tarefa rodando, dou start no
      compromisso: a tela bloqueada passa a mostrar o compromisso (a tarefa
      pausa sozinha, como já acontece no app). Ao parar o compromisso, ele
      aparece na agenda com o sinal de "feito".
-   > 🟡 Parcial — plano 02; falta: 03, 05, 10, 11
+   > 🟡 Parcial — planos 02, 03, 05; falta: 10, 11
 5. **Reabrir no app**: tarefa ou compromisso concluído pode ser reaberto
    dentro do app; ao reabrir uma filha, a mãe e a avó reabrem junto.
    - _Pronto quando:_ concluo a última filha de uma mãe e a mãe conclui
@@ -102,18 +102,20 @@ _Ainda não conversado._
   **concluído**, **com confirmação em dois toques**: ao tocar em "parar", o
   botão vira "confirmar" por **5 segundos**; sem o segundo toque, volta a
   "parar" e nada muda. Igual no iPhone e no Android.
+  > 🟡 Parcial — plano 05; falta: 06, 09, 10, 11
 - Vale para **tarefas e compromissos**, do mesmo jeito.
 - **Pausado**: continua aparecendo, parado, com um botão **continuar** (que
   volta a contar) e o botão **parar**. Não dá para arrastar para o lado: só
   sai da tela ao continuar, parar ou dar start em outra tarefa/compromisso.
   > 🟡 Parcial — plano 04; falta: 05, 10, 11
 - **Parado** (concluído): some da tela bloqueada e da cortina.
+  > 🟡 Parcial — plano 05; falta: 10, 11
 - Concluir pela tela bloqueada **não tem "desfazer"**: o segundo toque de
   confirmação já protege contra toque errado.
 - **Compromisso também pode ser concluído** (novidade: hoje só tarefa conclui).
   Ao parar um compromisso, ele fica marcado como concluído, também dentro do
   app. Já incluído na v1 (requisitos, req. 14) em 07/10/2026.
-  > 🟡 Parcial — plano 02; falta: 03, 05
+  > ✅ Implementado — planos 02, 03, 05
 - **Reabrir**: tarefa ou compromisso concluído pode ser reaberto dentro do app
   (novidade; hoje só existe "desfazer" logo após concluir). Ao reabrir uma
   filha, a **mãe e a avó** que tinham concluído sozinhas **reabrem junto**.
@@ -128,6 +130,7 @@ _Ainda não conversado._
   tela bloqueada com o cronômetro que está de fato rodando.
 - Só um cronômetro aparece por vez: ao dar start em outro, a tela bloqueada
   passa a mostrar o novo (o anterior pausa sozinho, regra da v1).
+  > 🟡 Parcial — plano 05; falta: 07, 10, 11
 - O que aparece: **nome**, **tempo correndo** e **lista**, igual para tarefa e
   compromisso. O tempo estimado **não** aparece.
 

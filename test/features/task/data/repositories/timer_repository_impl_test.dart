@@ -99,6 +99,62 @@ void main() {
       expect(result, const Right<Failure, bool>(false));
     });
 
+    test(
+      'clearActiveIfUnchanged: predicado aceita só o doc igual ao esperado',
+      () async {
+        when(
+          () => dataSource.clearActiveIf(matches: any(named: 'matches')),
+        ).thenAnswer((_) async => true);
+        final expected = entity(TimerStatusEnum.running);
+
+        final result = await repository.clearActiveIfUnchanged(
+          expected: expected,
+        );
+
+        expect(result, const Right<Failure, bool>(true));
+        final matches =
+            verify(
+                  () => dataSource.clearActiveIf(
+                    matches: captureAny(named: 'matches'),
+                  ),
+                ).captured.single
+                as bool Function(ActiveTimerModel?);
+        expect(matches(ActiveTimerModel.fromEntity(expected)), isTrue);
+        expect(
+          matches(ActiveTimerModel.fromEntity(entity(TimerStatusEnum.paused))),
+          isFalse,
+        );
+        expect(matches(null), isFalse);
+      },
+    );
+
+    test(
+      'clearActiveIfUnchanged devolve Right(false) quando o datasource recusa',
+      () async {
+        when(
+          () => dataSource.clearActiveIf(matches: any(named: 'matches')),
+        ).thenAnswer((_) async => false);
+
+        final result = await repository.clearActiveIfUnchanged(
+          expected: entity(TimerStatusEnum.running),
+        );
+
+        expect(result, const Right<Failure, bool>(false));
+      },
+    );
+
+    test('clearActiveIfUnchanged: AppException vira Left(Failure)', () async {
+      when(
+        () => dataSource.clearActiveIf(matches: any(named: 'matches')),
+      ).thenThrow(const ServerException());
+
+      final result = await repository.clearActiveIfUnchanged(
+        expected: entity(TimerStatusEnum.running),
+      );
+
+      expect(result, const Left<Failure, bool>(ServerFailure()));
+    });
+
     test('AppException vira Left(Failure)', () async {
       when(() => dataSource.replaceActiveIf(
             matches: any(named: 'matches'),

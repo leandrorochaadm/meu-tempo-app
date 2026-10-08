@@ -172,8 +172,12 @@ class TaskListBloc extends Bloc<TaskListEvent, TaskListState> {
 
     await _timerSub?.cancel();
     _timerSub = _watchActiveTimer(const NoParams()).listen((result) {
+      // Só o cronômetro contando marca a tarefa como ativa. Pausado aparece
+      // como parado (sem selo, com play) e o play retoma o mesmo alvo pelo
+      // StartTimerUseCase.
       final active = result.getRight().toNullable();
-      add(ActiveTimerUpdated(active?.targetId, active?.startedAt));
+      final running = (active != null && active.isRunning) ? active : null;
+      add(ActiveTimerUpdated(running?.targetId, running?.startedAt));
     });
 
     await _listsSub?.cancel();

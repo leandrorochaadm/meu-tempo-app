@@ -10,6 +10,7 @@ import 'package:meu_tempo/features/task/domain/entities/importance_enum.dart';
 import 'package:meu_tempo/features/task/domain/entities/quick_add_target_entity.dart';
 import 'package:meu_tempo/features/task/domain/entities/task_entity.dart';
 import 'package:meu_tempo/features/task/domain/entities/active_timer_entity.dart';
+import 'package:meu_tempo/features/task/domain/entities/timer_status_enum.dart';
 import 'package:meu_tempo/features/task/domain/entities/timer_target_type_enum.dart';
 import 'package:meu_tempo/features/task/domain/task_failures.dart';
 import 'package:meu_tempo/features/task/domain/usecases/add_subtask_use_case.dart';
@@ -333,6 +334,82 @@ void main() {
       final state = bloc.state as TaskListLoaded;
       expect(state.activeTaskId, isNull);
       expect(state.activeTimerStartedAt, isNull);
+    },
+  );
+
+  final pausedTimer = ActiveTimerEntity(
+    targetId: 't1',
+    targetType: TimerTargetTypeEnum.task,
+    listId: 'inbox',
+    startedAt: startedAt,
+    status: TimerStatusEnum.paused,
+  );
+
+  blocTest<TaskListBloc, TaskListState>(
+    'cronômetro pausado não marca a tarefa como ativa',
+    build: () {
+      when(
+        () => watchTasks(any()),
+      ).thenAnswer((_) => Stream.value(Right([task])));
+      when(() => watchActiveTimer(any())).thenAnswer(
+        (_) => Stream.value(Right<Failure, ActiveTimerEntity?>(pausedTimer)),
+      );
+      return build();
+    },
+    act: (bloc) => bloc.add(const TaskListStarted()),
+    verify: (bloc) {
+      final state = bloc.state as TaskListLoaded;
+      expect(state.activeTaskId, isNull);
+      expect(state.activeTimerStartedAt, isNull);
+    },
+  );
+
+  blocTest<TaskListBloc, TaskListState>(
+    'pausar tira o destaque da tarefa que estava rodando',
+    build: () {
+      when(
+        () => watchTasks(any()),
+      ).thenAnswer((_) => Stream.value(Right([task])));
+      when(() => watchActiveTimer(any())).thenAnswer(
+        (_) => Stream.fromIterable([
+          Right<Failure, ActiveTimerEntity?>(activeTimer),
+          Right<Failure, ActiveTimerEntity?>(pausedTimer),
+        ]),
+      );
+      return build();
+    },
+    act: (bloc) => bloc.add(const TaskListStarted()),
+    verify: (bloc) {
+      final state = bloc.state as TaskListLoaded;
+      expect(state.activeTaskId, isNull);
+    },
+  );
+
+  blocTest<TaskListBloc, TaskListState>(
+    'play na tarefa pausada chama o StartTimerUseCase no mesmo alvo',
+    build: () {
+      when(
+        () => watchTasks(any()),
+      ).thenAnswer((_) => Stream.value(Right([task])));
+      when(() => startTimer(any())).thenAnswer((_) async => const Right(unit));
+      when(() => watchActiveTimer(any())).thenAnswer(
+        (_) => Stream.value(Right<Failure, ActiveTimerEntity?>(pausedTimer)),
+      );
+      return build();
+    },
+    act: (bloc) async {
+      bloc.add(const TaskListStarted());
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+      bloc.add(const TimerStartRequested(taskId: 't1', isLeaf: true));
+    },
+    wait: const Duration(milliseconds: 10),
+    verify: (_) {
+      final params =
+          verify(() => startTimer(captureAny())).captured.single
+              as StartTimerParams;
+      expect(params.targetId, 't1');
+      expect(params.targetType, TimerTargetTypeEnum.task);
+      verifyNever(() => stopTimer(any()));
     },
   );
 

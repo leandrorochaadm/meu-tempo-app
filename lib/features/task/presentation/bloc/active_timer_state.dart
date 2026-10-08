@@ -8,8 +8,8 @@ sealed class ActiveTimerState extends Equatable {
 }
 
 /// Nenhum cronômetro rodando numa tarefa folha — a barra não aparece. Cobre
-/// também o cronômetro num compromisso (a barra é só para tarefas) e o estado
-/// deslogado.
+/// também o cronômetro num compromisso (a barra é só para tarefas), o
+/// cronômetro **pausado** (pausado = não rodando no app) e o estado deslogado.
 class ActiveTimerHidden extends ActiveTimerState {
   const ActiveTimerHidden();
 }

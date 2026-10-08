@@ -90,7 +90,8 @@ class CreationListChanged extends TaskListEvent {
 }
 
 /// Emitido internamente quando o cronômetro ativo muda. Carrega o id da folha
-/// ativa e o início da sessão (`startedAt`), base do contador ao vivo hh:mm:ss.
+/// **rodando** (`null` se nenhuma, se o ativo é compromisso ou se está pausado)
+/// e o início da sessão (`startedAt`), base do contador ao vivo hh:mm:ss.
 class ActiveTimerUpdated extends TaskListEvent {
   const ActiveTimerUpdated(this.activeTaskId, this.startedAt);
   final String? activeTaskId;

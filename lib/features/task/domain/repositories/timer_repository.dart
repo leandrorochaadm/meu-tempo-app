@@ -5,7 +5,8 @@ import '../entities/active_timer_entity.dart';
 
 /// Contrato do cronômetro ativo (no máximo 1 por usuário).
 abstract class TimerRepository {
-  /// Fluxo do cronômetro ativo (`null` = nenhum rodando).
+  /// Fluxo do cronômetro ativo (`null` = nenhum). O pausado continua vindo,
+  /// com `status: TimerStatusEnum.paused` — quem exibe decide por `isRunning`.
   Stream<Either<Failure, ActiveTimerEntity?>> watchActive();
 
   /// Leitura pontual do cronômetro ativo.
@@ -29,6 +30,15 @@ abstract class TimerRepository {
   Future<Either<Failure, bool>> replaceActiveIfUnchanged({
     required ActiveTimerEntity expected,
     required ActiveTimerEntity replacement,
+  });
+
+  /// Apaga o cronômetro ativo **só se** ele ainda for igual a [expected]
+  /// (mesmo alvo, tipo, lista, início e status), de forma atômica. Devolve
+  /// `true` se apagou; `false` se o cronômetro mudou ou sumiu no meio (outro
+  /// toque ou outro celular venceu) — nesse caso nada é apagado. É a base da
+  /// idempotência do "parar que conclui".
+  Future<Either<Failure, bool>> clearActiveIfUnchanged({
+    required ActiveTimerEntity expected,
   });
 
   /// Limpa o cronômetro ativo.

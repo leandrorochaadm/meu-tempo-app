@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
@@ -7,6 +9,7 @@ import 'package:meu_tempo/features/list/domain/entities/task_list_entity.dart';
 import 'package:meu_tempo/features/list/domain/usecases/watch_lists_use_case.dart';
 import 'package:meu_tempo/features/task/domain/entities/active_timer_entity.dart';
 import 'package:meu_tempo/features/task/domain/entities/task_entity.dart';
+import 'package:meu_tempo/features/task/domain/entities/timer_status_enum.dart';
 import 'package:meu_tempo/features/task/domain/entities/timer_target_type_enum.dart';
 import 'package:meu_tempo/features/task/domain/task_failures.dart';
 import 'package:meu_tempo/features/task/domain/usecases/build_task_tree_use_case.dart';
@@ -65,6 +68,13 @@ void main() {
     targetType: TimerTargetTypeEnum.task,
     listId: 'inbox',
     startedAt: DateTime(2026, 7, 22, 10),
+  );
+  final pausedOnTask = ActiveTimerEntity(
+    targetId: 't1',
+    targetType: TimerTargetTypeEnum.task,
+    listId: 'inbox',
+    startedAt: DateTime(2026, 7, 22, 10, 30),
+    status: TimerStatusEnum.paused,
   );
   final activeOnAppointment = ActiveTimerEntity(
     targetId: 'a1',
@@ -168,6 +178,52 @@ void main() {
     wait: const Duration(milliseconds: 50),
     verify: (bloc) => expect(bloc.state, isA<ActiveTimerHidden>()),
   );
+
+  blocTest<ActiveTimerBloc, ActiveTimerState>(
+    'não exibe a barra quando o cronômetro da folha está pausado',
+    build: () {
+      when(() => watchActiveTimer(any())).thenAnswer(
+        (_) => Stream.value(Right<Failure, ActiveTimerEntity?>(pausedOnTask)),
+      );
+      return build();
+    },
+    act: (bloc) => bloc.add(const ActiveTimerStarted()),
+    wait: const Duration(milliseconds: 50),
+    verify: (bloc) => expect(bloc.state, isA<ActiveTimerHidden>()),
+  );
+
+  test('a barra some ao pausar e volta ao continuar', () async {
+    final controller = StreamController<Either<Failure, ActiveTimerEntity?>>();
+    when(() => watchActiveTimer(any())).thenAnswer((_) => controller.stream);
+    final bloc = build()..add(const ActiveTimerStarted());
+    const settle = Duration(milliseconds: 10);
+
+    controller.add(Right(activeOnTask));
+    await Future<void>.delayed(settle);
+    expect(bloc.state, isA<ActiveTimerRunning>());
+
+    controller.add(Right(pausedOnTask));
+    await Future<void>.delayed(settle);
+    expect(bloc.state, isA<ActiveTimerHidden>());
+
+    final resumedAt = DateTime(2026, 7, 22, 11);
+    controller.add(
+      Right(
+        ActiveTimerEntity(
+          targetId: 't1',
+          targetType: TimerTargetTypeEnum.task,
+          listId: 'inbox',
+          startedAt: resumedAt,
+        ),
+      ),
+    );
+    await Future<void>.delayed(settle);
+    expect(bloc.state, isA<ActiveTimerRunning>());
+    expect((bloc.state as ActiveTimerRunning).startedAt, resumedAt);
+
+    await controller.close();
+    await bloc.close();
+  });
 
   blocTest<ActiveTimerBloc, ActiveTimerState>(
     'parar chama o StopTimerUseCase',

@@ -110,6 +110,41 @@ void main() {
       expect((await doc().get()).exists, isFalse);
     });
 
+    test('clearActiveIf apaga quando o predicado aceita', () async {
+      await dataSource.setActive(model(TimerStatusEnum.running));
+
+      final cleared = await dataSource.clearActiveIf(matches: (_) => true);
+
+      expect(cleared, isTrue);
+      expect((await doc().get()).exists, isFalse);
+    });
+
+    test('clearActiveIf não apaga quando o predicado recusa', () async {
+      await dataSource.setActive(model(TimerStatusEnum.running));
+
+      final cleared = await dataSource.clearActiveIf(matches: (_) => false);
+
+      expect(cleared, isFalse);
+      expect(
+        (await doc().get()).data()![ActiveTimerFields.status],
+        TimerStatusEnum.running.apiValue,
+      );
+    });
+
+    test('clearActiveIf sem doc passa null ao predicado', () async {
+      var receivedNull = false;
+
+      final cleared = await dataSource.clearActiveIf(
+        matches: (current) {
+          receivedNull = current == null;
+          return false;
+        },
+      );
+
+      expect(cleared, isFalse);
+      expect(receivedNull, isTrue);
+    });
+
     test('claimActive devolve o pausado e apaga o doc', () async {
       await dataSource.setActive(model(TimerStatusEnum.paused));
 
