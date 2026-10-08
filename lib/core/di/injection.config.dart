@@ -81,6 +81,14 @@ import 'package:meu_tempo/features/list/domain/usecases/watch_lists_use_case.dar
     as _i689;
 import 'package:meu_tempo/features/list/presentation/bloc/list_manager_bloc.dart'
     as _i427;
+import 'package:meu_tempo/features/lock_screen/data/lock_screen_gateway_module.dart'
+    as _i752;
+import 'package:meu_tempo/features/lock_screen/domain/gateways/lock_screen_timer_gateway.dart'
+    as _i684;
+import 'package:meu_tempo/features/lock_screen/domain/usecases/handle_lock_screen_action_use_case.dart'
+    as _i98;
+import 'package:meu_tempo/features/lock_screen/domain/usecases/watch_lock_screen_timer_use_case.dart'
+    as _i188;
 import 'package:meu_tempo/features/report/domain/usecases/get_list_report_use_case.dart'
     as _i67;
 import 'package:meu_tempo/features/report/domain/usecases/get_task_report_use_case.dart'
@@ -190,6 +198,7 @@ extension GetItInjectableX on _i174.GetIt {
     final gh = _i526.GetItHelper(this, environment, environmentFilter);
     final preferencesModule = _$PreferencesModule();
     final firebaseModule = _$FirebaseModule();
+    final lockScreenGatewayModule = _$LockScreenGatewayModule();
     await gh.factoryAsync<_i460.SharedPreferences>(
       () => preferencesModule.prefs,
       preResolve: true,
@@ -198,6 +207,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i974.FirebaseFirestore>(() => firebaseModule.firestore);
     gh.lazySingleton<_i483.CheckFitsInDayUseCase>(
       () => const _i483.CheckFitsInDayUseCase(),
+    );
+    gh.lazySingleton<_i684.LockScreenTimerGateway>(
+      () => lockScreenGatewayModule.lockScreenTimerGateway,
     );
     gh.lazySingleton<_i67.GetListReportUseCase>(
       () => const _i67.GetListReportUseCase(),
@@ -350,6 +362,14 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i521.TaskRepository>(),
         gh<_i259.AppointmentRepository>(),
         gh<_i706.TimeEntryRepository>(),
+      ),
+    );
+    gh.lazySingleton<_i188.WatchLockScreenTimerUseCase>(
+      () => _i188.WatchLockScreenTimerUseCase(
+        gh<_i381.TimerRepository>(),
+        gh<_i521.TaskRepository>(),
+        gh<_i259.AppointmentRepository>(),
+        gh<_i219.TaskListRepository>(),
       ),
     );
     gh.lazySingleton<_i543.RegisterAppointmentTimeUseCase>(
@@ -536,6 +556,13 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i348.SetAppointmentDoneUseCase>(),
       ),
     );
+    gh.lazySingleton<_i98.HandleLockScreenActionUseCase>(
+      () => _i98.HandleLockScreenActionUseCase(
+        gh<_i197.PauseTimerUseCase>(),
+        gh<_i73.ResumeTimerUseCase>(),
+        gh<_i805.FinishTimerUseCase>(),
+      ),
+    );
     gh.factory<_i35.TaskListBloc>(
       () => _i35.TaskListBloc(
         gh<_i1035.WatchTasksUseCase>(),
@@ -570,3 +597,5 @@ extension GetItInjectableX on _i174.GetIt {
 class _$PreferencesModule extends _i767.PreferencesModule {}
 
 class _$FirebaseModule extends _i767.FirebaseModule {}
+
+class _$LockScreenGatewayModule extends _i752.LockScreenGatewayModule {}

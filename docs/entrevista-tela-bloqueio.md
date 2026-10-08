@@ -49,6 +49,7 @@ tarefa com tempo absurdo (tipo 24 horas para uma tarefa de 30 min).
      aparecem "Tela de login", "Trabalho" e o tempo andando. Dou start no
      compromisso "Dentista" da lista "Pessoal" e aparecem "Dentista", "Pessoal"
      e o tempo andando.
+   > 🟡 Parcial — plano 06; falta: 10, 11
 3. **Pausar e parar dali mesmo**: botão **pausar** (continua depois) e botão
    **parar** (confirma com um segundo toque e conclui a tarefa). Pausado, continua à vista
    com o botão **continuar**; parado, some.
@@ -57,7 +58,7 @@ tarefa com tempo absurdo (tipo 24 horas para uma tarefa de 30 min).
      novo, toco em "parar": o botão vira "confirmar"; toco nele e a tarefa
      aparece concluída no app. Se eu não tocar em "confirmar" em 5 segundos, o
      botão volta a "parar" e nada muda.
-   > 🟡 Parcial — planos 04, 05; falta: 06, 09, 10, 11
+   > 🟡 Parcial — planos 04, 05, 06; falta: 09, 10, 11
 4. **Tarefas e compromissos**: tudo acima vale para os dois, do mesmo jeito.
    - _Pronto quando:_ repito os testes dos itens 1 e 3 com o compromisso
      "Dentista" e tudo funciona igual. E, com uma tarefa rodando, dou start no
@@ -97,12 +98,12 @@ _Ainda não conversado._
 - **Pausar** (na tela bloqueada ou na cortina de avisos): o cronômetro para de
   contar e o tempo continua somando quando der start de novo, como já funciona
   no app.
-  > 🟡 Parcial — plano 04; falta: 06, 09, 10, 11
+  > 🟡 Parcial — planos 04, 06; falta: 09, 10, 11
 - **Parar**: interrompe o cronômetro **e** dá a tarefa ou o compromisso por
   **concluído**, **com confirmação em dois toques**: ao tocar em "parar", o
   botão vira "confirmar" por **5 segundos**; sem o segundo toque, volta a
   "parar" e nada muda. Igual no iPhone e no Android.
-  > 🟡 Parcial — plano 05; falta: 06, 09, 10, 11
+  > 🟡 Parcial — planos 05, 06; falta: 09, 10, 11
 - Vale para **tarefas e compromissos**, do mesmo jeito.
 - **Pausado**: continua aparecendo, parado, com um botão **continuar** (que
   volta a contar) e o botão **parar**. Não dá para arrastar para o lado: só
@@ -133,6 +134,7 @@ _Ainda não conversado._
   > 🟡 Parcial — plano 05; falta: 07, 10, 11
 - O que aparece: **nome**, **tempo correndo** e **lista**, igual para tarefa e
   compromisso. O tempo estimado **não** aparece.
+  > 🟡 Parcial — plano 06; falta: 10, 11
 
 ## Quando dá errado
 
