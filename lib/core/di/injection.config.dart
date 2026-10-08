@@ -87,8 +87,12 @@ import 'package:meu_tempo/features/lock_screen/domain/gateways/lock_screen_timer
     as _i684;
 import 'package:meu_tempo/features/lock_screen/domain/usecases/handle_lock_screen_action_use_case.dart'
     as _i98;
+import 'package:meu_tempo/features/lock_screen/domain/usecases/sync_lock_screen_timer_use_case.dart'
+    as _i485;
 import 'package:meu_tempo/features/lock_screen/domain/usecases/watch_lock_screen_timer_use_case.dart'
     as _i188;
+import 'package:meu_tempo/features/lock_screen/presentation/bloc/lock_screen_sync_bloc.dart'
+    as _i580;
 import 'package:meu_tempo/features/report/domain/usecases/get_list_report_use_case.dart'
     as _i67;
 import 'package:meu_tempo/features/report/domain/usecases/get_task_report_use_case.dart'
@@ -262,6 +266,10 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i820.TaskListFilterLocalDataSourceImpl(
         gh<_i460.SharedPreferences>(),
       ),
+    );
+    gh.lazySingleton<_i485.SyncLockScreenTimerUseCase>(
+      () =>
+          _i485.SyncLockScreenTimerUseCase(gh<_i684.LockScreenTimerGateway>()),
     );
     gh.lazySingleton<_i592.TaskRemoteDataSource>(
       () => _i592.TaskRemoteDataSourceImpl(
@@ -489,6 +497,12 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i43.EditTaskUseCase>(),
         gh<_i213.MoveTaskUseCase>(),
         gh<_i623.CompleteTaskUseCase>(),
+      ),
+    );
+    gh.factory<_i580.LockScreenSyncBloc>(
+      () => _i580.LockScreenSyncBloc(
+        gh<_i188.WatchLockScreenTimerUseCase>(),
+        gh<_i485.SyncLockScreenTimerUseCase>(),
       ),
     );
     gh.factory<_i318.ReportBloc>(

@@ -12,6 +12,8 @@ import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'core/ui/app_error_screen.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
+import 'features/lock_screen/presentation/bloc/lock_screen_sync_bloc.dart';
+import 'features/lock_screen/presentation/widgets/lock_screen_sync_listener.dart';
 import 'features/task/presentation/bloc/active_timer_bloc.dart';
 import 'firebase_options.dart';
 
@@ -68,19 +70,26 @@ class MeuTempoApp extends StatelessWidget {
         // Estado global do cronômetro ativo — a barra "now playing" abaixo do
         // router o consome em qualquer tela.
         BlocProvider<ActiveTimerBloc>(create: (_) => getIt<ActiveTimerBloc>()),
+        // Mirrors the active timer on the lock screen / notification shade
+        // (empty implementation on web).
+        BlocProvider<LockScreenSyncBloc>(
+          create: (_) => getIt<LockScreenSyncBloc>(),
+        ),
       ],
-      child: Builder(
-        builder: (context) {
-          final router = AppRouter(context.read<AuthBloc>()).router;
-          return MaterialApp.router(
-            title: 'Meu Tempo',
-            debugShowCheckedModeBanner: false,
-            themeMode: ThemeMode.dark,
-            theme: AppTheme.dark,
-            darkTheme: AppTheme.dark,
-            routerConfig: router,
-          );
-        },
+      child: LockScreenSyncListener(
+        child: Builder(
+          builder: (context) {
+            final router = AppRouter(context.read<AuthBloc>()).router;
+            return MaterialApp.router(
+              title: 'Meu Tempo',
+              debugShowCheckedModeBanner: false,
+              themeMode: ThemeMode.dark,
+              theme: AppTheme.dark,
+              darkTheme: AppTheme.dark,
+              routerConfig: router,
+            );
+          },
+        ),
       ),
     );
   }

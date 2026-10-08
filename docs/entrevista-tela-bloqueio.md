@@ -43,6 +43,7 @@ tarefa com tempo absurdo (tipo 24 horas para uma tarefa de 30 min).
      celular: o cronômetro aparece na tela bloqueada. Ao desbloquear e puxar a
      cortina, ele está lá, fixo e contando. **Continua aparecendo mesmo se eu
      fechar o app de vez** (arrastar para fora).
+   > 🟡 Parcial — plano 07; falta: 09, 10, 11
 2. **O que aparece**: nome, lista e tempo correndo — igual para tarefa e
    compromisso.
    - _Pronto quando:_ dou start na tarefa "Tela de login" da lista "Trabalho" e
@@ -65,7 +66,7 @@ tarefa com tempo absurdo (tipo 24 horas para uma tarefa de 30 min).
      compromisso: a tela bloqueada passa a mostrar o compromisso (a tarefa
      pausa sozinha, como já acontece no app). Ao parar o compromisso, ele
      aparece na agenda com o sinal de "feito".
-   > 🟡 Parcial — planos 02, 03, 05; falta: 10, 11
+   > 🟡 Parcial — planos 02, 03, 05, 07; falta: 10, 11
 5. **Reabrir no app**: tarefa ou compromisso concluído pode ser reaberto
    dentro do app; ao reabrir uma filha, a mãe e a avó reabrem junto.
    - _Pronto quando:_ concluo a última filha de uma mãe e a mãe conclui
@@ -129,9 +130,10 @@ _Ainda não conversado._
 - **Dois celulares** (iPhone e Android com a mesma conta): a tela bloqueada de
   um não acompanha o outro na hora. Ao abrir o app, o celular acerta a própria
   tela bloqueada com o cronômetro que está de fato rodando.
+  > 🟡 Parcial — plano 07; falta: 10, 11
 - Só um cronômetro aparece por vez: ao dar start em outro, a tela bloqueada
   passa a mostrar o novo (o anterior pausa sozinho, regra da v1).
-  > 🟡 Parcial — plano 05; falta: 07, 10, 11
+  > 🟡 Parcial — planos 05, 07; falta: 10, 11
 - O que aparece: **nome**, **tempo correndo** e **lista**, igual para tarefa e
   compromisso. O tempo estimado **não** aparece.
   > 🟡 Parcial — plano 06; falta: 10, 11
