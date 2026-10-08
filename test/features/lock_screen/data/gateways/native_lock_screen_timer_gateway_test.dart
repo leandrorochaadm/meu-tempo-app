@@ -5,7 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:meu_tempo/core/error/failures.dart';
 import 'package:meu_tempo/features/lock_screen/data/background/lock_screen_channel_constants.dart';
-import 'package:meu_tempo/features/lock_screen/data/gateways/android_lock_screen_timer_gateway.dart';
+import 'package:meu_tempo/features/lock_screen/data/gateways/native_lock_screen_timer_gateway.dart';
 import 'package:meu_tempo/features/lock_screen/data/gateways/lock_screen_timer_channel_constants.dart';
 import 'package:meu_tempo/features/lock_screen/data/gateways/lock_screen_timer_channel_method_enum.dart';
 import 'package:meu_tempo/features/lock_screen/data/models/lock_screen_timer_payload_model.dart';
@@ -48,7 +48,7 @@ void main() {
     sessionStartedAt: DateTime(2026, 10, 7, 10, 5),
   );
 
-  late AndroidLockScreenTimerGateway gateway;
+  late NativeLockScreenTimerGateway gateway;
   late List<MethodCall> calls;
 
   void mockMethod(Future<Object?> Function(MethodCall call) handler) {
@@ -60,7 +60,7 @@ void main() {
 
   setUp(() {
     calls = [];
-    gateway = AndroidLockScreenTimerGateway(
+    gateway = NativeLockScreenTimerGateway(
       clock: () => now,
       callTimeout: const Duration(milliseconds: 20),
     );
@@ -166,6 +166,26 @@ void main() {
     expect(
       calls.single.method,
       LockScreenTimerChannelMethodEnum.requestPermission.apiValue,
+    );
+  });
+
+  test('pedir permissão sem diálogo devolve o estado na hora', () async {
+    mockMethod((_) async => 'denied');
+
+    expect(
+      await gateway.requestPermission(),
+      const Right<Failure, LockScreenPermissionStatusEnum>(
+        LockScreenPermissionStatusEnum.denied,
+      ),
+    );
+  });
+
+  test('falha ao mostrar vira LockScreenPlatformFailure', () async {
+    mockMethod((_) async => throw PlatformException(code: 'activity_failed'));
+
+    expect(
+      await gateway.show(timer),
+      const Left<Failure, Unit>(LockScreenPlatformFailure()),
     );
   });
 

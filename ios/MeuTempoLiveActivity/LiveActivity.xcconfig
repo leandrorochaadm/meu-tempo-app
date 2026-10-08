@@ -1,0 +1,4 @@
+// Base configuration of the MeuTempoLiveActivity target (Debug, Release,
+// Profile): the extension version follows the app version. Does not include
+// the CocoaPods xcconfig because the extension uses no plugin.
+#include "../Flutter/Generated.xcconfig"

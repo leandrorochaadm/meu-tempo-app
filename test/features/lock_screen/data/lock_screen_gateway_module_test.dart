@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:meu_tempo/features/lock_screen/data/gateways/android_lock_screen_timer_gateway.dart';
+import 'package:meu_tempo/features/lock_screen/data/gateways/native_lock_screen_timer_gateway.dart';
 import 'package:meu_tempo/features/lock_screen/data/gateways/noop_lock_screen_timer_gateway.dart';
 import 'package:meu_tempo/features/lock_screen/data/lock_screen_gateway_module.dart';
 
@@ -14,12 +14,21 @@ void main() {
 
     expect(
       _Module().lockScreenTimerGateway,
-      isA<AndroidLockScreenTimerGateway>(),
+      isA<NativeLockScreenTimerGateway>(),
     );
   });
 
-  test('iPhone usa o gateway vazio', () {
+  test('iPhone usa o gateway nativo', () {
     debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+
+    expect(
+      _Module().lockScreenTimerGateway,
+      isA<NativeLockScreenTimerGateway>(),
+    );
+  });
+
+  test('outras plataformas usam o vazio', () {
+    debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
 
     expect(_Module().lockScreenTimerGateway, isA<NoopLockScreenTimerGateway>());
   });

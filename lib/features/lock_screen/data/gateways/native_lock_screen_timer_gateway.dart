@@ -15,11 +15,11 @@ import '../models/lock_screen_timer_payload_model.dart';
 import 'lock_screen_timer_channel_constants.dart';
 import 'lock_screen_timer_channel_method_enum.dart';
 
-/// Android implementation: foreground service + notification on the native
-/// side. Only converts and relays; any channel failure becomes
+/// Android (foreground service) and iPhone (Live Activity) speak the same
+/// channel protocol; only converts and relays. Any channel failure becomes
 /// [LockScreenPlatformFailure].
-class AndroidLockScreenTimerGateway implements LockScreenTimerGateway {
-  AndroidLockScreenTimerGateway({
+class NativeLockScreenTimerGateway implements LockScreenTimerGateway {
+  NativeLockScreenTimerGateway({
     MethodChannel methodChannel = const MethodChannel(
       LockScreenTimerChannelConstants.methodChannelName,
     ),
@@ -33,7 +33,7 @@ class AndroidLockScreenTimerGateway implements LockScreenTimerGateway {
        _clock = clock,
        _callTimeout = callTimeout;
 
-  static const _logName = 'AndroidLockScreenTimerGateway';
+  static const _logName = 'NativeLockScreenTimerGateway';
 
   final MethodChannel _methodChannel;
   final EventChannel _tapChannel;

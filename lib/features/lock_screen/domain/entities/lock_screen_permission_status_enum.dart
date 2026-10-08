@@ -7,7 +7,8 @@ enum LockScreenPermissionStatusEnum {
   /// User denied or turned off in settings: the timer does not show.
   denied('denied'),
 
-  /// The app has not asked for the permission yet; the first start asks.
+  /// The app has not asked for the permission yet; the first start asks. Only
+  /// Android reports it; the iPhone returns `granted` or `denied`.
   notRequested('not_requested'),
 
   /// Platform without a lock screen (browser): nothing to ask for.

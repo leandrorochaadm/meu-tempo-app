@@ -1,4 +1,5 @@
-/// Contract with `android/.../lockscreen/LockScreenContract.kt`: changing a
+/// Contract with `android/.../lockscreen/LockScreenContract.kt` and
+/// `ios/MeuTempoLiveActivity/Shared/LockScreenContract.swift`: changing a
 /// name here requires changing there.
 abstract final class LockScreenTimerChannelConstants {
   static const methodChannelName = 'br.com.tekton.meutempo/lock_screen_timer';
