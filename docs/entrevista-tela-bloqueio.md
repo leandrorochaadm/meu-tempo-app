@@ -43,14 +43,14 @@ tarefa com tempo absurdo (tipo 24 horas para uma tarefa de 30 min).
      celular: o cronômetro aparece na tela bloqueada. Ao desbloquear e puxar a
      cortina, ele está lá, fixo e contando. **Continua aparecendo mesmo se eu
      fechar o app de vez** (arrastar para fora).
-   > 🟡 Parcial — planos 07, 09; falta: 10, 11
+   > 🟡 Parcial — planos 07, 09, 10; falta: 11
 2. **O que aparece**: nome, lista e tempo correndo — igual para tarefa e
    compromisso.
    - _Pronto quando:_ dou start na tarefa "Tela de login" da lista "Trabalho" e
      aparecem "Tela de login", "Trabalho" e o tempo andando. Dou start no
      compromisso "Dentista" da lista "Pessoal" e aparecem "Dentista", "Pessoal"
      e o tempo andando.
-   > 🟡 Parcial — plano 06; falta: 10, 11
+   > 🟡 Parcial — planos 06, 10; falta: 11
 3. **Pausar e parar dali mesmo**: botão **pausar** (continua depois) e botão
    **parar** (confirma com um segundo toque e conclui a tarefa). Pausado, continua à vista
    com o botão **continuar**; parado, some.
@@ -59,14 +59,14 @@ tarefa com tempo absurdo (tipo 24 horas para uma tarefa de 30 min).
      novo, toco em "parar": o botão vira "confirmar"; toco nele e a tarefa
      aparece concluída no app. Se eu não tocar em "confirmar" em 5 segundos, o
      botão volta a "parar" e nada muda.
-   > 🟡 Parcial — planos 04, 05, 06, 09; falta: 10, 11
+   > 🟡 Parcial — planos 04, 05, 06, 09, 10; falta: 11
 4. **Tarefas e compromissos**: tudo acima vale para os dois, do mesmo jeito.
    - _Pronto quando:_ repito os testes dos itens 1 e 3 com o compromisso
      "Dentista" e tudo funciona igual. E, com uma tarefa rodando, dou start no
      compromisso: a tela bloqueada passa a mostrar o compromisso (a tarefa
      pausa sozinha, como já acontece no app). Ao parar o compromisso, ele
      aparece na agenda com o sinal de "feito".
-   > 🟡 Parcial — planos 02, 03, 05, 07; falta: 10, 11
+   > 🟡 Parcial — planos 02, 03, 05, 07, 10; falta: 11
 5. **Reabrir no app**: tarefa ou compromisso concluído pode ser reaberto
    dentro do app; ao reabrir uma filha, a mãe e a avó reabrem junto.
    - _Pronto quando:_ concluo a última filha de uma mãe e a mãe conclui
@@ -99,22 +99,22 @@ _Ainda não conversado._
 - **Pausar** (na tela bloqueada ou na cortina de avisos): o cronômetro para de
   contar e o tempo continua somando quando der start de novo, como já funciona
   no app.
-  > 🟡 Parcial — planos 04, 06; falta: 09, 10, 11
+  > 🟡 Parcial — planos 04, 06, 09, 10; falta: 11
 - **Parar**: interrompe o cronômetro **e** dá a tarefa ou o compromisso por
   **concluído**, **com confirmação em dois toques**: ao tocar em "parar", o
   botão vira "confirmar" por **5 segundos**; sem o segundo toque, volta a
   "parar" e nada muda. Igual no iPhone e no Android.
-  > 🟡 Parcial — planos 05, 06; falta: 09, 10, 11
+  > 🟡 Parcial — planos 05, 06, 09, 10; falta: 11
 - Vale para **tarefas e compromissos**, do mesmo jeito.
 - **Pausado**: continua aparecendo, parado, com um botão **continuar** (que
   volta a contar) e o botão **parar**. Não dá para arrastar para o lado: só
   sai da tela ao continuar, parar ou dar start em outra tarefa/compromisso.
-  > 🟡 Parcial — plano 04; falta: 05, 10, 11
+  > 🟡 Parcial — planos 04, 05, 10; falta: 11
 - **Parado** (concluído): some da tela bloqueada e da cortina.
-  > 🟡 Parcial — plano 05; falta: 10, 11
+  > 🟡 Parcial — planos 05, 10; falta: 11
 - Concluir pela tela bloqueada **não tem "desfazer"**: o segundo toque de
   confirmação já protege contra toque errado.
-  > 🟡 Parcial — plano 09; falta: 10, 11
+  > 🟡 Parcial — planos 09, 10; falta: 11
 - **Compromisso também pode ser concluído** (novidade: hoje só tarefa conclui).
   Ao parar um compromisso, ele fica marcado como concluído, também dentro do
   app. Já incluído na v1 (requisitos, req. 14) em 07/10/2026.
@@ -128,17 +128,17 @@ _Ainda não conversado._
   > ✅ Implementado — plano 03
 - **Tocar no cronômetro** (fora dos botões) abre o app direto na tarefa ou
   compromisso que está rodando.
-  > 🟡 Parcial — plano 08; falta: 10, 11
+  > 🟡 Parcial — planos 08, 10; falta: 11
 - **Dois celulares** (iPhone e Android com a mesma conta): a tela bloqueada de
   um não acompanha o outro na hora. Ao abrir o app, o celular acerta a própria
   tela bloqueada com o cronômetro que está de fato rodando.
-  > 🟡 Parcial — plano 07; falta: 10, 11
+  > 🟡 Parcial — planos 07, 10; falta: 11
 - Só um cronômetro aparece por vez: ao dar start em outro, a tela bloqueada
   passa a mostrar o novo (o anterior pausa sozinho, regra da v1).
-  > 🟡 Parcial — planos 05, 07; falta: 10, 11
+  > 🟡 Parcial — planos 05, 07, 10; falta: 11
 - O que aparece: **nome**, **tempo correndo** e **lista**, igual para tarefa e
   compromisso. O tempo estimado **não** aparece.
-  > 🟡 Parcial — plano 06; falta: 10, 11
+  > 🟡 Parcial — planos 06, 10; falta: 11
 
 ## Quando dá errado
 
@@ -151,7 +151,7 @@ _Ainda não conversado._
   nos Ajustes) → o cronômetro não aparece na tela bloqueada. Ao dar start, o
   app mostra uma faixa: "Ative os avisos para ver o cronômetro com o celular
   bloqueado", com um botão que leva aos Ajustes do celular.
-  > 🟡 Parcial — plano 08; falta: 10, 11
+  > 🟡 Parcial — planos 08, 10; falta: 11
 - **Tarefa sem tempo estimado** e **compromisso** → o app **não avisa**; só
   fica visível na tela bloqueada e na cortina de avisos.
 
