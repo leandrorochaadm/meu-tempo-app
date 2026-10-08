@@ -91,6 +91,8 @@ import 'package:meu_tempo/features/lock_screen/domain/usecases/handle_lock_scree
     as _i98;
 import 'package:meu_tempo/features/lock_screen/domain/usecases/open_notification_settings_use_case.dart'
     as _i77;
+import 'package:meu_tempo/features/lock_screen/domain/usecases/process_lock_screen_action_use_case.dart'
+    as _i1017;
 import 'package:meu_tempo/features/lock_screen/domain/usecases/sync_lock_screen_timer_use_case.dart'
     as _i485;
 import 'package:meu_tempo/features/lock_screen/domain/usecases/watch_lock_screen_permission_warnings_use_case.dart'
@@ -665,6 +667,13 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i843.GetTaskEditContextUseCase>(),
         gh<_i268.CreateTaskAndStartTimerUseCase>(),
         gh<_i499.GetDefaultCreationListUseCase>(),
+      ),
+    );
+    gh.lazySingleton<_i1017.ProcessLockScreenActionUseCase>(
+      () => _i1017.ProcessLockScreenActionUseCase(
+        gh<_i224.AuthRepository>(),
+        gh<_i98.HandleLockScreenActionUseCase>(),
+        gh<_i188.WatchLockScreenTimerUseCase>(),
       ),
     );
     return this;
