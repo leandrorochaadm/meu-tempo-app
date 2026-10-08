@@ -29,14 +29,13 @@ class Routes {
   static const String timerTarget = '/timer-target';
 
   /// Full address of [timerTarget] for the target [type]/[id].
-  static String timerTargetLocation(TimerTargetTypeEnum type, String id) =>
-      Uri(
-        path: timerTarget,
-        queryParameters: {
-          TimerTargetQueryParams.type: type.apiValue,
-          TimerTargetQueryParams.id: id,
-        },
-      ).toString();
+  static String timerTargetLocation(TimerTargetTypeEnum type, String id) => Uri(
+    path: timerTarget,
+    queryParameters: {
+      TimerTargetQueryParams.type: type.apiValue,
+      TimerTargetQueryParams.id: id,
+    },
+  ).toString();
 }
 
 /// Query param names of [Routes.timerTarget].

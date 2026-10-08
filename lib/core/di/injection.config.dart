@@ -109,6 +109,20 @@ import 'package:meu_tempo/features/lock_screen/presentation/bloc/lock_screen_syn
     as _i580;
 import 'package:meu_tempo/features/lock_screen/presentation/bloc/lock_screen_tap_bloc.dart'
     as _i397;
+import 'package:meu_tempo/features/overrun_alert/data/overrun_alert_scheduler_module.dart'
+    as _i722;
+import 'package:meu_tempo/features/overrun_alert/domain/gateways/overrun_alert_scheduler.dart'
+    as _i191;
+import 'package:meu_tempo/features/overrun_alert/domain/usecases/plan_overrun_alerts_use_case.dart'
+    as _i631;
+import 'package:meu_tempo/features/overrun_alert/domain/usecases/sync_overrun_alert_schedule_use_case.dart'
+    as _i941;
+import 'package:meu_tempo/features/overrun_alert/domain/usecases/watch_overrun_alert_plan_use_case.dart'
+    as _i86;
+import 'package:meu_tempo/features/overrun_alert/domain/usecases/watch_overrun_alerts_use_case.dart'
+    as _i298;
+import 'package:meu_tempo/features/overrun_alert/presentation/bloc/overrun_alert_bloc.dart'
+    as _i1029;
 import 'package:meu_tempo/features/report/domain/usecases/get_list_report_use_case.dart'
     as _i67;
 import 'package:meu_tempo/features/report/domain/usecases/get_task_report_use_case.dart'
@@ -223,6 +237,7 @@ extension GetItInjectableX on _i174.GetIt {
     final preferencesModule = _$PreferencesModule();
     final firebaseModule = _$FirebaseModule();
     final lockScreenGatewayModule = _$LockScreenGatewayModule();
+    final overrunAlertSchedulerModule = _$OverrunAlertSchedulerModule();
     await gh.factoryAsync<_i460.SharedPreferences>(
       () => preferencesModule.prefs,
       preResolve: true,
@@ -234,6 +249,12 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i684.LockScreenTimerGateway>(
       () => lockScreenGatewayModule.lockScreenTimerGateway,
+    );
+    gh.lazySingleton<_i191.OverrunAlertScheduler>(
+      () => overrunAlertSchedulerModule.overrunAlertScheduler,
+    );
+    gh.lazySingleton<_i631.PlanOverrunAlertsUseCase>(
+      () => const _i631.PlanOverrunAlertsUseCase(),
     );
     gh.lazySingleton<_i67.GetListReportUseCase>(
       () => const _i67.GetListReportUseCase(),
@@ -257,6 +278,14 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i170.GetActiveTaskDetailsUseCase(
         gh<_i1067.GetPrioritizedLeavesUseCase>(),
       ),
+    );
+    gh.lazySingleton<_i941.SyncOverrunAlertScheduleUseCase>(
+      () => _i941.SyncOverrunAlertScheduleUseCase(
+        gh<_i191.OverrunAlertScheduler>(),
+      ),
+    );
+    gh.lazySingleton<_i298.WatchOverrunAlertsUseCase>(
+      () => _i298.WatchOverrunAlertsUseCase(gh<_i191.OverrunAlertScheduler>()),
     );
     gh.lazySingleton<_i813.TaskListRemoteDataSource>(
       () => _i813.TaskListRemoteDataSourceImpl(
@@ -429,6 +458,13 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i32.SaveTaskListFilterUseCase>(
       () => _i32.SaveTaskListFilterUseCase(gh<_i74.TaskListFilterRepository>()),
     );
+    gh.lazySingleton<_i86.WatchOverrunAlertPlanUseCase>(
+      () => _i86.WatchOverrunAlertPlanUseCase(
+        gh<_i381.TimerRepository>(),
+        gh<_i521.TaskRepository>(),
+        gh<_i631.PlanOverrunAlertsUseCase>(),
+      ),
+    );
     gh.lazySingleton<_i666.DeleteListUseCase>(
       () => _i666.DeleteListUseCase(
         gh<_i219.TaskListRepository>(),
@@ -599,6 +635,14 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i77.OpenNotificationSettingsUseCase>(),
       ),
     );
+    gh.factory<_i1029.OverrunAlertBloc>(
+      () => _i1029.OverrunAlertBloc(
+        gh<_i86.WatchOverrunAlertPlanUseCase>(),
+        gh<_i941.SyncOverrunAlertScheduleUseCase>(),
+        gh<_i298.WatchOverrunAlertsUseCase>(),
+        gh<_i197.PauseTimerUseCase>(),
+      ),
+    );
     gh.factory<_i990.AgendaBloc>(
       () => _i990.AgendaBloc(
         gh<_i777.WatchAppointmentsForDayUseCase>(),
@@ -685,3 +729,5 @@ class _$PreferencesModule extends _i767.PreferencesModule {}
 class _$FirebaseModule extends _i767.FirebaseModule {}
 
 class _$LockScreenGatewayModule extends _i752.LockScreenGatewayModule {}
+
+class _$OverrunAlertSchedulerModule extends _i722.OverrunAlertSchedulerModule {}

@@ -12,6 +12,7 @@ import 'package:meu_tempo/features/auth/domain/entities/user_entity.dart';
 import 'package:meu_tempo/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:meu_tempo/features/lock_screen/presentation/bloc/lock_screen_permission_bloc.dart';
 import 'package:meu_tempo/features/lock_screen/presentation/bloc/lock_screen_tap_bloc.dart';
+import 'package:meu_tempo/features/overrun_alert/presentation/bloc/overrun_alert_bloc.dart';
 import 'package:meu_tempo/features/task/domain/entities/active_task_details.dart';
 import 'package:meu_tempo/features/task/domain/entities/importance_enum.dart';
 import 'package:meu_tempo/features/task/domain/entities/task_edit_context.dart';
@@ -19,6 +20,10 @@ import 'package:meu_tempo/features/task/domain/entities/task_entity.dart';
 import 'package:meu_tempo/features/task/presentation/bloc/active_timer_bloc.dart';
 import 'package:meu_tempo/features/task/presentation/widgets/active_timer_bar.dart';
 import 'package:mocktail/mocktail.dart';
+
+class _MockOverrunAlertBloc
+    extends MockBloc<OverrunAlertEvent, OverrunAlertState>
+    implements OverrunAlertBloc {}
 
 class _MockActiveTimerBloc extends MockBloc<ActiveTimerEvent, ActiveTimerState>
     implements ActiveTimerBloc {}
@@ -31,13 +36,15 @@ class _MockLockScreenTapBloc
     extends MockBloc<LockScreenTapEvent, LockScreenTapState>
     implements LockScreenTapBloc {}
 
-class _MockAuthBloc extends MockBloc<AuthEvent, AuthState> implements AuthBloc {}
+class _MockAuthBloc extends MockBloc<AuthEvent, AuthState>
+    implements AuthBloc {}
 
 void main() {
   late _MockActiveTimerBloc timerBloc;
   late _MockAuthBloc authBloc;
   late _MockLockScreenPermissionBloc permissionBloc;
   late _MockLockScreenTapBloc tapBloc;
+  late _MockOverrunAlertBloc overrunBloc;
 
   final leaf = TaskEntity(
     id: 't1',
@@ -78,8 +85,11 @@ void main() {
     authBloc = _MockAuthBloc();
     permissionBloc = _MockLockScreenPermissionBloc();
     tapBloc = _MockLockScreenTapBloc();
-    when(() => permissionBloc.state)
-        .thenReturn(const LockScreenPermissionBannerHidden());
+    overrunBloc = _MockOverrunAlertBloc();
+    when(() => overrunBloc.state).thenReturn(const OverrunAlertHidden());
+    when(
+      () => permissionBloc.state,
+    ).thenReturn(const LockScreenPermissionBannerHidden());
     when(() => tapBloc.state).thenReturn(const LockScreenTapIdle());
     when(() => authBloc.state).thenReturn(
       const AuthAuthenticated(UserEntity(uid: 'u1', email: 'a@b.com')),
@@ -87,20 +97,20 @@ void main() {
   });
 
   Widget harness() => MaterialApp(
-        theme: AppTheme.dark,
-        home: Scaffold(
-          body: MultiBlocProvider(
-            providers: [
-              BlocProvider<AuthBloc>.value(value: authBloc),
-              BlocProvider<ActiveTimerBloc>.value(value: timerBloc),
-            ],
-            child: const Align(
-              alignment: Alignment.bottomCenter,
-              child: ActiveTimerBar(),
-            ),
-          ),
+    theme: AppTheme.dark,
+    home: Scaffold(
+      body: MultiBlocProvider(
+        providers: [
+          BlocProvider<AuthBloc>.value(value: authBloc),
+          BlocProvider<ActiveTimerBloc>.value(value: timerBloc),
+        ],
+        child: const Align(
+          alignment: Alignment.bottomCenter,
+          child: ActiveTimerBar(),
         ),
-      );
+      ),
+    ),
+  );
 
   // Harness com GoRouter: a rota de edição devolve um EditTaskResult ao "salvar",
   // permitindo testar a navegação do botão Editar e o guard de toque duplo.
@@ -175,6 +185,7 @@ void main() {
         BlocProvider<ActiveTimerBloc>.value(value: timerBloc),
         BlocProvider<LockScreenPermissionBloc>.value(value: permissionBloc),
         BlocProvider<LockScreenTapBloc>.value(value: tapBloc),
+        BlocProvider<OverrunAlertBloc>.value(value: overrunBloc),
       ],
       child: MaterialApp.router(theme: AppTheme.dark, routerConfig: router),
     );
@@ -220,86 +231,94 @@ void main() {
     expect(find.byIcon(Icons.info_outline_rounded), findsOneWidget);
   });
 
-  testWidgets('mostra todos os metadados da tarefa, quebrando linha se preciso',
-      (tester) async {
-    // Viewport estreito: os metadados devem quebrar para a linha seguinte sem
-    // sumir nem estourar overflow.
-    tester.view.physicalSize = const Size(320, 640);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
+  testWidgets(
+    'mostra todos os metadados da tarefa, quebrando linha se preciso',
+    (tester) async {
+      // Viewport estreito: os metadados devem quebrar para a linha seguinte sem
+      // sumir nem estourar overflow.
+      tester.view.physicalSize = const Size(320, 640);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
 
-    final detailedLeaf = TaskEntity(
-      id: 't1',
-      title: 'Fazer telas de login',
-      listId: 'inbox',
-      createdAt: DateTime(2026, 7, 22),
-      estimatedMinutes: 90,
-      dueDate: DateTime.now(),
-      importance: ImportanceEnum.max,
-      spentMinutes: 45,
+      final detailedLeaf = TaskEntity(
+        id: 't1',
+        title: 'Fazer telas de login',
+        listId: 'inbox',
+        createdAt: DateTime(2026, 7, 22),
+        estimatedMinutes: 90,
+        dueDate: DateTime.now(),
+        importance: ImportanceEnum.max,
+        spentMinutes: 45,
+      );
+      when(() => timerBloc.state).thenReturn(
+        ActiveTimerRunning(
+          title: detailedLeaf.title,
+          ancestryLabel: 'Lançar app › App',
+          startedAt: DateTime(2026, 7, 22, 10),
+          editContext: TaskEditContext(
+            task: detailedLeaf,
+            parentCandidates: const [],
+            currentParentLabel: 'Lançar app › App',
+          ),
+          details: ActiveTaskDetails(
+            listName: 'Entrada',
+            listColorIndex: 0,
+            breakdown: PriorityBreakdown(
+              estimatedMinutes: 180,
+              importance: ImportanceEnum.min,
+              urgencyWeight: 6,
+              daysUntilDue: 0,
+            ),
+            rank: 1,
+            isOverdue: false,
+          ),
+          lists: const [],
+        ),
+      );
+      await tester.pumpWidget(harness());
+
+      expect(find.text('Entrada'), findsOneWidget); // chip da lista
+      expect(find.text('gasto 45min'), findsOneWidget);
+      expect(find.text('est. 1h30'), findsOneWidget);
+      expect(find.text('Hoje'), findsOneWidget);
+      expect(find.text('Máxima'), findsOneWidget);
+      // Posição na fila, não a pontuação bruta (que vive no diálogo de info).
+      expect(find.text('#1'), findsOneWidget);
+      expect(find.textContaining('prio'), findsNothing);
+      // Nenhum RenderFlex overflow no viewport estreito.
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets('omite a posição quando a tarefa não está na fila', (
+    tester,
+  ) async {
+    when(() => timerBloc.state).thenReturn(
+      ActiveTimerRunning(
+        title: leaf.title,
+        ancestryLabel: 'Lançar app › App',
+        startedAt: DateTime(2026, 7, 22, 10),
+        editContext: TaskEditContext(
+          task: leaf,
+          parentCandidates: const [],
+          currentParentLabel: 'Lançar app › App',
+        ),
+        details: const ActiveTaskDetails(
+          listName: 'Entrada',
+          listColorIndex: 0,
+          breakdown: PriorityBreakdown(
+            estimatedMinutes: 90,
+            importance: ImportanceEnum.min,
+            urgencyWeight: 1,
+            daysUntilDue: null,
+          ),
+          rank: null,
+          isOverdue: false,
+        ),
+        lists: const [],
+      ),
     );
-    when(() => timerBloc.state).thenReturn(ActiveTimerRunning(
-      title: detailedLeaf.title,
-      ancestryLabel: 'Lançar app › App',
-      startedAt: DateTime(2026, 7, 22, 10),
-      editContext: TaskEditContext(
-        task: detailedLeaf,
-        parentCandidates: const [],
-        currentParentLabel: 'Lançar app › App',
-      ),
-      details: ActiveTaskDetails(
-        listName: 'Entrada',
-        listColorIndex: 0,
-        breakdown: PriorityBreakdown(
-          estimatedMinutes: 180,
-          importance: ImportanceEnum.min,
-          urgencyWeight: 6,
-          daysUntilDue: 0,
-        ),
-        rank: 1,
-        isOverdue: false,
-      ),
-      lists: const [],
-    ));
-    await tester.pumpWidget(harness());
-
-    expect(find.text('Entrada'), findsOneWidget); // chip da lista
-    expect(find.text('gasto 45min'), findsOneWidget);
-    expect(find.text('est. 1h30'), findsOneWidget);
-    expect(find.text('Hoje'), findsOneWidget);
-    expect(find.text('Máxima'), findsOneWidget);
-    // Posição na fila, não a pontuação bruta (que vive no diálogo de info).
-    expect(find.text('#1'), findsOneWidget);
-    expect(find.textContaining('prio'), findsNothing);
-    // Nenhum RenderFlex overflow no viewport estreito.
-    expect(tester.takeException(), isNull);
-  });
-
-  testWidgets('omite a posição quando a tarefa não está na fila', (tester) async {
-    when(() => timerBloc.state).thenReturn(ActiveTimerRunning(
-      title: leaf.title,
-      ancestryLabel: 'Lançar app › App',
-      startedAt: DateTime(2026, 7, 22, 10),
-      editContext: TaskEditContext(
-        task: leaf,
-        parentCandidates: const [],
-        currentParentLabel: 'Lançar app › App',
-      ),
-      details: const ActiveTaskDetails(
-        listName: 'Entrada',
-        listColorIndex: 0,
-        breakdown: PriorityBreakdown(
-          estimatedMinutes: 90,
-          importance: ImportanceEnum.min,
-          urgencyWeight: 1,
-          daysUntilDue: null,
-        ),
-        rank: null,
-        isOverdue: false,
-      ),
-      lists: const [],
-    ));
     await tester.pumpWidget(harness());
 
     expect(find.textContaining('#'), findsNothing);
@@ -322,8 +341,9 @@ void main() {
     expect(find.text('4 × 1 × 1 = 4'), findsOneWidget);
   });
 
-  testWidgets('tocar em Parar dispara ActiveTimerStopRequested',
-      (tester) async {
+  testWidgets('tocar em Parar dispara ActiveTimerStopRequested', (
+    tester,
+  ) async {
     when(() => timerBloc.state).thenReturn(running);
     await tester.pumpWidget(harness());
 
@@ -333,8 +353,9 @@ void main() {
     verify(() => timerBloc.add(const ActiveTimerStopRequested())).called(1);
   });
 
-  testWidgets('Concluir pede confirmação antes de disparar o evento',
-      (tester) async {
+  testWidgets('Concluir pede confirmação antes de disparar o evento', (
+    tester,
+  ) async {
     when(() => timerBloc.state).thenReturn(running);
     await tester.pumpWidget(harness());
 
@@ -352,12 +373,14 @@ void main() {
     await tester.tap(find.widgetWithText(FilledButton, 'Concluir'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
-    verify(() => timerBloc.add(const ActiveTimerCompleteRequested('t1')))
-        .called(1);
+    verify(
+      () => timerBloc.add(const ActiveTimerCompleteRequested('t1')),
+    ).called(1);
   });
 
-  testWidgets('mostra snackbar quando uma ação falha, sem sumir com a barra',
-      (tester) async {
+  testWidgets('mostra snackbar quando uma ação falha, sem sumir com a barra', (
+    tester,
+  ) async {
     whenListen(
       timerBloc,
       Stream<ActiveTimerState>.fromIterable([
@@ -390,8 +413,9 @@ void main() {
     );
   });
 
-  testWidgets('toque duplo em Concluir abre apenas um diálogo (guard)',
-      (tester) async {
+  testWidgets('toque duplo em Concluir abre apenas um diálogo (guard)', (
+    tester,
+  ) async {
     when(() => timerBloc.state).thenReturn(running);
     await tester.pumpWidget(harness());
 
@@ -404,8 +428,9 @@ void main() {
     expect(find.text('Concluir tarefa?'), findsOneWidget);
   });
 
-  testWidgets('Editar navega e, ao salvar, dispara ActiveTimerEditSubmitted',
-      (tester) async {
+  testWidgets('Editar navega e, ao salvar, dispara ActiveTimerEditSubmitted', (
+    tester,
+  ) async {
     when(() => timerBloc.state).thenReturn(running);
     await tester.pumpWidget(routerHarness());
     await tester.pump();
@@ -421,7 +446,8 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 350));
 
-    verify(() => timerBloc.add(any(that: isA<ActiveTimerEditSubmitted>())))
-        .called(1);
+    verify(
+      () => timerBloc.add(any(that: isA<ActiveTimerEditSubmitted>())),
+    ).called(1);
   });
 }

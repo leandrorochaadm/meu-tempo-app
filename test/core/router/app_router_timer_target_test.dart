@@ -12,6 +12,7 @@ import 'package:meu_tempo/features/auth/domain/entities/user_entity.dart';
 import 'package:meu_tempo/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:meu_tempo/features/lock_screen/presentation/bloc/lock_screen_permission_bloc.dart';
 import 'package:meu_tempo/features/lock_screen/presentation/bloc/lock_screen_tap_bloc.dart';
+import 'package:meu_tempo/features/overrun_alert/presentation/bloc/overrun_alert_bloc.dart';
 import 'package:meu_tempo/features/task/domain/entities/timer_target_type_enum.dart';
 import 'package:meu_tempo/features/task/presentation/bloc/active_timer_bloc.dart';
 import 'package:meu_tempo/features/task/presentation/bloc/edit_task_by_id_bloc.dart';
@@ -22,6 +23,10 @@ import 'package:mocktail/mocktail.dart';
 
 class _MockAuthBloc extends MockBloc<AuthEvent, AuthState>
     implements AuthBloc {}
+
+class _MockOverrunAlertBloc
+    extends MockBloc<OverrunAlertEvent, OverrunAlertState>
+    implements OverrunAlertBloc {}
 
 class _MockActiveTimerBloc extends MockBloc<ActiveTimerEvent, ActiveTimerState>
     implements ActiveTimerBloc {}
@@ -47,6 +52,7 @@ void main() {
   late _MockActiveTimerBloc timerBloc;
   late _MockPermissionBloc permissionBloc;
   late _MockTapBloc tapBloc;
+  late _MockOverrunAlertBloc overrunBloc;
   late AppRouter appRouter;
 
   setUpAll(() {
@@ -60,16 +66,23 @@ void main() {
     timerBloc = _MockActiveTimerBloc();
     permissionBloc = _MockPermissionBloc();
     tapBloc = _MockTapBloc();
+    overrunBloc = _MockOverrunAlertBloc();
+    when(() => overrunBloc.state).thenReturn(const OverrunAlertHidden());
     final taskListBloc = _MockTaskListBloc();
     final agendaBloc = _MockAgendaBloc();
     final editByIdBloc = _MockEditByIdBloc();
 
-    whenListen(authBloc, const Stream<AuthState>.empty(),
-        initialState:
-            const AuthAuthenticated(UserEntity(uid: 'u1', email: 'a@b.com')));
+    whenListen(
+      authBloc,
+      const Stream<AuthState>.empty(),
+      initialState: const AuthAuthenticated(
+        UserEntity(uid: 'u1', email: 'a@b.com'),
+      ),
+    );
     when(() => timerBloc.state).thenReturn(const ActiveTimerHidden());
-    when(() => permissionBloc.state)
-        .thenReturn(const LockScreenPermissionBannerHidden());
+    when(
+      () => permissionBloc.state,
+    ).thenReturn(const LockScreenPermissionBannerHidden());
     when(() => tapBloc.state).thenReturn(const LockScreenTapIdle());
     when(() => taskListBloc.state).thenReturn(const TaskListLoading());
     when(() => agendaBloc.state).thenReturn(const AgendaLoading());
@@ -92,6 +105,7 @@ void main() {
           BlocProvider<ActiveTimerBloc>.value(value: timerBloc),
           BlocProvider<LockScreenPermissionBloc>.value(value: permissionBloc),
           BlocProvider<LockScreenTapBloc>.value(value: tapBloc),
+          BlocProvider<OverrunAlertBloc>.value(value: overrunBloc),
         ],
         child: MaterialApp.router(
           theme: AppTheme.dark,
@@ -141,7 +155,8 @@ void main() {
   testWidgets('the shell wires the banner', (tester) async {
     await open(tester, Routes.home);
 
-    verify(() => permissionBloc.add(const LockScreenPermissionStarted()))
-        .called(1);
+    verify(
+      () => permissionBloc.add(const LockScreenPermissionStarted()),
+    ).called(1);
   });
 }

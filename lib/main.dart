@@ -16,6 +16,7 @@ import 'features/lock_screen/presentation/bloc/lock_screen_permission_bloc.dart'
 import 'features/lock_screen/presentation/bloc/lock_screen_sync_bloc.dart';
 import 'features/lock_screen/presentation/bloc/lock_screen_tap_bloc.dart';
 import 'features/lock_screen/presentation/widgets/lock_screen_sync_listener.dart';
+import 'features/overrun_alert/presentation/bloc/overrun_alert_bloc.dart';
 import 'features/task/presentation/bloc/active_timer_bloc.dart';
 
 Future<void> main() async {
@@ -87,6 +88,10 @@ class MeuTempoApp extends StatelessWidget {
           lazy: false,
           create: (_) =>
               getIt<LockScreenTapBloc>()..add(const LockScreenTapStarted()),
+        ),
+        // Overrun alert — switched on/off by the AppShell.
+        BlocProvider<OverrunAlertBloc>(
+          create: (_) => getIt<OverrunAlertBloc>(),
         ),
       ],
       child: LockScreenSyncListener(

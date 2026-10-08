@@ -12,6 +12,7 @@ import '../../features/list/presentation/bloc/list_manager_bloc.dart';
 import '../../features/list/presentation/pages/lists_page.dart';
 import '../../features/lock_screen/presentation/widgets/lock_screen_permission_banner_host.dart';
 import '../../features/lock_screen/presentation/widgets/lock_screen_tap_navigator.dart';
+import '../../features/overrun_alert/presentation/widgets/overrun_alert_host.dart';
 import '../../features/report/domain/entities/report_period_enum.dart';
 import '../../features/report/presentation/bloc/report_bloc.dart';
 import '../../features/report/presentation/bloc/report_detail_bloc.dart';
@@ -55,123 +56,121 @@ class AppRouter {
       return null;
     },
     routes: [
-      GoRoute(
-        path: Routes.login,
-        builder: (_, _) => const LoginPage(),
-      ),
+      GoRoute(path: Routes.login, builder: (_, _) => const LoginPage()),
       // Shell das rotas autenticadas: mantém a barra "now playing" fixa no
       // rodapé, dentro do Navigator raiz (assim seus Tooltip/diálogos têm
       // Overlay/Navigator). O login fica fora — sem barra.
       ShellRoute(
         builder: (_, _, child) => AppShell(child: child),
         routes: [
-      GoRoute(
-        path: Routes.home,
-        builder: (_, _) => BlocProvider(
-          create: (_) => getIt<TaskListBloc>(),
-          child: const TaskListPage(),
-        ),
-      ),
-      GoRoute(
-        path: Routes.lists,
-        builder: (_, _) => BlocProvider(
-          create: (_) => getIt<ListManagerBloc>(),
-          child: const ListsPage(),
-        ),
-      ),
-      GoRoute(
-        path: Routes.agenda,
-        builder: (_, _) => BlocProvider(
-          create: (_) => getIt<AgendaBloc>(),
-          child: const AgendaPage(),
-        ),
-      ),
-      GoRoute(
-        path: Routes.report,
-        builder: (_, _) => BlocProvider(
-          create: (_) => getIt<ReportBloc>(),
-          child: const ReportPage(),
-        ),
-      ),
-      GoRoute(
-        path: Routes.reportDetail,
-        builder: (_, state) {
-          final q = state.uri.queryParameters;
-          return BlocProvider(
-            create: (_) => getIt<ReportDetailBloc>(),
-            child: ReportDetailPage(
-              listId: q['list'] ?? '',
-              period: ReportPeriodEnum.values.byName(q['period'] ?? 'day'),
-              offset: int.tryParse(q['offset'] ?? '0') ?? 0,
-              listName: state.extra as String?,
+          GoRoute(
+            path: Routes.home,
+            builder: (_, _) => BlocProvider(
+              create: (_) => getIt<TaskListBloc>(),
+              child: const TaskListPage(),
             ),
-          );
-        },
-      ),
-      GoRoute(
-        path: Routes.settings,
-        builder: (_, _) => BlocProvider(
-          create: (_) => getIt<SettingsBloc>(),
-          child: const SettingsPage(),
-        ),
-      ),
-      GoRoute(
-        path: Routes.editTask,
-        builder: (context, state) {
-          // `extra` não sobrevive a refresh do PWA — volta pra home nesse caso.
-          final args = state.extra;
-          if (args is! EditTaskArgs) {
-            return BlocProvider(
-              create: (_) => getIt<TaskListBloc>(),
-              child: const TaskListPage(),
-            );
-          }
-          return EditTaskPage(args: args, today: DateTime.now());
-        },
-      ),
-      GoRoute(
-        path: Routes.timeEntry,
-        builder: (context, state) {
-          final leaf = state.extra;
-          if (leaf is! TaskEntity) {
-            return BlocProvider(
-              create: (_) => getIt<TaskListBloc>(),
-              child: const TaskListPage(),
-            );
-          }
-          return BlocProvider(
-            create: (_) => getIt<TimeEntryBloc>(),
-            child: TimeEntryPage(leaf: leaf),
-          );
-        },
-      ),
-      GoRoute(
-        path: Routes.timerTarget,
-        builder: (context, state) {
-          final q = state.uri.queryParameters;
-          final type =
-              TimerTargetTypeEnum.fromApi(q[TimerTargetQueryParams.type]);
-          final id = q[TimerTargetQueryParams.id] ?? '';
-          // Incomplete address or from another version: back to home.
-          if (type == null || id.isEmpty) {
-            return BlocProvider(
-              create: (_) => getIt<TaskListBloc>(),
-              child: const TaskListPage(),
-            );
-          }
-          return switch (type) {
-            TimerTargetTypeEnum.task => BlocProvider(
-                create: (_) => getIt<EditTaskByIdBloc>(),
-                child: EditTaskByIdPage(taskId: id),
-              ),
-            // The agenda only shows today (no navigation by day).
-            TimerTargetTypeEnum.appointment => BlocProvider(
-                create: (_) => getIt<AgendaBloc>(),
-                child: const AgendaPage(),
-              ),
-          };
-        },
-      ),
+          ),
+          GoRoute(
+            path: Routes.lists,
+            builder: (_, _) => BlocProvider(
+              create: (_) => getIt<ListManagerBloc>(),
+              child: const ListsPage(),
+            ),
+          ),
+          GoRoute(
+            path: Routes.agenda,
+            builder: (_, _) => BlocProvider(
+              create: (_) => getIt<AgendaBloc>(),
+              child: const AgendaPage(),
+            ),
+          ),
+          GoRoute(
+            path: Routes.report,
+            builder: (_, _) => BlocProvider(
+              create: (_) => getIt<ReportBloc>(),
+              child: const ReportPage(),
+            ),
+          ),
+          GoRoute(
+            path: Routes.reportDetail,
+            builder: (_, state) {
+              final q = state.uri.queryParameters;
+              return BlocProvider(
+                create: (_) => getIt<ReportDetailBloc>(),
+                child: ReportDetailPage(
+                  listId: q['list'] ?? '',
+                  period: ReportPeriodEnum.values.byName(q['period'] ?? 'day'),
+                  offset: int.tryParse(q['offset'] ?? '0') ?? 0,
+                  listName: state.extra as String?,
+                ),
+              );
+            },
+          ),
+          GoRoute(
+            path: Routes.settings,
+            builder: (_, _) => BlocProvider(
+              create: (_) => getIt<SettingsBloc>(),
+              child: const SettingsPage(),
+            ),
+          ),
+          GoRoute(
+            path: Routes.editTask,
+            builder: (context, state) {
+              // `extra` não sobrevive a refresh do PWA — volta pra home nesse caso.
+              final args = state.extra;
+              if (args is! EditTaskArgs) {
+                return BlocProvider(
+                  create: (_) => getIt<TaskListBloc>(),
+                  child: const TaskListPage(),
+                );
+              }
+              return EditTaskPage(args: args, today: DateTime.now());
+            },
+          ),
+          GoRoute(
+            path: Routes.timeEntry,
+            builder: (context, state) {
+              final leaf = state.extra;
+              if (leaf is! TaskEntity) {
+                return BlocProvider(
+                  create: (_) => getIt<TaskListBloc>(),
+                  child: const TaskListPage(),
+                );
+              }
+              return BlocProvider(
+                create: (_) => getIt<TimeEntryBloc>(),
+                child: TimeEntryPage(leaf: leaf),
+              );
+            },
+          ),
+          GoRoute(
+            path: Routes.timerTarget,
+            builder: (context, state) {
+              final q = state.uri.queryParameters;
+              final type = TimerTargetTypeEnum.fromApi(
+                q[TimerTargetQueryParams.type],
+              );
+              final id = q[TimerTargetQueryParams.id] ?? '';
+              // Incomplete address or from another version: back to home.
+              if (type == null || id.isEmpty) {
+                return BlocProvider(
+                  create: (_) => getIt<TaskListBloc>(),
+                  child: const TaskListPage(),
+                );
+              }
+              return switch (type) {
+                TimerTargetTypeEnum.task => BlocProvider(
+                  create: (_) => getIt<EditTaskByIdBloc>(),
+                  child: EditTaskByIdPage(taskId: id),
+                ),
+                // The agenda only shows today (no navigation by day).
+                TimerTargetTypeEnum.appointment => BlocProvider(
+                  create: (_) => getIt<AgendaBloc>(),
+                  child: const AgendaPage(),
+                ),
+              };
+            },
+          ),
         ],
       ),
     ],
@@ -180,7 +179,8 @@ class AppRouter {
 
 /// Casca das telas autenticadas: empilha a barra do cronômetro no rodapé, acima
 /// da área segura, com o conteúdo da rota preenchendo o restante. Também liga
-/// a faixa de avisos desligados e o toque no cronômetro da tela bloqueada.
+/// a faixa de avisos desligados, o toque no cronômetro da tela bloqueada e o
+/// aviso de tempo estourado.
 class AppShell extends StatelessWidget {
   const AppShell({super.key, required this.child});
 
@@ -190,11 +190,13 @@ class AppShell extends StatelessWidget {
   Widget build(BuildContext context) {
     return LockScreenTapNavigator(
       child: LockScreenPermissionBannerHost(
-        child: Column(
-          children: [
-            Expanded(child: child),
-            const ActiveTimerBar(),
-          ],
+        child: OverrunAlertHost(
+          child: Column(
+            children: [
+              Expanded(child: child),
+              const ActiveTimerBar(),
+            ],
+          ),
         ),
       ),
     );
