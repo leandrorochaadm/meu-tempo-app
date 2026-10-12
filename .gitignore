@@ -52,3 +52,6 @@ app.*.map.json
 
 # Artefatos locais (planos, arquivos de trabalho temporários)
 temp/
+
+# Configuração local por máquina
+.env

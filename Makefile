@@ -1,5 +1,5 @@
 # Atalhos de desenvolvimento — Meu Tempo
-.PHONY: gen watch test run analyze build deploy ship
+.PHONY: gen watch test run run-ios run-ios-debug run-ios-release run-android run-android-debug run-android-release analyze build deploy ship
 
 # Gera código (json_serializable + injectable)
 gen:
@@ -27,6 +27,37 @@ run:
 	flutter run -d chrome \
 		--web-port=$(WEB_PORT) \
 		--web-browser-flag="--user-data-dir=$(CHROME_PROFILE)"
+
+# Configuração local por máquina (fora do git). Modelo em .env.example.
+-include .env
+
+# Roda o app nativo no iPhone de dev (via fvm). UDID vem de IOS_DEVICE no .env.
+# `run-ios` é atalho para o modo debug.
+run-ios: run-ios-debug
+
+run-ios-debug:
+	@test -n "$(IOS_DEVICE)" || { echo "Defina IOS_DEVICE no .env (veja .env.example)"; exit 1; }
+	fvm flutter run --debug -d $(IOS_DEVICE)
+
+# Release no iPhone: necessário para testar com o app fechado (botões da tela
+# bloqueada). Em debug, o iOS não deixa o Dart rodar sem o Xcode/flutter
+# conectado, então o app reaberto em segundo plano não executa nada.
+run-ios-release:
+	@test -n "$(IOS_DEVICE)" || { echo "Defina IOS_DEVICE no .env (veja .env.example)"; exit 1; }
+	fvm flutter run --release -d $(IOS_DEVICE)
+
+# Roda o app nativo no Android de dev (via fvm). ID vem de ANDROID_DEVICE no .env.
+# `run-android` é atalho para o modo debug.
+run-android: run-android-debug
+
+run-android-debug:
+	@test -n "$(ANDROID_DEVICE)" || { echo "Defina ANDROID_DEVICE no .env (veja .env.example)"; exit 1; }
+	fvm flutter run --debug -d $(ANDROID_DEVICE)
+
+# Release no Android: comportamento real com o app fechado/em segundo plano.
+run-android-release:
+	@test -n "$(ANDROID_DEVICE)" || { echo "Defina ANDROID_DEVICE no .env (veja .env.example)"; exit 1; }
+	fvm flutter run --release -d $(ANDROID_DEVICE)
 
 # Análise estática (manter zero issues)
 analyze:
