@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "588975528122",
+    "project_id": "meu-tempo-dev",
+    "storage_bucket": "meu-tempo-dev.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:588975528122:android:ce6e7b17c6277de2250a83",
+        "android_client_info": {
+          "package_name": "br.com.tekton.meutempo"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "588975528122-tk6l4edtn3c9qi5tgbao2t433i6jb9sc.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDSTHLY86-s0EtWgcF0K1tmjnIZUYS0BV4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "588975528122-tk6l4edtn3c9qi5tgbao2t433i6jb9sc.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "588975528122-fv4gjq4j1i8l1rconfm7arakn94bvb8n.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "br.com.tekton.meutempo"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

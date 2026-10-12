@@ -5,8 +5,25 @@
         "lib/firebase_options.dart": {
           "projectId": "meu-tempo-dev",
           "configurations": {
+            "android": "1:588975528122:android:ce6e7b17c6277de2250a83",
+            "ios": "1:588975528122:ios:5479ddca65637746250a83",
             "web": "1:588975528122:web:dbc3c6d2b8f4a782250a83"
           }
+        }
+      },
+      "android": {
+        "default": {
+          "projectId": "meu-tempo-dev",
+          "appId": "1:588975528122:android:ce6e7b17c6277de2250a83",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "ios": {
+        "default": {
+          "projectId": "meu-tempo-dev",
+          "appId": "1:588975528122:ios:5479ddca65637746250a83",
+          "uploadDebugSymbols": false,
+          "fileOutput": "ios/Runner/GoogleService-Info.plist"
         }
       }
     }
