@@ -7,12 +7,20 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0EAFCE3412641A9AB3788770 /* MeuTempoLiveActivityBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66B37D4DCC77DAE515CDF254 /* MeuTempoLiveActivityBundle.swift */; };
 		1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */ = {isa = PBXBuildFile; fileRef = 1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */; };
+		16E9509E5D1BD66E10B513DB /* TimerActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000014 /* TimerActivityAttributes.swift */; };
+		27811C39B5C7E7C5D6D3C868 /* LockScreenContract.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000011 /* LockScreenContract.swift */; };
+		2994F9979D94AEB3EAA80462 /* TimerLiveActivityWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 702236A2D57D2674B13BD704 /* TimerLiveActivityWidget.swift */; };
 		331C808B294A63AB00263BE5 /* RunnerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 331C807B294A618700263BE5 /* RunnerTests.swift */; };
 		3B3967161E833CAA004F5970 /* AppFrameworkInfo.plist in Resources */ = {isa = PBXBuildFile; fileRef = 3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */; };
+		48F5A42F7B9A17F59C9F1F7E /* MeuTempoLiveActivity.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = D5388F4BD1F63192F2BA4B79 /* MeuTempoLiveActivity.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		49FBCA66399AB2E0702E4801 /* TimerLiveActivityViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0897AD0520B04CF83195ECF /* TimerLiveActivityViews.swift */; };
+		68EC2A3B667FEFFEFF0F521A /* LockScreenIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000013 /* LockScreenIntents.swift */; };
 		74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74858FAE1ED2DC5600515810 /* AppDelegate.swift */; };
 		7884E8682EC3CC0700C636F2 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7884E8672EC3CC0400C636F2 /* SceneDelegate.swift */; };
 		78A318202AECB46A00862997 /* FlutterGeneratedPluginSwiftPackage in Frameworks */ = {isa = PBXBuildFile; productRef = 78A3181F2AECB46A00862997 /* FlutterGeneratedPluginSwiftPackage */; };
+		832941703ADF3E4C2EBE11F5 /* LockScreenEnums.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000012 /* LockScreenEnums.swift */; };
 		97C146FC1CF9000F007C117D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FA1CF9000F007C117D /* Main.storyboard */; };
 		97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FD1CF9000F007C117D /* Assets.xcassets */; };
 		97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FF1CF9000F007C117D /* LaunchScreen.storyboard */; };
@@ -27,9 +35,19 @@
 		B10000000000000000000012 /* LockScreenEnums.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000012 /* LockScreenEnums.swift */; };
 		B10000000000000000000013 /* LockScreenIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000013 /* LockScreenIntents.swift */; };
 		B10000000000000000000014 /* TimerActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000014 /* TimerActivityAttributes.swift */; };
+		B471B4702F4EA02639EECAE5 /* LockScreenIntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E46F4B29A507ABF91AE2B14 /* LockScreenIntentHandler.swift */; };
+		C6155671F90F5AD0330A5E71 /* LockScreenStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BFF7B41D5244729C86C00B3 /* LockScreenStyle.swift */; };
+		C9F0AF9C398BB29EA62B88A8 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 38786C470AE46C551E30CFE9 /* GoogleService-Info.plist */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		093AA5E0BC524BC063F75384 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 97C146E61CF9000F007C117D /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = AF742322A1A29E96E40FE901;
+			remoteInfo = MeuTempoLiveActivity;
+		};
 		331C8085294A63A400263BE5 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 97C146E61CF9000F007C117D /* Project object */;
@@ -40,6 +58,17 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		255FA73F5A2B336B1EE1A47C /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				48F5A42F7B9A17F59C9F1F7E /* MeuTempoLiveActivity.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		9705A1C41CF9048500538489 /* Embed Frameworks */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -55,14 +84,21 @@
 /* Begin PBXFileReference section */
 		1498D2321E8E86230040F4C2 /* GeneratedPluginRegistrant.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GeneratedPluginRegistrant.h; sourceTree = "<group>"; };
 		1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GeneratedPluginRegistrant.m; sourceTree = "<group>"; };
+		1AA8C69013E2A67B8F634AD7 /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		1BFF7B41D5244729C86C00B3 /* LockScreenStyle.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LockScreenStyle.swift; sourceTree = "<group>"; };
+		250AA2479A1D0610E9FD937D /* LiveActivity.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = LiveActivity.xcconfig; sourceTree = "<group>"; };
 		331C807B294A618700263BE5 /* RunnerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunnerTests.swift; sourceTree = "<group>"; };
 		331C8081294A63A400263BE5 /* RunnerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RunnerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		38786C470AE46C551E30CFE9 /* GoogleService-Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; name = "GoogleService-Info.plist"; path = "Runner/GoogleService-Info.plist"; sourceTree = "<group>"; };
 		3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = AppFrameworkInfo.plist; path = Flutter/AppFrameworkInfo.plist; sourceTree = "<group>"; };
+		66B37D4DCC77DAE515CDF254 /* MeuTempoLiveActivityBundle.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MeuTempoLiveActivityBundle.swift; sourceTree = "<group>"; };
+		702236A2D57D2674B13BD704 /* TimerLiveActivityWidget.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TimerLiveActivityWidget.swift; sourceTree = "<group>"; };
 		74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Runner-Bridging-Header.h"; sourceTree = "<group>"; };
 		74858FAE1ED2DC5600515810 /* AppDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		7884E8672EC3CC0400C636F2 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
 		78E0A7A72DC9AD7400C4905E /* FlutterGeneratedPluginSwiftPackage */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = FlutterGeneratedPluginSwiftPackage; path = Flutter/ephemeral/Packages/FlutterGeneratedPluginSwiftPackage; sourceTree = "<group>"; };
 		7AFA3C8E1D35360C0083082E /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Release.xcconfig; path = Flutter/Release.xcconfig; sourceTree = "<group>"; };
+		8E46F4B29A507ABF91AE2B14 /* LockScreenIntentHandler.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LockScreenIntentHandler.swift; sourceTree = "<group>"; };
 		9740EEB21CF90195004384FC /* Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = Debug.xcconfig; path = Flutter/Debug.xcconfig; sourceTree = "<group>"; };
 		9740EEB31CF90195004384FC /* Generated.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = Generated.xcconfig; path = Flutter/Generated.xcconfig; sourceTree = "<group>"; };
 		97C146EE1CF9000F007C117D /* Runner.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Runner.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -81,6 +117,8 @@
 		A10000000000000000000012 /* LockScreenEnums.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = LockScreenEnums.swift; path = MeuTempoLiveActivity/Shared/LockScreenEnums.swift; sourceTree = SOURCE_ROOT; };
 		A10000000000000000000013 /* LockScreenIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = LockScreenIntents.swift; path = MeuTempoLiveActivity/Shared/LockScreenIntents.swift; sourceTree = SOURCE_ROOT; };
 		A10000000000000000000014 /* TimerActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = TimerActivityAttributes.swift; path = MeuTempoLiveActivity/Shared/TimerActivityAttributes.swift; sourceTree = SOURCE_ROOT; };
+		D5388F4BD1F63192F2BA4B79 /* MeuTempoLiveActivity.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = MeuTempoLiveActivity.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		E0897AD0520B04CF83195ECF /* TimerLiveActivityViews.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TimerLiveActivityViews.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -92,27 +130,16 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		EF5B32618763C2F46E11B252 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		C10000000000000000000001 /* LockScreen */ = {
-			isa = PBXGroup;
-			children = (
-				A10000000000000000000001 /* LiveActivityController.swift */,
-				A10000000000000000000002 /* LockScreenActionEngine.swift */,
-				A10000000000000000000003 /* LockScreenIntentHandler.swift */,
-				A10000000000000000000004 /* LockScreenPermission.swift */,
-				A10000000000000000000005 /* LockScreenTapStreamHandler.swift */,
-				A10000000000000000000006 /* LockScreenTimerPayload.swift */,
-				A10000000000000000000007 /* LockScreenTimerPlugin.swift */,
-				A10000000000000000000011 /* LockScreenContract.swift */,
-				A10000000000000000000012 /* LockScreenEnums.swift */,
-				A10000000000000000000013 /* LockScreenIntents.swift */,
-				A10000000000000000000014 /* TimerActivityAttributes.swift */,
-			);
-			path = LockScreen;
-			sourceTree = "<group>";
-		};
 		331C8082294A63A400263BE5 /* RunnerTests */ = {
 			isa = PBXGroup;
 			children = (
@@ -140,6 +167,8 @@
 				97C146F01CF9000F007C117D /* Runner */,
 				97C146EF1CF9000F007C117D /* Products */,
 				331C8082294A63A400263BE5 /* RunnerTests */,
+				38786C470AE46C551E30CFE9 /* GoogleService-Info.plist */,
+				BECDF00C0578050DC3D6E772 /* MeuTempoLiveActivity */,
 			);
 			sourceTree = "<group>";
 		};
@@ -148,6 +177,7 @@
 			children = (
 				97C146EE1CF9000F007C117D /* Runner.app */,
 				331C8081294A63A400263BE5 /* RunnerTests.xctest */,
+				D5388F4BD1F63192F2BA4B79 /* MeuTempoLiveActivity.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -167,6 +197,39 @@
 				74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */,
 			);
 			path = Runner;
+			sourceTree = "<group>";
+		};
+		BECDF00C0578050DC3D6E772 /* MeuTempoLiveActivity */ = {
+			isa = PBXGroup;
+			children = (
+				250AA2479A1D0610E9FD937D /* LiveActivity.xcconfig */,
+				1AA8C69013E2A67B8F634AD7 /* Info.plist */,
+				66B37D4DCC77DAE515CDF254 /* MeuTempoLiveActivityBundle.swift */,
+				702236A2D57D2674B13BD704 /* TimerLiveActivityWidget.swift */,
+				E0897AD0520B04CF83195ECF /* TimerLiveActivityViews.swift */,
+				1BFF7B41D5244729C86C00B3 /* LockScreenStyle.swift */,
+				8E46F4B29A507ABF91AE2B14 /* LockScreenIntentHandler.swift */,
+			);
+			name = MeuTempoLiveActivity;
+			path = MeuTempoLiveActivity;
+			sourceTree = "<group>";
+		};
+		C10000000000000000000001 /* LockScreen */ = {
+			isa = PBXGroup;
+			children = (
+				A10000000000000000000001 /* LiveActivityController.swift */,
+				A10000000000000000000002 /* LockScreenActionEngine.swift */,
+				A10000000000000000000003 /* LockScreenIntentHandler.swift */,
+				A10000000000000000000004 /* LockScreenPermission.swift */,
+				A10000000000000000000005 /* LockScreenTapStreamHandler.swift */,
+				A10000000000000000000006 /* LockScreenTimerPayload.swift */,
+				A10000000000000000000007 /* LockScreenTimerPlugin.swift */,
+				A10000000000000000000011 /* LockScreenContract.swift */,
+				A10000000000000000000012 /* LockScreenEnums.swift */,
+				A10000000000000000000013 /* LockScreenIntents.swift */,
+				A10000000000000000000014 /* TimerActivityAttributes.swift */,
+			);
+			path = LockScreen;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -198,11 +261,13 @@
 				97C146EB1CF9000F007C117D /* Frameworks */,
 				97C146EC1CF9000F007C117D /* Resources */,
 				9705A1C41CF9048500538489 /* Embed Frameworks */,
+				255FA73F5A2B336B1EE1A47C /* Embed Foundation Extensions */,
 				3B06AD1E1E4923F5004D2608 /* Thin Binary */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				FB72A0DE34735DCB2B902CD2 /* PBXTargetDependency */,
 			);
 			name = Runner;
 			packageProductDependencies = (
@@ -211,6 +276,23 @@
 			productName = Runner;
 			productReference = 97C146EE1CF9000F007C117D /* Runner.app */;
 			productType = "com.apple.product-type.application";
+		};
+		AF742322A1A29E96E40FE901 /* MeuTempoLiveActivity */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 058D761B2BD6C716B4DEC58A /* Build configuration list for PBXNativeTarget "MeuTempoLiveActivity" */;
+			buildPhases = (
+				2FADCEEDB928FB23A4F3FCA3 /* Sources */,
+				EF5B32618763C2F46E11B252 /* Frameworks */,
+				B9DC9503491623049DC19011 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = MeuTempoLiveActivity;
+			productName = MeuTempoLiveActivity;
+			productReference = D5388F4BD1F63192F2BA4B79 /* MeuTempoLiveActivity.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -230,6 +312,9 @@
 						CreatedOnToolsVersion = 7.3.1;
 						LastSwiftMigration = 1100;
 					};
+					AF742322A1A29E96E40FE901 = {
+						CreatedOnToolsVersion = 26.0;
+					};
 				};
 			};
 			buildConfigurationList = 97C146E91CF9000F007C117D /* Build configuration list for PBXProject "Runner" */;
@@ -242,7 +327,7 @@
 			);
 			mainGroup = 97C146E51CF9000F007C117D;
 			packageReferences = (
-				781AD8BC2B33823900A9FFBB /* XCLocalSwiftPackageReference "Flutter/ephemeral/Packages/FlutterGeneratedPluginSwiftPackage" */,
+				781AD8BC2B33823900A9FFBB /* XCLocalSwiftPackageReference "FlutterGeneratedPluginSwiftPackage" */,
 			);
 			productRefGroup = 97C146EF1CF9000F007C117D /* Products */;
 			projectDirPath = "";
@@ -250,6 +335,7 @@
 			targets = (
 				97C146ED1CF9000F007C117D /* Runner */,
 				331C8080294A63A400263BE5 /* RunnerTests */,
+				AF742322A1A29E96E40FE901 /* MeuTempoLiveActivity */,
 			);
 		};
 /* End PBXProject section */
@@ -270,6 +356,14 @@
 				3B3967161E833CAA004F5970 /* AppFrameworkInfo.plist in Resources */,
 				97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */,
 				97C146FC1CF9000F007C117D /* Main.storyboard in Resources */,
+				C9F0AF9C398BB29EA62B88A8 /* GoogleService-Info.plist in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B9DC9503491623049DC19011 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -310,6 +404,22 @@
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		2FADCEEDB928FB23A4F3FCA3 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0EAFCE3412641A9AB3788770 /* MeuTempoLiveActivityBundle.swift in Sources */,
+				2994F9979D94AEB3EAA80462 /* TimerLiveActivityWidget.swift in Sources */,
+				49FBCA66399AB2E0702E4801 /* TimerLiveActivityViews.swift in Sources */,
+				C6155671F90F5AD0330A5E71 /* LockScreenStyle.swift in Sources */,
+				B471B4702F4EA02639EECAE5 /* LockScreenIntentHandler.swift in Sources */,
+				27811C39B5C7E7C5D6D3C868 /* LockScreenContract.swift in Sources */,
+				832941703ADF3E4C2EBE11F5 /* LockScreenEnums.swift in Sources */,
+				68EC2A3B667FEFFEFF0F521A /* LockScreenIntents.swift in Sources */,
+				16E9509E5D1BD66E10B513DB /* TimerActivityAttributes.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		331C807D294A63A400263BE5 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -347,6 +457,12 @@
 			target = 97C146ED1CF9000F007C117D /* Runner */;
 			targetProxy = 331C8085294A63A400263BE5 /* PBXContainerItemProxy */;
 		};
+		FB72A0DE34735DCB2B902CD2 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = MeuTempoLiveActivity;
+			target = AF742322A1A29E96E40FE901 /* MeuTempoLiveActivity */;
+			targetProxy = 093AA5E0BC524BC063F75384 /* PBXContainerItemProxy */;
+		};
 /* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
@@ -369,6 +485,31 @@
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
+		05B3AAA4EE55391E8D5A43A9 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 250AA2479A1D0610E9FD937D /* LiveActivity.xcconfig */;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = GSG82A9W3Y;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = MeuTempoLiveActivity/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = br.com.tekton.meutempo.MeuTempoLiveActivity;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
 		249021D3217E4FDB00AE95B9 /* Profile */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -489,6 +630,32 @@
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Runner.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Runner";
 			};
 			name = Profile;
+		};
+		54E9BD93732C2D0F3534F207 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 250AA2479A1D0610E9FD937D /* LiveActivity.xcconfig */;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = GSG82A9W3Y;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = MeuTempoLiveActivity/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = br.com.tekton.meutempo.MeuTempoLiveActivity;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
 		};
 		97C147031CF9000F007C117D /* Debug */ = {
 			isa = XCBuildConfiguration;
@@ -646,9 +813,45 @@
 			};
 			name = Release;
 		};
+		B1251D5E5745DC9DB50C5FA9 /* Profile */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 250AA2479A1D0610E9FD937D /* LiveActivity.xcconfig */;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = GSG82A9W3Y;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = MeuTempoLiveActivity/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = br.com.tekton.meutempo.MeuTempoLiveActivity;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Profile;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		058D761B2BD6C716B4DEC58A /* Build configuration list for PBXNativeTarget "MeuTempoLiveActivity" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				54E9BD93732C2D0F3534F207 /* Release */,
+				05B3AAA4EE55391E8D5A43A9 /* Debug */,
+				B1251D5E5745DC9DB50C5FA9 /* Profile */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		331C8087294A63A400263BE5 /* Build configuration list for PBXNativeTarget "RunnerTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -682,7 +885,7 @@
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
-		781AD8BC2B33823900A9FFBB /* XCLocalSwiftPackageReference "Flutter/ephemeral/Packages/FlutterGeneratedPluginSwiftPackage" */ = {
+		781AD8BC2B33823900A9FFBB /* XCLocalSwiftPackageReference "FlutterGeneratedPluginSwiftPackage" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = Flutter/ephemeral/Packages/FlutterGeneratedPluginSwiftPackage;
 		};
