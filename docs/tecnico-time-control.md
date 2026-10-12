@@ -124,7 +124,7 @@ continua.
 
 | # | Pergunta | Resposta |
 |---|---|---|
-| 7.1 💰 | Versão mínima | **iOS 17** (Live Activity com botões) · **Android 13 / API 33** (pede permissão de notificação) |
+| 7.1 💰 | Versão mínima | **iOS 17** (Live Activity com botões) · **Android 12 / API 31** (do 13 em diante pede permissão de notificação; no 12 ela já vem liberada) |
 | 7.2 💰 | Tablet / paisagem | Não: só celular, retrato |
 | 7.3 | Web ou desktop | Web: sim, o PWA continua (sem o cronômetro na tela bloqueada; código de plataforma atrás de abstração com implementação vazia no web). Desktop: não |
 | 7.4 💰 | Idioma e fuso | pt-BR, `America/Sao_Paulo` |
@@ -200,7 +200,8 @@ de 24 h | Médio | Aceito. O aviso de estouro (desejável) só cobre tarefa com 
 | 1 | Flutter nativo (alvos `android/` e `ios/` no mesmo projeto) | 07/10/2026 | Leandro |
 | 2 | PWA mantido junto com Android e iOS (mesmo código) | 07/10/2026 | Leandro |
 | 3 | Instalação direta, sem lojas | 07/10/2026 | Leandro |
-| 4 | Mínimo iOS 17 e Android 13 (API 33) | 07/10/2026 | Leandro |
+| 4 | Mínimo iOS 17 e Android 13 (API 33) — Android revisto na decisão 8 | 07/10/2026 | Leandro |
+| 8 | Android mínimo baixado para 12 (API 31), para rodar no celular de teste (SM A125M) | 09/10/2026 | Leandro |
 | 5 | Bundle id `br.com.tekton.meutempo` | 07/10/2026 | Leandro |
 | 6 | Login Google mantido, adaptado ao nativo | 07/10/2026 | Leandro |
 | 7 | Crash reporting com Firebase Crashlytics, só no nativo (substitui o Sentry) | 07/10/2026 | Leandro |

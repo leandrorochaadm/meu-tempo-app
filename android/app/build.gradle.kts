@@ -3,6 +3,9 @@ import java.util.Properties
 
 plugins {
     id("com.android.application")
+    // START: FlutterFire Configuration
+    id("com.google.gms.google-services")
+    // END: FlutterFire Configuration
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
@@ -28,8 +31,8 @@ android {
 
     defaultConfig {
         applicationId = "br.com.tekton.meutempo"
-        // Android 13 (API 33): required for POST_NOTIFICATIONS (docs/tecnico-time-control.md 7.1).
-        minSdk = 33
+        // Android 12 (API 31): docs/tecnico-time-control.md 7.1.
+        minSdk = 31
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName

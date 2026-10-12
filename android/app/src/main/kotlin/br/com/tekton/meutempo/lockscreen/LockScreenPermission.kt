@@ -5,6 +5,7 @@ import android.app.Activity
 import android.app.NotificationManager
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.os.Build
 import android.provider.Settings
 import io.flutter.plugin.common.MethodChannel
 
@@ -21,17 +22,20 @@ class LockScreenPermission(
         val manager = activity.getSystemService(NotificationManager::class.java)
         val channel = manager.getNotificationChannel(LockScreenContract.NOTIFICATION_CHANNEL_ID)
         val channelOn = channel == null || channel.importance != NotificationManager.IMPORTANCE_NONE
-        val granted = activity.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) ==
+        // Below Android 13 there is no runtime permission: notifications start enabled.
+        val granted = !canAsk() ||
+            activity.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) ==
             PackageManager.PERMISSION_GRANTED
         return when {
             granted && manager.areNotificationsEnabled() && channelOn -> LockScreenPermissionStatus.GRANTED
-            !store.permissionRequested -> LockScreenPermissionStatus.NOT_REQUESTED
+            canAsk() && !store.permissionRequested -> LockScreenPermissionStatus.NOT_REQUESTED
             else -> LockScreenPermissionStatus.DENIED
         }
     }
 
     fun request(result: MethodChannel.Result) {
-        if (status() == LockScreenPermissionStatus.GRANTED || !isResumed || pending != null) {
+        val noDialog = !canAsk() || status() == LockScreenPermissionStatus.GRANTED
+        if (noDialog || !isResumed || pending != null) {
             result.success(status().apiValue)
             return
         }
@@ -53,6 +57,8 @@ class LockScreenPermission(
             .putExtra(Settings.EXTRA_APP_PACKAGE, activity.packageName)
         activity.startActivity(intent)
     }
+
+    private fun canAsk() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
 
     private fun answerPending() {
         val result = pending ?: return

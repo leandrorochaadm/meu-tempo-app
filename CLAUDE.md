@@ -39,7 +39,7 @@ Nunca invente requisito. Se algo não está nos documentos, **pergunte** (ver sk
   grandes**. Não desenhe layouts de desktop.
   - **Alvos nativos** (decisão de 07/10/2026): o cronômetro na tela bloqueada exige
     código nativo, por isso entram Android e iOS; o **PWA continua**. Mínimo **iOS 17** e
-    **Android 13 (API 33)**; bundle/application id `br.com.tekton.meutempo`; instalação
+    **Android 12 (API 31)**; bundle/application id `br.com.tekton.meutempo`; instalação
     direta, sem lojas. Detalhes e riscos em `docs/tecnico-time-control.md`.
   - **Recurso só nativo:** cronômetro na tela bloqueada/notificação. No web, o código de
     plataforma fica atrás de uma abstração com implementação vazia (`kIsWeb`).
