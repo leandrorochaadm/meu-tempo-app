@@ -6,6 +6,7 @@ import '../../../../core/ui/app_empty_state.dart';
 import '../../../../core/ui/app_list_skeleton.dart';
 import '../../../../core/ui/app_undo_snackbar.dart';
 import '../../../../core/ui/task_running_badge.dart';
+import '../../../../core/ui/timer_toggle_button.dart';
 import '../../../../core/utils/formatters/duration_formatter.dart';
 import '../../../../core/utils/formatters/time_formatter.dart';
 import '../../domain/entities/appointment_entity.dart';
@@ -34,11 +35,13 @@ class _AgendaPageState extends State<AgendaPage> {
       MaterialPageRoute(builder: (_) => const AddAppointmentPage()),
     );
     if (result != null) {
-      bloc.add(AppointmentCreated(
-        title: result.title,
-        startMinute: result.startMinute,
-        durationMinutes: result.durationMinutes,
-      ));
+      bloc.add(
+        AppointmentCreated(
+          title: result.title,
+          startMinute: result.startMinute,
+          durationMinutes: result.durationMinutes,
+        ),
+      );
     }
   }
 
@@ -76,10 +79,10 @@ class _AgendaPageState extends State<AgendaPage> {
             return switch (state) {
               AgendaLoading() => const AppListSkeleton(),
               AgendaError() => const AppEmptyState(
-                  icon: Icons.event_rounded,
-                  title: 'Não foi possível carregar',
-                  message: 'Tente novamente em instantes.',
-                ),
+                icon: Icons.event_rounded,
+                title: 'Não foi possível carregar',
+                message: 'Tente novamente em instantes.',
+              ),
               AgendaLoaded(
                 :final appointments,
                 :final fit,
@@ -105,24 +108,28 @@ class _AgendaPageState extends State<AgendaPage> {
                                 final isActive =
                                     appointments[i].id == activeAppointmentId;
                                 return _AppointmentTile(
-                                appointment: appointments[i],
-                                isActive: isActive,
-                                activeStartedAt:
-                                    isActive ? activeTimerStartedAt : null,
-                                onToggleTimer: (start) =>
-                                    context.read<AgendaBloc>().add(
-                                          start
-                                              ? AppointmentTimerStarted(
-                                                  appointments[i].id)
-                                              : const AppointmentTimerStopped(),
-                                        ),
-                                onToggleDone: () => _toggleDone(
-                                  appointments[i],
-                                  !appointments[i].isDone,
-                                ),
-                                onDelete: () => context.read<AgendaBloc>().add(
-                                    AppointmentDeleted(appointments[i].id)),
-                              );
+                                  appointment: appointments[i],
+                                  isActive: isActive,
+                                  activeStartedAt: isActive
+                                      ? activeTimerStartedAt
+                                      : null,
+                                  onToggleTimer: (start) =>
+                                      context.read<AgendaBloc>().add(
+                                        start
+                                            ? AppointmentTimerStarted(
+                                                appointments[i].id,
+                                              )
+                                            : const AppointmentTimerStopped(),
+                                      ),
+                                  onToggleDone: () => _toggleDone(
+                                    appointments[i],
+                                    !appointments[i].isDone,
+                                  ),
+                                  onDelete: () =>
+                                      context.read<AgendaBloc>().add(
+                                        AppointmentDeleted(appointments[i].id),
+                                      ),
+                                );
                               },
                             ),
                     ),
@@ -160,16 +167,19 @@ class _FitBanner extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(ok ? Icons.check_circle_rounded : Icons.warning_rounded,
-              color: color, size: 20),
+          Icon(
+            ok ? Icons.check_circle_rounded : Icons.warning_rounded,
+            color: color,
+            size: 20,
+          ),
           SizedBox(width: context.space.sm),
           Expanded(
             child: Text(
               ok
                   ? 'Cabe no dia: ${DurationFormatter.hm(fit.plannedMinutes)} de '
-                      '${DurationFormatter.hm(fit.availableMinutes)}.'
+                        '${DurationFormatter.hm(fit.availableMinutes)}.'
                   : 'Passou ${DurationFormatter.hm(fit.overflowMinutes)} do '
-                      'disponível (${DurationFormatter.hm(fit.availableMinutes)}).',
+                        'disponível (${DurationFormatter.hm(fit.availableMinutes)}).',
               style: context.text.bodySmall,
             ),
           ),
@@ -264,22 +274,14 @@ class _AppointmentTile extends StatelessWidget {
           IconButton(
             onPressed: onToggleDone,
             icon: Icon(
-              done
-                  ? Icons.replay_rounded
-                  : Icons.check_circle_outline_rounded,
+              done ? Icons.replay_rounded : Icons.check_circle_outline_rounded,
               color: done ? colors.textMuted : colors.success,
             ),
             tooltip: done ? 'Reabrir' : 'Concluir',
           ),
-          IconButton(
+          TimerToggleButton(
+            isActive: isActive,
             onPressed: () => onToggleTimer(!isActive),
-            icon: Icon(
-              isActive
-                  ? Icons.stop_circle_rounded
-                  : Icons.play_circle_rounded,
-              color: isActive ? colors.timerActive : colors.primary,
-            ),
-            tooltip: isActive ? 'Parar cronômetro' : 'Iniciar cronômetro',
           ),
           IconButton(
             onPressed: onDelete,

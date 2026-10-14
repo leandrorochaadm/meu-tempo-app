@@ -7,23 +7,30 @@ void main() {
   late bool editTapped;
   late bool moveTapped;
   late bool deleteTapped;
+  late bool addSubtaskTapped;
+  late bool addTimeTapped;
 
   setUp(() {
     editTapped = false;
     moveTapped = false;
     deleteTapped = false;
+    addSubtaskTapped = false;
+    addTimeTapped = false;
   });
 
-  Widget harness() => MaterialApp(
-    theme: AppTheme.dark,
-    home: Scaffold(
-      body: TaskCrudMenu(
-        onEdit: () => editTapped = true,
-        onMove: () => moveTapped = true,
-        onDelete: () => deleteTapped = true,
-      ),
-    ),
-  );
+  Widget harness({VoidCallback? onAddSubtask, VoidCallback? onAddTime}) =>
+      MaterialApp(
+        theme: AppTheme.dark,
+        home: Scaffold(
+          body: TaskCrudMenu(
+            onEdit: () => editTapped = true,
+            onMove: () => moveTapped = true,
+            onDelete: () => deleteTapped = true,
+            onAddSubtask: onAddSubtask,
+            onAddTime: onAddTime,
+          ),
+        ),
+      );
 
   Future<void> openAndSelect(WidgetTester tester, String item) async {
     await tester.tap(find.byIcon(Icons.more_vert_rounded));
@@ -62,5 +69,46 @@ void main() {
     await openAndSelect(tester, 'Excluir');
 
     expect(deleteTapped, isTrue);
+  });
+
+  testWidgets('mostra "Somar 30 min" e chama onAddTime quando informado', (
+    tester,
+  ) async {
+    await tester.pumpWidget(harness(onAddTime: () => addTimeTapped = true));
+    await openAndSelect(tester, 'Somar 30 min');
+
+    expect(addTimeTapped, isTrue);
+  });
+
+  testWidgets('não mostra "Somar" quando onAddTime é nulo', (tester) async {
+    await tester.pumpWidget(harness());
+    await tester.tap(find.byIcon(Icons.more_vert_rounded));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Editar'), findsOneWidget);
+    expect(find.textContaining('Somar'), findsNothing);
+  });
+
+  testWidgets(
+    'mostra "Adicionar subtarefa" e chama onAddSubtask quando informado',
+    (tester) async {
+      await tester.pumpWidget(
+        harness(onAddSubtask: () => addSubtaskTapped = true),
+      );
+      await openAndSelect(tester, 'Adicionar subtarefa');
+
+      expect(addSubtaskTapped, isTrue);
+    },
+  );
+
+  testWidgets('não mostra "Adicionar subtarefa" quando onAddSubtask é nulo', (
+    tester,
+  ) async {
+    await tester.pumpWidget(harness());
+    await tester.tap(find.byIcon(Icons.more_vert_rounded));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Editar'), findsOneWidget);
+    expect(find.text('Adicionar subtarefa'), findsNothing);
   });
 }

@@ -8,6 +8,9 @@ class AppDefaults {
   /// Tempo estimado padrão da criação rápida (minutos).
   static const int defaultEstimatedMinutes = 30;
 
+  /// Atalho de tempo manual da listagem ("Somar 30 min" no menu ⋮), em minutos.
+  static const int quickAddTimeMinutes = 30;
+
   /// Tempo que o snackbar de "Desfazer" (concluir/excluir) fica visível.
   static const Duration undoSnackbarDuration = Duration(seconds: 10);
 
