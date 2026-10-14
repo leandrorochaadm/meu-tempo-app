@@ -38,6 +38,8 @@ class ListFilterBar extends StatelessWidget {
     final chosen = await showModalBottomSheet<_FilterChoice>(
       context: context,
       showDragHandle: true,
+      isScrollControlled: true,
+      useSafeArea: true,
       builder: (ctx) => _ListFilterSheet(
         lists: lists,
         selectedListId: selectedListId,
@@ -87,21 +89,31 @@ class _ListFilterSheet extends StatelessWidget {
             ),
             child: Text('Filtrar por lista', style: context.text.titleMedium),
           ),
-          _FilterOption(
-            icon: Icons.all_inbox_rounded,
-            label: 'Todas as listas',
-            selected: selectedListId == null,
-            onTap: () => Navigator.of(context).pop(const _FilterChoice(null)),
-          ),
-          const Divider(height: 1),
-          for (final l in lists)
-            _FilterOption(
-              icon: Icons.folder_rounded,
-              label: l.name,
-              selected: selectedListId == l.id,
-              onTap: () => Navigator.of(context).pop(_FilterChoice(l.id)),
+          // Rolável: com muitas listas, os últimos itens passavam da altura
+          // máxima do sheet e ficavam cortados.
+          Flexible(
+            child: ListView(
+              shrinkWrap: true,
+              padding: EdgeInsets.only(bottom: context.space.md),
+              children: [
+                _FilterOption(
+                  icon: Icons.all_inbox_rounded,
+                  label: 'Todas as listas',
+                  selected: selectedListId == null,
+                  onTap: () =>
+                      Navigator.of(context).pop(const _FilterChoice(null)),
+                ),
+                const Divider(height: 1),
+                for (final l in lists)
+                  _FilterOption(
+                    icon: Icons.folder_rounded,
+                    label: l.name,
+                    selected: selectedListId == l.id,
+                    onTap: () => Navigator.of(context).pop(_FilterChoice(l.id)),
+                  ),
+              ],
             ),
-          SizedBox(height: context.space.md),
+          ),
         ],
       ),
     );
