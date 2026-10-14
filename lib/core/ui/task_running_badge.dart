@@ -40,9 +40,10 @@ class _TaskRunningBadgeState extends State<TaskRunningBadge>
     });
     // Duração real vem dos tokens (context.motion) em didChangeDependencies.
     _pulse = AnimationController(vsync: this);
-    _pulseOpacity = Tween<double>(begin: 0.4, end: 1).animate(
-      CurvedAnimation(parent: _pulse, curve: Curves.easeInOut),
-    );
+    _pulseOpacity = Tween<double>(
+      begin: 0.4,
+      end: 1,
+    ).animate(CurvedAnimation(parent: _pulse, curve: Curves.easeInOut));
   }
 
   @override

@@ -130,8 +130,11 @@ class AppColors extends ThemeExtension<AppColors> {
       primary: Color.lerp(primary, other.primary, t)!,
       onPrimary: Color.lerp(onPrimary, other.onPrimary, t)!,
       timerActive: Color.lerp(timerActive, other.timerActive, t)!,
-      timerActiveSurface:
-          Color.lerp(timerActiveSurface, other.timerActiveSurface, t)!,
+      timerActiveSurface: Color.lerp(
+        timerActiveSurface,
+        other.timerActiveSurface,
+        t,
+      )!,
       success: Color.lerp(success, other.success, t)!,
       warning: Color.lerp(warning, other.warning, t)!,
       danger: Color.lerp(danger, other.danger, t)!,

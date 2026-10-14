@@ -28,14 +28,13 @@ class AppMotion extends ThemeExtension<AppMotion> {
     Duration? slow,
     Duration? pulse,
     Curve? curve,
-  }) =>
-      AppMotion(
-        fast: fast ?? this.fast,
-        medium: medium ?? this.medium,
-        slow: slow ?? this.slow,
-        pulse: pulse ?? this.pulse,
-        curve: curve ?? this.curve,
-      );
+  }) => AppMotion(
+    fast: fast ?? this.fast,
+    medium: medium ?? this.medium,
+    slow: slow ?? this.slow,
+    pulse: pulse ?? this.pulse,
+    curve: curve ?? this.curve,
+  );
 
   @override
   AppMotion lerp(ThemeExtension<AppMotion>? other, double t) => this;

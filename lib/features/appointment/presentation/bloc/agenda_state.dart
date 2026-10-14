@@ -30,8 +30,12 @@ class AgendaLoaded extends AgendaState {
   final DateTime? activeTimerStartedAt;
 
   @override
-  List<Object?> get props =>
-      [appointments, fit, activeAppointmentId, activeTimerStartedAt];
+  List<Object?> get props => [
+    appointments,
+    fit,
+    activeAppointmentId,
+    activeTimerStartedAt,
+  ];
 }
 
 class AgendaError extends AgendaState {

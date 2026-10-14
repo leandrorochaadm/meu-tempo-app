@@ -45,9 +45,11 @@ class AppointmentRemoteDataSourceImpl implements AppointmentRemoteDataSource {
           .orderBy(AppointmentFields.date)
           .orderBy(AppointmentFields.startMinute)
           .snapshots()
-          .map((snap) => snap.docs
-              .map((d) => AppointmentModel.fromDoc(d.id, d.data()))
-              .toList());
+          .map(
+            (snap) => snap.docs
+                .map((d) => AppointmentModel.fromDoc(d.id, d.data()))
+                .toList(),
+          );
     } on FirebaseException catch (e) {
       throw mapFirestoreException(e);
     }
@@ -59,9 +61,11 @@ class AppointmentRemoteDataSourceImpl implements AppointmentRemoteDataSource {
       return _collection
           .orderBy(AppointmentFields.date)
           .snapshots()
-          .map((snap) => snap.docs
-              .map((d) => AppointmentModel.fromDoc(d.id, d.data()))
-              .toList());
+          .map(
+            (snap) => snap.docs
+                .map((d) => AppointmentModel.fromDoc(d.id, d.data()))
+                .toList(),
+          );
     } on FirebaseException catch (e) {
       throw mapFirestoreException(e);
     }

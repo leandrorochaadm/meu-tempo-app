@@ -25,8 +25,7 @@ class WatchAppointmentsForDayUseCase
 
   @override
   Stream<Either<Failure, List<AppointmentEntity>>> call(DayParams params) {
-    final day =
-        DateTime(params.day.year, params.day.month, params.day.day);
+    final day = DateTime(params.day.year, params.day.month, params.day.day);
     return _repository.watchForDay(day);
   }
 }

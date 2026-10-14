@@ -42,11 +42,13 @@ class _AddAppointmentPageState extends State<AddAppointmentPage> {
   void _save() {
     final title = _title.text.trim();
     if (title.isEmpty) return;
-    Navigator.of(context).pop(NewAppointment(
-      title: title,
-      startMinute: _startMinute,
-      durationMinutes: _duration,
-    ));
+    Navigator.of(context).pop(
+      NewAppointment(
+        title: title,
+        startMinute: _startMinute,
+        durationMinutes: _duration,
+      ),
+    );
   }
 
   @override

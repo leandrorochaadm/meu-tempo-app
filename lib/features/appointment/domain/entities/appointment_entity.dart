@@ -34,13 +34,13 @@ class AppointmentEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        title,
-        listId,
-        date,
-        startMinute,
-        durationMinutes,
-        spentMinutes,
-        isDone,
-      ];
+    id,
+    title,
+    listId,
+    date,
+    startMinute,
+    durationMinutes,
+    spentMinutes,
+    isDone,
+  ];
 }

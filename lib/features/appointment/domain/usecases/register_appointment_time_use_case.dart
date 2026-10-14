@@ -56,15 +56,17 @@ class RegisterAppointmentTimeUseCase
     final failure = result.getLeft().toNullable();
     if (failure != null) return Left(failure);
 
-    await _timeEntryRepository.add(TimeEntryEntity(
-      id: '',
-      targetId: params.appointmentId,
-      targetType: TimerTargetTypeEnum.appointment,
-      listId: params.listId,
-      minutes: params.minutes,
-      origin: TimeEntryOriginEnum.manual,
-      occurredAt: params.now,
-    ));
+    await _timeEntryRepository.add(
+      TimeEntryEntity(
+        id: '',
+        targetId: params.appointmentId,
+        targetType: TimerTargetTypeEnum.appointment,
+        listId: params.listId,
+        minutes: params.minutes,
+        origin: TimeEntryOriginEnum.manual,
+        occurredAt: params.now,
+      ),
+    );
     return const Right(unit);
   }
 }

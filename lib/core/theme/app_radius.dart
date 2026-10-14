@@ -3,12 +3,7 @@ import 'package:flutter/material.dart';
 /// Tokens de raio de borda — usados por `context.radius`.
 @immutable
 class AppRadius extends ThemeExtension<AppRadius> {
-  const AppRadius({
-    this.sm = 10,
-    this.md = 16,
-    this.lg = 20,
-    this.pill = 999,
-  });
+  const AppRadius({this.sm = 10, this.md = 16, this.lg = 20, this.pill = 999});
 
   final double sm;
   final double md;

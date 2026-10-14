@@ -20,10 +20,11 @@ class AppointmentRepositoryImpl implements AppointmentRepository {
     DateTime day,
   ) async* {
     try {
-      yield* _dataSource.watchForDay(day).map<
-          Either<Failure, List<AppointmentEntity>>>(
-        (models) => Right(models.map((m) => m.toEntity()).toList()),
-      );
+      yield* _dataSource
+          .watchForDay(day)
+          .map<Either<Failure, List<AppointmentEntity>>>(
+            (models) => Right(models.map((m) => m.toEntity()).toList()),
+          );
     } on AppException catch (e, s) {
       AppLogger.logError('watchForDay falhou', error: e, stackTrace: s);
       yield Left(e.toFailure());
@@ -36,7 +37,9 @@ class AppointmentRepositoryImpl implements AppointmentRepository {
   @override
   Stream<Either<Failure, List<AppointmentEntity>>> watchAll() async* {
     try {
-      yield* _dataSource.watchAll().map<Either<Failure, List<AppointmentEntity>>>(
+      yield* _dataSource
+          .watchAll()
+          .map<Either<Failure, List<AppointmentEntity>>>(
             (models) => Right(models.map((m) => m.toEntity()).toList()),
           );
     } on AppException catch (e, s) {
@@ -49,9 +52,7 @@ class AppointmentRepositoryImpl implements AppointmentRepository {
   }
 
   @override
-  Future<Either<Failure, AppointmentEntity>> create(
-    AppointmentEntity a,
-  ) async {
+  Future<Either<Failure, AppointmentEntity>> create(AppointmentEntity a) async {
     try {
       final model = await _dataSource.create(AppointmentModel.fromEntity(a));
       return Right(model.toEntity());
@@ -81,8 +82,11 @@ class AppointmentRepositoryImpl implements AppointmentRepository {
       await _dataSource.addSpentMinutes(appointmentId, minutes);
       return const Right(unit);
     } on AppException catch (e, s) {
-      AppLogger.logError('addSpentMinutes appointment falhou',
-          error: e, stackTrace: s);
+      AppLogger.logError(
+        'addSpentMinutes appointment falhou',
+        error: e,
+        stackTrace: s,
+      );
       return Left(e.toFailure());
     }
   }

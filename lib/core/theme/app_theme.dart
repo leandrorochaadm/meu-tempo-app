@@ -12,18 +12,21 @@ class AppTheme {
 
   static ThemeData get dark {
     const colors = AppColors.dark;
-    final textTheme =
-        AppTypography.textTheme(colors.textPrimary, colors.textSecondary);
-
-    final scheme = ColorScheme.fromSeed(
-      seedColor: colors.primary,
-      brightness: Brightness.dark,
-    ).copyWith(
-      surface: colors.surface,
-      primary: colors.primary,
-      onPrimary: colors.onPrimary,
-      error: colors.danger,
+    final textTheme = AppTypography.textTheme(
+      colors.textPrimary,
+      colors.textSecondary,
     );
+
+    final scheme =
+        ColorScheme.fromSeed(
+          seedColor: colors.primary,
+          brightness: Brightness.dark,
+        ).copyWith(
+          surface: colors.surface,
+          primary: colors.primary,
+          onPrimary: colors.onPrimary,
+          error: colors.danger,
+        );
 
     return ThemeData(
       useMaterial3: true,

@@ -20,12 +20,11 @@ class AppLogger {
     Object? error,
     StackTrace? stackTrace,
     String? name,
-  }) =>
-      developer.log(
-        message,
-        name: name ?? 'ERROR',
-        level: 1000,
-        error: error,
-        stackTrace: stackTrace,
-      );
+  }) => developer.log(
+    message,
+    name: name ?? 'ERROR',
+    level: 1000,
+    error: error,
+    stackTrace: stackTrace,
+  );
 }

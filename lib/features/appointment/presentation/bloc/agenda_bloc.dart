@@ -97,21 +97,24 @@ class AgendaBloc extends Bloc<AgendaEvent, AgendaState> {
     _inboxListId = inbox.getRight().toNullable()?.id;
 
     await _apptSub?.cancel();
-    _apptSub = _watchAppointments(DayParams(_today))
-        .listen((r) => add(AgendaAppointmentsUpdated(r)));
+    _apptSub = _watchAppointments(
+      DayParams(_today),
+    ).listen((r) => add(AgendaAppointmentsUpdated(r)));
 
     await _configSub?.cancel();
-    _configSub = _watchConfig(const NoParams())
-        .listen((r) => add(AgendaConfigUpdated(r)));
+    _configSub = _watchConfig(
+      const NoParams(),
+    ).listen((r) => add(AgendaConfigUpdated(r)));
 
     await _tasksSub?.cancel();
-    _tasksSub =
-        _watchTasks(const WatchTasksParams())
-            .listen((r) => add(AgendaTasksUpdated(r)));
+    _tasksSub = _watchTasks(
+      const WatchTasksParams(),
+    ).listen((r) => add(AgendaTasksUpdated(r)));
 
     await _timerSub?.cancel();
-    _timerSub = _watchActiveTimer(const NoParams())
-        .listen((r) => add(AgendaActiveTimerUpdated(r)));
+    _timerSub = _watchActiveTimer(
+      const NoParams(),
+    ).listen((r) => add(AgendaActiveTimerUpdated(r)));
   }
 
   void _onActiveTimerUpdated(
@@ -121,7 +124,8 @@ class AgendaBloc extends Bloc<AgendaEvent, AgendaState> {
     final active = e.result.getRight().toNullable();
     // Só o compromisso com cronômetro contando é "ativo". Pausado aparece
     // parado (com play), e o play retoma o mesmo alvo pelo StartTimerUseCase.
-    final isRunningAppointment = active != null &&
+    final isRunningAppointment =
+        active != null &&
         active.isRunning &&
         active.targetType == TimerTargetTypeEnum.appointment;
     _activeAppointmentId = isRunningAppointment ? active.targetId : null;
@@ -134,7 +138,8 @@ class AgendaBloc extends Bloc<AgendaEvent, AgendaState> {
     Emitter<AgendaState> emit,
   ) {
     e.result.match((f) => emit(AgendaError(_mapFailure(f))), (list) {
-      _appointments = [...list]..sort((a, b) => a.startMinute.compareTo(b.startMinute));
+      _appointments = [...list]
+        ..sort((a, b) => a.startMinute.compareTo(b.startMinute));
       _emit(emit);
     });
   }
@@ -155,11 +160,13 @@ class AgendaBloc extends Bloc<AgendaEvent, AgendaState> {
 
   void _emit(Emitter<AgendaState> emit) {
     final taskDurations = _tasks
-        .where((t) =>
-            !t.hasChildren &&
-            !t.isDone &&
-            t.dueDate != null &&
-            _isSameDay(t.dueDate!, _today))
+        .where(
+          (t) =>
+              !t.hasChildren &&
+              !t.isDone &&
+              t.dueDate != null &&
+              _isSameDay(t.dueDate!, _today),
+        )
         .map((t) => t.estimatedMinutes ?? 0)
         .toList();
     final apptDurations = _appointments.map((a) => a.durationMinutes).toList();
@@ -169,12 +176,14 @@ class AgendaBloc extends Bloc<AgendaEvent, AgendaState> {
       appointmentDurations: apptDurations,
       availableMinutes: _availableMinutes,
     );
-    emit(AgendaLoaded(
-      appointments: _appointments,
-      fit: fit,
-      activeAppointmentId: _activeAppointmentId,
-      activeTimerStartedAt: _activeStartedAt,
-    ));
+    emit(
+      AgendaLoaded(
+        appointments: _appointments,
+        fit: fit,
+        activeAppointmentId: _activeAppointmentId,
+        activeTimerStartedAt: _activeStartedAt,
+      ),
+    );
   }
 
   bool _isSameDay(DateTime a, DateTime b) =>
@@ -186,13 +195,15 @@ class AgendaBloc extends Bloc<AgendaEvent, AgendaState> {
   ) async {
     final listId = _inboxListId;
     if (listId == null) return;
-    final result = await _createAppointment(CreateAppointmentParams(
-      title: e.title,
-      listId: listId,
-      date: _today,
-      startMinute: e.startMinute,
-      durationMinutes: e.durationMinutes,
-    ));
+    final result = await _createAppointment(
+      CreateAppointmentParams(
+        title: e.title,
+        listId: listId,
+        date: _today,
+        startMinute: e.startMinute,
+        durationMinutes: e.durationMinutes,
+      ),
+    );
     result.match((f) => emit(AgendaError(_mapFailure(f))), (_) {});
   }
 
@@ -200,8 +211,9 @@ class AgendaBloc extends Bloc<AgendaEvent, AgendaState> {
     AppointmentDeleted e,
     Emitter<AgendaState> emit,
   ) async {
-    final result =
-        await _deleteAppointment(DeleteAppointmentParams(e.appointmentId));
+    final result = await _deleteAppointment(
+      DeleteAppointmentParams(e.appointmentId),
+    );
     result.match((f) => emit(AgendaError(_mapFailure(f))), (_) {});
   }
 
@@ -210,13 +222,15 @@ class AgendaBloc extends Bloc<AgendaEvent, AgendaState> {
     Emitter<AgendaState> emit,
   ) async {
     final listId = _listIdOf(e.appointmentId);
-    final result = await _startTimer(StartTimerParams(
-      targetId: e.appointmentId,
-      targetType: TimerTargetTypeEnum.appointment,
-      targetIsLeaf: true, // irrelevante para compromisso
-      listId: listId,
-      now: DateTime.now(),
-    ));
+    final result = await _startTimer(
+      StartTimerParams(
+        targetId: e.appointmentId,
+        targetType: TimerTargetTypeEnum.appointment,
+        targetIsLeaf: true, // irrelevante para compromisso
+        listId: listId,
+        now: DateTime.now(),
+      ),
+    );
     _handleWrite(result, emit);
   }
 
@@ -232,10 +246,9 @@ class AgendaBloc extends Bloc<AgendaEvent, AgendaState> {
     AppointmentDoneToggled e,
     Emitter<AgendaState> emit,
   ) async {
-    final result = await _setAppointmentDone(SetAppointmentDoneParams(
-      appointmentId: e.appointmentId,
-      done: e.done,
-    ));
+    final result = await _setAppointmentDone(
+      SetAppointmentDoneParams(appointmentId: e.appointmentId, done: e.done),
+    );
     _handleWrite(result, emit);
   }
 
@@ -259,12 +272,12 @@ class AgendaBloc extends Bloc<AgendaEvent, AgendaState> {
   }
 
   String _mapFailure(Failure failure) => switch (failure) {
-        EmptyAppointmentTitleFailure() => 'Digite um título.',
-        InvalidAppointmentDurationFailure() => 'Informe uma duração válida.',
-        NotFoundFailure() => 'Este compromisso não existe mais.',
-        NetworkFailure() => 'Sem conexão. Verifique a internet.',
-        _ => 'Algo deu errado. Tente novamente.',
-      };
+    EmptyAppointmentTitleFailure() => 'Digite um título.',
+    InvalidAppointmentDurationFailure() => 'Informe uma duração válida.',
+    NotFoundFailure() => 'Este compromisso não existe mais.',
+    NetworkFailure() => 'Sem conexão. Verifique a internet.',
+    _ => 'Algo deu errado. Tente novamente.',
+  };
 
   @override
   Future<void> close() {

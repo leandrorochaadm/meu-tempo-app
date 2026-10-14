@@ -14,7 +14,8 @@ class CheckFitsInDayUseCase {
     required List<int> appointmentDurations,
     required int availableMinutes,
   }) {
-    final planned = taskDurations.fold<int>(0, (s, m) => s + m) +
+    final planned =
+        taskDurations.fold<int>(0, (s, m) => s + m) +
         appointmentDurations.fold<int>(0, (s, m) => s + m);
     return DayFit(plannedMinutes: planned, availableMinutes: availableMinutes);
   }

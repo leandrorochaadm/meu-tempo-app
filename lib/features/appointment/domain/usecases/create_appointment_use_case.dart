@@ -24,8 +24,13 @@ class CreateAppointmentParams extends Equatable {
   final int durationMinutes;
 
   @override
-  List<Object?> get props =>
-      [title, listId, date, startMinute, durationMinutes];
+  List<Object?> get props => [
+    title,
+    listId,
+    date,
+    startMinute,
+    durationMinutes,
+  ];
 }
 
 @lazySingleton
@@ -47,13 +52,15 @@ class CreateAppointmentUseCase
       return Future.value(const Left(InvalidAppointmentDurationFailure()));
     }
     final day = DateTime(params.date.year, params.date.month, params.date.day);
-    return _repository.create(AppointmentEntity(
-      id: '',
-      title: title,
-      listId: params.listId,
-      date: day,
-      startMinute: params.startMinute,
-      durationMinutes: params.durationMinutes,
-    ));
+    return _repository.create(
+      AppointmentEntity(
+        id: '',
+        title: title,
+        listId: params.listId,
+        date: day,
+        startMinute: params.startMinute,
+        durationMinutes: params.durationMinutes,
+      ),
+    );
   }
 }

@@ -10,7 +10,8 @@ import '../repositories/appointment_repository.dart';
 /// para resolver o nome do compromisso pelo id do registro de tempo).
 @lazySingleton
 class WatchAllAppointmentsUseCase
-    implements StreamUseCase<Either<Failure, List<AppointmentEntity>>, NoParams> {
+    implements
+        StreamUseCase<Either<Failure, List<AppointmentEntity>>, NoParams> {
   const WatchAllAppointmentsUseCase(this._repository);
 
   final AppointmentRepository _repository;

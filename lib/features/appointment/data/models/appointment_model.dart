@@ -41,24 +41,24 @@ class AppointmentModel {
   Map<String, dynamic> toJson() => _$AppointmentModelToJson(this);
 
   AppointmentEntity toEntity() => AppointmentEntity(
-        id: id,
-        title: title,
-        listId: listId,
-        date: date ?? DateTime.fromMillisecondsSinceEpoch(0),
-        startMinute: startMinute,
-        durationMinutes: durationMinutes,
-        spentMinutes: spentMinutes,
-        isDone: isDone,
-      );
+    id: id,
+    title: title,
+    listId: listId,
+    date: date ?? DateTime.fromMillisecondsSinceEpoch(0),
+    startMinute: startMinute,
+    durationMinutes: durationMinutes,
+    spentMinutes: spentMinutes,
+    isDone: isDone,
+  );
 
   factory AppointmentModel.fromEntity(AppointmentEntity e) => AppointmentModel(
-        id: e.id,
-        title: e.title,
-        listId: e.listId,
-        date: e.date,
-        startMinute: e.startMinute,
-        durationMinutes: e.durationMinutes,
-        spentMinutes: e.spentMinutes,
-        isDone: e.isDone,
-      );
+    id: e.id,
+    title: e.title,
+    listId: e.listId,
+    date: e.date,
+    startMinute: e.startMinute,
+    durationMinutes: e.durationMinutes,
+    spentMinutes: e.spentMinutes,
+    isDone: e.isDone,
+  );
 }

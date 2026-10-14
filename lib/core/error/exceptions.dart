@@ -55,26 +55,25 @@ class SignInCancelledException extends AppException {
 
 /// Mapeia o `code` de uma [FirebaseException] do Firestore para [AppException].
 AppException mapFirestoreException(FirebaseException e) => switch (e.code) {
-      'permission-denied' => const PermissionException(),
-      'unavailable' => const NetworkException(),
-      'not-found' => const NotFoundException(),
-      'unauthenticated' => const UnauthenticatedException(),
-      _ => const ServerException(),
-    };
+  'permission-denied' => const PermissionException(),
+  'unavailable' => const NetworkException(),
+  'not-found' => const NotFoundException(),
+  'unauthenticated' => const UnauthenticatedException(),
+  _ => const ServerException(),
+};
 
 /// Mapeia o `code` de uma [FirebaseAuthException] para [AppException].
-AppException mapFirebaseAuthException(FirebaseAuthException e) => switch (e.code) {
+AppException mapFirebaseAuthException(FirebaseAuthException e) =>
+    switch (e.code) {
       'popup-closed-by-user' ||
       'cancelled-popup-request' ||
       'popup-blocked' ||
       'user-cancelled' ||
       // Nativo: usuário fechou a aba do Google (Android | iOS).
       'web-context-canceled' ||
-      'web-context-cancelled' =>
-        const SignInCancelledException(),
+      'web-context-cancelled' => const SignInCancelledException(),
       'network-request-failed' ||
       // iOS: sem rede dentro da tela do Google.
-      'web-network-request-failed' =>
-        const NetworkException(),
+      'web-network-request-failed' => const NetworkException(),
       _ => const AuthException(),
     };
