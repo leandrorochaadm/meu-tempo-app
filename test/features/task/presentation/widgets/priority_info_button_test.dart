@@ -17,6 +17,45 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  const childLabel = 'gasto 1h · hoje · #1';
+  const simpleBreakdown = PriorityBreakdown(
+    estimatedMinutes: 30,
+    importance: ImportanceEnum.min,
+    urgencyWeight: 1,
+    daysUntilDue: null,
+  );
+
+  Widget harnessWithChild(PriorityBreakdown b) => MaterialApp(
+    theme: AppTheme.dark,
+    home: Scaffold(
+      body: PriorityInfoButton(breakdown: b, child: const Text(childLabel)),
+    ),
+  );
+
+  testWidgets('com child, tocar no texto abre a explicação', (tester) async {
+    await tester.pumpWidget(harnessWithChild(simpleBreakdown));
+    await tester.tap(find.text(childLabel));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Como calculamos'), findsOneWidget);
+  });
+
+  testWidgets('com child, mostra o ícone de info pequeno ao lado do texto', (
+    tester,
+  ) async {
+    await tester.pumpWidget(harnessWithChild(simpleBreakdown));
+
+    final icon = tester.widget<Icon>(find.byIcon(Icons.info_outline_rounded));
+    expect(icon.size, 14);
+    expect(find.byType(IconButton), findsNothing);
+  });
+
+  testWidgets('com child, não usa Tooltip', (tester) async {
+    await tester.pumpWidget(harnessWithChild(simpleBreakdown));
+
+    expect(find.byType(Tooltip), findsNothing);
+  });
+
   testWidgets('mostra os fatores e a conta final', (tester) async {
     await openDialog(
       tester,

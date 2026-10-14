@@ -6,26 +6,67 @@ import '../../domain/entities/priority_breakdown.dart';
 import 'effort_band_presentation.dart';
 import 'importance_presentation.dart';
 
-/// Ícone de "info" que abre a explicação do cálculo da prioridade.
+/// Abre a explicação do cálculo da prioridade.
+///
+/// Tem dois modos:
+/// - sem [child]: só o ícone de "info" (usado na barra do cronômetro ativo);
+/// - com [child]: o [child] vira um texto tocável, com um ícone de "info"
+///   pequeno ao lado (usado no card compacto). Esse modo não tem `Tooltip`,
+///   porque ele capturaria o clique longo que o card usa para excluir.
 ///
 /// Só exibe o que o [PriorityBreakdown] já traz resolvido do domínio — nenhuma
 /// conta acontece aqui (ver `architecture.md`).
 class PriorityInfoButton extends StatelessWidget {
-  const PriorityInfoButton({super.key, required this.breakdown});
+  const PriorityInfoButton({super.key, required this.breakdown, this.child});
 
   final PriorityBreakdown breakdown;
+  final Widget? child;
+
+  static const String _label = 'Como a prioridade é calculada';
+
+  void _showBreakdown(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (_) => _PriorityBreakdownDialog(breakdown: breakdown),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    return IconButton(
-      icon: const Icon(Icons.info_outline_rounded),
-      iconSize: 18,
-      visualDensity: VisualDensity.compact,
-      color: context.colors.textMuted,
-      tooltip: 'Como a prioridade é calculada',
-      onPressed: () => showDialog<void>(
-        context: context,
-        builder: (_) => _PriorityBreakdownDialog(breakdown: breakdown),
+    final child = this.child;
+
+    if (child == null) {
+      return IconButton(
+        icon: const Icon(Icons.info_outline_rounded),
+        iconSize: 18,
+        visualDensity: VisualDensity.compact,
+        color: context.colors.textMuted,
+        tooltip: _label,
+        onPressed: () => _showBreakdown(context),
+      );
+    }
+
+    return Semantics(
+      button: true,
+      label: _label,
+      child: Material(
+        type: MaterialType.transparency,
+        child: InkWell(
+          onTap: () => _showBreakdown(context),
+          borderRadius: context.radius.smRadius,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Flexible(child: child),
+              SizedBox(width: context.space.xs),
+              Icon(
+                Icons.info_outline_rounded,
+                size: 14,
+                color: context.colors.textMuted,
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -52,12 +93,14 @@ class _PriorityBreakdownDialog extends StatelessWidget {
           ),
           _FactorRow(
             label: 'Esforço',
-            value: '${breakdown.effortBand.label}'
+            value:
+                '${breakdown.effortBand.label}'
                 ' (${breakdown.effortBand.weight})',
           ),
           _FactorRow(
             label: 'Importância',
-            value: '${breakdown.importance.label}'
+            value:
+                '${breakdown.importance.label}'
                 ' (5 − ${breakdown.importance.value}'
                 ' = ${breakdown.importanceFactor})',
             valueColor: breakdown.importance.colorOf(context),
@@ -113,11 +156,7 @@ class _PriorityBreakdownDialog extends StatelessWidget {
 }
 
 class _FactorRow extends StatelessWidget {
-  const _FactorRow({
-    required this.label,
-    required this.value,
-    this.valueColor,
-  });
+  const _FactorRow({required this.label, required this.value, this.valueColor});
 
   final String label;
   final String value;
