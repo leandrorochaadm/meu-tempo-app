@@ -13,31 +13,36 @@ import 'package:meu_tempo/features/task/presentation/widgets/prioritized_leaf_ti
 void main() {
   final today = DateTime(2026, 7, 21);
 
-  TaskEntity leafTask({bool isDone = false, int spentMinutes = 90}) =>
-      TaskEntity(
-        id: 't1',
-        title: 'Estudar Flutter',
-        listId: 'l1',
-        createdAt: today,
-        estimatedMinutes: 120,
-        dueDate: today,
-        spentMinutes: spentMinutes,
-        isDone: isDone,
-      );
+  TaskEntity leafTask({
+    bool isDone = false,
+    int spentMinutes = 90,
+    String title = 'Estudar Flutter',
+  }) => TaskEntity(
+    id: 't1',
+    title: title,
+    listId: 'l1',
+    createdAt: today,
+    estimatedMinutes: 120,
+    dueDate: today,
+    spentMinutes: spentMinutes,
+    isDone: isDone,
+  );
 
   PrioritizedLeaf leaf({
     bool isDone = false,
     int spentMinutes = 90,
     bool isOverdue = false,
+    String title = 'Estudar Flutter',
+    String ancestryLabel = '',
   }) => PrioritizedLeaf(
-    task: leafTask(isDone: isDone, spentMinutes: spentMinutes),
+    task: leafTask(isDone: isDone, spentMinutes: spentMinutes, title: title),
     breakdown: const PriorityBreakdown(
       estimatedMinutes: 42,
       importance: ImportanceEnum.min,
       urgencyWeight: 1,
       daysUntilDue: null,
     ),
-    ancestryLabel: '',
+    ancestryLabel: ancestryLabel,
     rank: 1,
     isOverdue: isOverdue,
   );
@@ -134,18 +139,20 @@ void main() {
     setView(tester);
     await tester.pumpWidget(harness(leaf: leaf(), isActive: false));
 
-    await tester.tap(find.text('Iniciar'));
+    await tester.tap(find.byTooltip('Iniciar cronômetro'));
     await tester.pump();
 
     expect(timerTapped, isTrue);
   });
 
-  testWidgets('tapping +30 min triggers onAddTime', (tester) async {
+  testWidgets('"Somar 30 min" no menu ⋮ chama onAddTime', (tester) async {
     setView(tester);
     await tester.pumpWidget(harness(leaf: leaf(), isActive: false));
 
-    await tester.tap(find.text('+30 min'));
-    await tester.pump();
+    await tester.tap(find.byIcon(Icons.more_vert_rounded));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Somar 30 min'));
+    await tester.pumpAndSettle();
 
     expect(addTimeTapped, isTrue);
   });
@@ -262,4 +269,88 @@ void main() {
 
     expect(leftBorderColor(tester), AppColors.dark.timerActive);
   });
+
+  testWidgets('card com título de 1 linha tem no máximo 88 px de altura', (
+    tester,
+  ) async {
+    setView(tester);
+    await tester.pumpWidget(
+      harness(
+        leaf: leaf(title: 'Relatório', ancestryLabel: 'Projeto › Cliente'),
+        isActive: true,
+        activeStartedAt: DateTime.now(),
+      ),
+    );
+
+    expect(
+      tester.getSize(find.byType(PrioritizedLeafTile)).height,
+      lessThanOrEqualTo(88),
+    );
+  });
+
+  testWidgets('não mostra o tempo estimado', (tester) async {
+    setView(tester);
+    await tester.pumpWidget(harness(leaf: leaf(), isActive: false));
+
+    expect(find.textContaining('est.'), findsNothing);
+  });
+
+  testWidgets(
+    'título longo aparece inteiro, em mais de 1 linha, sem overflow',
+    (tester) async {
+      setView(tester);
+      const longTitle =
+          'Preparar a apresentação trimestral completa com todos os números';
+      await tester.pumpWidget(
+        harness(leaf: leaf(title: longTitle), isActive: false),
+      );
+
+      final text = tester.widget<Text>(find.text(longTitle));
+      expect(text.maxLines, isNull);
+      expect(text.overflow, isNull);
+      expect(
+        tester.getSize(find.text(longTitle)).height,
+        greaterThanOrEqualTo(
+          2 * AppTheme.dark.textTheme.titleMedium!.fontSize!,
+        ),
+      );
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets('mostra Concluir/Reabrir como dica do botão de concluir', (
+    tester,
+  ) async {
+    setView(tester);
+    await tester.pumpWidget(harness(leaf: leaf(), isActive: false));
+    expect(find.byTooltip('Concluir'), findsOneWidget);
+
+    await tester.pumpWidget(harness(leaf: leaf(isDone: true), isActive: false));
+    expect(find.byTooltip('Reabrir'), findsOneWidget);
+  });
+
+  testWidgets('tocar na linha de tempo abre a explicação da prioridade', (
+    tester,
+  ) async {
+    setView(tester);
+    await tester.pumpWidget(harness(leaf: leaf(), isActive: false));
+
+    await tester.tap(find.textContaining('gasto'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Como calculamos'), findsOneWidget);
+  });
+
+  testWidgets(
+    'clique longo na linha de tempo exclui (gesto do card não é capturado)',
+    (tester) async {
+      setView(tester);
+      await tester.pumpWidget(harness(leaf: leaf(), isActive: false));
+
+      await tester.longPress(find.textContaining('gasto'));
+      await tester.pump();
+
+      expect(deleteTapped, isTrue);
+    },
+  );
 }

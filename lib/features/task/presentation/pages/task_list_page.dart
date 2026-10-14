@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/constants/app_defaults.dart';
 import '../../../../core/router/routes.dart';
 import '../../../../core/theme/theme_context_extensions.dart';
 import '../../../../core/ui/app_empty_state.dart';
 import '../../../../core/ui/app_list_skeleton.dart';
 import '../../../../core/ui/app_undo_snackbar.dart';
-import '../../../../core/ui/task_timer_actions.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../list/domain/entities/task_list_entity.dart';
 import '../../domain/entities/prioritized_leaf.dart';
@@ -511,7 +511,7 @@ class _PriorityList extends StatelessWidget {
           activeStartedAt: isActive ? activeStartedAt : null,
           today: today,
           onToggleTimer: () => onToggleTimer(leaf, !isActive),
-          onAddTime: () => onAddTime(leaf, TaskTimerActions.quickMinutes),
+          onAddTime: () => onAddTime(leaf, AppDefaults.quickAddTimeMinutes),
           onToggleDone: () => onToggleDone(leaf, !leaf.task.isDone),
           onEdit: () => onEdit(leaf),
           onMove: () => onMove(leaf),

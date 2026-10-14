@@ -171,7 +171,7 @@ void main() {
     when(() => taskBloc.state).thenReturn(loadedWithLeaf());
 
     await tester.pumpWidget(harness());
-    await tester.tap(find.text('Iniciar'));
+    await tester.tap(find.byTooltip('Iniciar cronômetro'));
     await tester.pump();
 
     verify(
