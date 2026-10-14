@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:meu_tempo/core/constants/app_defaults.dart';
 import 'package:meu_tempo/core/theme/app_colors.dart';
 import 'package:meu_tempo/core/theme/app_theme.dart';
 import 'package:meu_tempo/features/task/domain/entities/task_entity.dart';
@@ -49,6 +50,12 @@ void main() {
     level: 0,
   );
 
+  TaskNode netaLeafNode({int? rank}) => TaskNode(
+    task: task('neta', 'Neta'),
+    level: AppDefaults.maxTaskLevel,
+    rank: rank,
+  );
+
   TaskNode doneLeafNode() => TaskNode(
     task: TaskEntity(
       id: 'leaf',
@@ -67,23 +74,34 @@ void main() {
   bool? doneValue;
   late bool editTapped;
   late bool deleteTapped;
+  bool? timerStart;
+  int? addedMinutes;
+  late bool addSubtaskTapped;
 
   setUp(() {
+    timerStart = null;
+    addedMinutes = null;
+    addSubtaskTapped = false;
     doneTapped = false;
     doneValue = null;
     editTapped = false;
     deleteTapped = false;
   });
 
-  Widget harness(TaskNode node) => MaterialApp(
+  Widget harness(
+    TaskNode node, {
+    bool isActive = false,
+    DateTime? activeStartedAt,
+  }) => MaterialApp(
     theme: AppTheme.dark,
     home: Scaffold(
       body: TaskNodeTile(
         node: node,
-        isActive: false,
-        onAddSubtask: (_) {},
-        onToggleTimer: (_, _) {},
-        onAddTime: (_, _) {},
+        isActive: isActive,
+        activeStartedAt: activeStartedAt,
+        onAddSubtask: (_) => addSubtaskTapped = true,
+        onToggleTimer: (_, start) => timerStart = start,
+        onAddTime: (_, minutes) => addedMinutes = minutes,
         onToggleDone: (_, done) {
           doneTapped = true;
           doneValue = done;
@@ -94,6 +112,18 @@ void main() {
       ),
     ),
   );
+
+  void phoneViewport(WidgetTester tester) {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+  }
+
+  Future<void> openMenu(WidgetTester tester) async {
+    await tester.tap(find.byIcon(Icons.more_vert_rounded));
+    await tester.pumpAndSettle();
+  }
 
   testWidgets('folha: arrastar para a direita conclui', (tester) async {
     await tester.pumpWidget(harness(leafNode()));
@@ -221,13 +251,13 @@ void main() {
       final node = TaskNode(task: task('leaf', 'Folha'), level: 0, rank: 3);
       await tester.pumpWidget(harness(node));
 
-      expect(find.text('gasto 30min · est. 1h · #3'), findsOneWidget);
+      expect(find.text('gasto 30min · #3'), findsOneWidget);
     });
 
     testWidgets('folha sem posição não exibe #', (tester) async {
       await tester.pumpWidget(harness(leafNode()));
 
-      expect(find.text('gasto 30min · est. 1h'), findsOneWidget);
+      expect(find.text('gasto 30min'), findsOneWidget);
       expect(find.textContaining('#'), findsNothing);
     });
 
@@ -254,8 +284,10 @@ void main() {
       await tester.pumpWidget(harness(parentWithFilteredChild()));
 
       // Ações de tempo existem só na folha (gate `node.isLeaf` no tile).
-      expect(find.byIcon(Icons.play_arrow_rounded), findsNothing);
-      expect(find.text('+15'), findsNothing);
+      expect(find.byTooltip('Iniciar cronômetro'), findsNothing);
+      await openMenu(tester);
+      expect(find.text('Editar'), findsOneWidget);
+      expect(find.text('Somar 30 min'), findsNothing);
     });
 
     testWidgets('segue editável e excluível', (tester) async {
@@ -269,5 +301,133 @@ void main() {
       await tester.pumpAndSettle();
       expect(deleteTapped, isTrue);
     });
+  });
+
+  group('card compacto', () {
+    testWidgets('folha com título de 1 linha tem no máximo 88 px de altura', (
+      tester,
+    ) async {
+      phoneViewport(tester);
+      await tester.pumpWidget(
+        harness(leafNode(), isActive: true, activeStartedAt: DateTime.now()),
+      );
+      await tester.pump();
+
+      expect(
+        tester.getSize(find.byType(TaskNodeTile)).height,
+        lessThanOrEqualTo(88),
+      );
+    });
+
+    testWidgets('título longo aparece inteiro, sem overflow', (tester) async {
+      phoneViewport(tester);
+      const longTitle =
+          'Preparar a apresentação completa do projeto para a reunião '
+          'trimestral com a diretoria';
+      final node = TaskNode(task: task('leaf', longTitle), level: 0);
+      await tester.pumpWidget(harness(node));
+
+      final text = tester.widget<Text>(find.text(longTitle));
+      expect(text.maxLines, isNull);
+      expect(text.overflow, isNull);
+      expect(
+        tester.getSize(find.text(longTitle)).height,
+        greaterThanOrEqualTo(
+          2 * AppTheme.dark.textTheme.titleMedium!.fontSize!,
+        ),
+      );
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets(
+      '"Somar 30 min" fica no menu ⋮ da folha e não aparece no da mãe',
+      (tester) async {
+        await tester.pumpWidget(harness(leafNode()));
+        await openMenu(tester);
+        await tester.tap(find.text('Somar 30 min'));
+        await tester.pumpAndSettle();
+        expect(addedMinutes, AppDefaults.quickAddTimeMinutes);
+
+        await tester.pumpWidget(harness(parentNode()));
+        await openMenu(tester);
+        expect(find.text('Editar'), findsOneWidget);
+        expect(find.text('Somar 30 min'), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'folha não mostra o "+" na linha e tem "Adicionar subtarefa" no ⋮',
+      (tester) async {
+        await tester.pumpWidget(harness(leafNode()));
+
+        expect(find.byTooltip('Adicionar subtarefa'), findsNothing);
+        await openMenu(tester);
+        await tester.tap(find.text('Adicionar subtarefa'));
+        await tester.pumpAndSettle();
+        expect(addSubtaskTapped, isTrue);
+      },
+    );
+
+    testWidgets('neta não tem "Adicionar subtarefa" no ⋮', (tester) async {
+      await tester.pumpWidget(harness(netaLeafNode()));
+      await openMenu(tester);
+
+      expect(find.text('Editar'), findsOneWidget);
+      expect(find.text('Adicionar subtarefa'), findsNothing);
+      expect(find.text('Somar 30 min'), findsOneWidget);
+    });
+
+    testWidgets('mãe mantém o "+" na linha', (tester) async {
+      await tester.pumpWidget(harness(parentNode()));
+
+      expect(find.byTooltip('Adicionar subtarefa'), findsOneWidget);
+      await tester.tap(find.byTooltip('Adicionar subtarefa'));
+      expect(addSubtaskTapped, isTrue);
+
+      await openMenu(tester);
+      expect(find.text('Adicionar subtarefa'), findsNothing);
+    });
+
+    testWidgets('neta com cronômetro ativo não estoura a largura', (
+      tester,
+    ) async {
+      phoneViewport(tester);
+      await tester.pumpWidget(
+        harness(
+          netaLeafNode(rank: 12),
+          isActive: true,
+          activeStartedAt: DateTime.now(),
+        ),
+      );
+      await tester.pump();
+
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('tocar no ▶ da folha inicia o cronômetro e no ■ para', (
+      tester,
+    ) async {
+      await tester.pumpWidget(harness(leafNode()));
+      await tester.tap(find.byTooltip('Iniciar cronômetro'));
+      expect(timerStart, isTrue);
+
+      await tester.pumpWidget(
+        harness(leafNode(), isActive: true, activeStartedAt: DateTime.now()),
+      );
+      await tester.tap(find.byTooltip('Parar cronômetro'));
+      await tester.pump();
+      expect(timerStart, isFalse);
+    });
+
+    testWidgets(
+      'mãe mostra gasto e folhas concluídas na mesma linha, sem "est."',
+      (tester) async {
+        await tester.pumpWidget(harness(parentNode()));
+
+        expect(find.text('gasto 30min · 0/1 concluídas'), findsOneWidget);
+        expect(find.textContaining('est.'), findsNothing);
+        expect(find.byType(LinearProgressIndicator), findsOneWidget);
+      },
+    );
   });
 }
