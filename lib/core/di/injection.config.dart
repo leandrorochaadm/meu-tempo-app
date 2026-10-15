@@ -762,6 +762,14 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i50.AddRecurringTaskTodayUseCase>(),
       ),
     );
+    gh.lazySingleton<_i1017.ProcessLockScreenActionUseCase>(
+      () => _i1017.ProcessLockScreenActionUseCase(
+        gh<_i224.AuthRepository>(),
+        gh<_i98.HandleLockScreenActionUseCase>(),
+        gh<_i188.WatchLockScreenTimerUseCase>(),
+        gh<_i539.RefreshOverrunAlertScheduleUseCase>(),
+      ),
+    );
     gh.factory<_i35.TaskListBloc>(
       () => _i35.TaskListBloc(
         gh<_i1035.WatchTasksUseCase>(),
@@ -787,14 +795,7 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i843.GetTaskEditContextUseCase>(),
         gh<_i268.CreateTaskAndStartTimerUseCase>(),
         gh<_i499.GetDefaultCreationListUseCase>(),
-      ),
-    );
-    gh.lazySingleton<_i1017.ProcessLockScreenActionUseCase>(
-      () => _i1017.ProcessLockScreenActionUseCase(
-        gh<_i224.AuthRepository>(),
-        gh<_i98.HandleLockScreenActionUseCase>(),
-        gh<_i188.WatchLockScreenTimerUseCase>(),
-        gh<_i539.RefreshOverrunAlertScheduleUseCase>(),
+        gh<_i779.MaterializeRecurringTasksUseCase>(),
       ),
     );
     return this;

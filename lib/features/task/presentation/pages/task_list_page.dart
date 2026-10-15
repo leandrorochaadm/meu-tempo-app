@@ -36,10 +36,23 @@ class _TaskListPageState extends State<TaskListPage> {
   bool _quickAddVisible = false;
   bool _priorityView = true;
 
+  late final AppLifecycleListener _lifecycle;
+
   @override
   void initState() {
     super.initState();
     context.read<TaskListBloc>().add(const TaskListStarted());
+    // Só dispara na transição para "resumed"; a abertura já é coberta pelo
+    // `TaskListStarted`.
+    _lifecycle = AppLifecycleListener(onResume: _onResume);
+  }
+
+  void _onResume() => context.read<TaskListBloc>().add(const TaskListResumed());
+
+  @override
+  void dispose() {
+    _lifecycle.dispose();
+    super.dispose();
   }
 
   /// Aponta a barra para dentro da tarefa (mesma fonte de verdade do chip).

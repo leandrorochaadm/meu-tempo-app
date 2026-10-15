@@ -6,6 +6,7 @@ import 'package:fpdart/fpdart.dart';
 import 'package:injectable/injectable.dart';
 
 import '../../../../core/error/failures.dart';
+import '../../../../core/logging/app_logger.dart';
 import '../../../../core/usecase/usecase.dart';
 import '../../../list/domain/entities/task_list_entity.dart';
 import '../../../list/domain/usecases/ensure_inbox_exists_use_case.dart';
@@ -31,6 +32,7 @@ import '../../domain/usecases/get_default_creation_list_use_case.dart';
 import '../../domain/usecases/get_prioritized_leaves_use_case.dart';
 import '../../domain/usecases/get_task_edit_context_use_case.dart';
 import '../../domain/usecases/get_task_list_filter_use_case.dart';
+import '../../domain/usecases/materialize_recurring_tasks_use_case.dart';
 import '../../domain/usecases/move_task_use_case.dart';
 import '../../domain/usecases/register_manual_time_use_case.dart';
 import '../../domain/usecases/restore_tasks_use_case.dart';
@@ -72,8 +74,10 @@ class TaskListBloc extends Bloc<TaskListEvent, TaskListState> {
     this._getEditContext,
     this._createAndStart,
     this._getDefaultCreationList,
+    this._materializeRecurring,
   ) : super(const TaskListLoading()) {
     on<TaskListStarted>(_onStarted);
+    on<TaskListResumed>(_onResumed);
     on<TaskListUpdated>(_onUpdated);
     on<TaskListListsUpdated>(_onListsUpdated);
     on<ListFilterChanged>(_onListFilterChanged);
@@ -116,6 +120,9 @@ class TaskListBloc extends Bloc<TaskListEvent, TaskListState> {
   final GetTaskEditContextUseCase _getEditContext;
   final CreateTaskAndStartTimerUseCase _createAndStart;
   final GetDefaultCreationListUseCase _getDefaultCreationList;
+  final MaterializeRecurringTasksUseCase _materializeRecurring;
+
+  static const _logName = 'TaskListBloc';
 
   StreamSubscription<Either<Failure, List<TaskEntity>>>? _tasksSub;
   StreamSubscription<Either<Failure, ActiveTimerEntity?>>? _timerSub;
@@ -168,6 +175,8 @@ class TaskListBloc extends Bloc<TaskListEvent, TaskListState> {
       SeedFirstAccessParams(today: DateTime.now(), inboxListId: _inboxListId!),
     );
 
+    await _materializeToday();
+
     await _subscribeTasks();
 
     await _timerSub?.cancel();
@@ -184,6 +193,39 @@ class TaskListBloc extends Bloc<TaskListEvent, TaskListState> {
     _listsSub = _watchLists(
       const NoParams(),
     ).listen((result) => add(TaskListListsUpdated(result)));
+  }
+
+  Future<void> _onResumed(
+    TaskListResumed event,
+    Emitter<TaskListState> emit,
+  ) => _materializeToday();
+
+  /// Gera as tarefas do dia a partir dos modelos recorrentes (R3, R7). A regra
+  /// (dia certo, 1x por dia, pendente) mora no UseCase. Falha não trava a tela:
+  /// só loga, e a próxima abertura ou retorno ao app tenta de novo. As tarefas
+  /// criadas chegam pelo stream de `_subscribeTasks`.
+  Future<void> _materializeToday() async {
+    try {
+      final result = await _materializeRecurring(
+        MaterializeRecurringTasksParams(today: DateTime.now()),
+      );
+      result.match(
+        (failure) => AppLogger.logWarning(
+          'Could not generate recurring tasks (${failure.runtimeType}).',
+          name: _logName,
+        ),
+        (_) {},
+      );
+    } catch (e, s) {
+      // Roda antes de `_subscribeTasks`: uma exceção aqui deixaria a lista
+      // presa no skeleton. `getTasks`/`create` só convertem `AppException`.
+      AppLogger.logError(
+        'Unexpected error generating recurring tasks.',
+        error: e,
+        stackTrace: s,
+        name: _logName,
+      );
+    }
   }
 
   void _onListsUpdated(TaskListListsUpdated e, Emitter<TaskListState> emit) {

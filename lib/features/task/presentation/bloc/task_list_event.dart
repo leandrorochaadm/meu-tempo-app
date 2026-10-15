@@ -12,6 +12,12 @@ class TaskListStarted extends TaskListEvent {
   const TaskListStarted();
 }
 
+/// App voltou para o primeiro plano: gera as tarefas recorrentes do dia
+/// (o app pode ficar dias em segundo plano sem reabrir a lista).
+class TaskListResumed extends TaskListEvent {
+  const TaskListResumed();
+}
+
 /// Emitido internamente quando o stream de tarefas atualiza.
 class TaskListUpdated extends TaskListEvent {
   const TaskListUpdated(this.result);
