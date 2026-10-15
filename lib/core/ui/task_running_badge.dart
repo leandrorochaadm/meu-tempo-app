@@ -13,10 +13,18 @@ import '../utils/formatters/duration_formatter.dart';
 /// na árvore. O
 /// espaçamento após o selo é responsabilidade de quem o posiciona.
 class TaskRunningBadge extends StatefulWidget {
-  const TaskRunningBadge({super.key, required this.startedAt});
+  const TaskRunningBadge({
+    super.key,
+    required this.startedAt,
+    this.now = DateTime.now,
+  });
 
   /// Início da sessão atual do cronômetro (do `ActiveTimerEntity`).
   final DateTime startedAt;
+
+  /// Relógio usado no cálculo do decorrido. Os testes passam um relógio fixo
+  /// para não depender da hora real.
+  final DateTime Function() now;
 
   @override
   State<TaskRunningBadge> createState() => _TaskRunningBadgeState();
@@ -68,7 +76,7 @@ class _TaskRunningBadgeState extends State<TaskRunningBadge>
   /// Segundos decorridos desde o início — derivação de apresentação de tempo
   /// (não é regra de negócio; a persistência mora no StopTimerUseCase).
   void _recompute() {
-    final diff = DateTime.now().difference(widget.startedAt).inSeconds;
+    final diff = widget.now().difference(widget.startedAt).inSeconds;
     _elapsedSeconds = diff < 0 ? 0 : diff;
   }
 
