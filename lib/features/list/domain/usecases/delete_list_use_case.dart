@@ -65,9 +65,9 @@ class DeleteListUseCase implements UseCase<Unit, DeleteListParams> {
           ? await _taskRepository.updateAll([
               for (final task in tasks) _withList(task, params.moveToListId!),
             ])
-          : await _taskRepository.deleteSubtree(
-              [for (final task in tasks) task.id],
-            );
+          : await _taskRepository.deleteSubtree([
+              for (final task in tasks) task.id,
+            ]);
       final f = res.getLeft().toNullable();
       if (f != null) return Left(f);
     }
@@ -76,16 +76,17 @@ class DeleteListUseCase implements UseCase<Unit, DeleteListParams> {
   }
 
   TaskEntity _withList(TaskEntity t, String listId) => TaskEntity(
-        id: t.id,
-        title: t.title,
-        listId: listId,
-        createdAt: t.createdAt,
-        parentId: t.parentId,
-        estimatedMinutes: t.estimatedMinutes,
-        dueDate: t.dueDate,
-        importance: t.importance,
-        isDone: t.isDone,
-        hasChildren: t.hasChildren,
-        spentMinutes: t.spentMinutes,
-      );
+    id: t.id,
+    title: t.title,
+    listId: listId,
+    createdAt: t.createdAt,
+    parentId: t.parentId,
+    estimatedMinutes: t.estimatedMinutes,
+    dueDate: t.dueDate,
+    importance: t.importance,
+    isDone: t.isDone,
+    hasChildren: t.hasChildren,
+    spentMinutes: t.spentMinutes,
+    recurringTaskId: t.recurringTaskId,
+  );
 }

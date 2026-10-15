@@ -21,6 +21,7 @@ class CreateTaskParams extends Equatable {
     this.estimatedMinutes,
     this.dueDate,
     this.importance,
+    this.recurringTaskId,
   });
 
   final String title;
@@ -34,9 +35,20 @@ class CreateTaskParams extends Equatable {
   final DateTime? dueDate;
   final ImportanceEnum? importance;
 
+  /// Preenchido só pela geração a partir de um modelo recorrente.
+  final String? recurringTaskId;
+
   @override
-  List<Object?> get props =>
-      [title, listId, today, parentId, estimatedMinutes, dueDate, importance];
+  List<Object?> get props => [
+    title,
+    listId,
+    today,
+    parentId,
+    estimatedMinutes,
+    dueDate,
+    importance,
+    recurringTaskId,
+  ];
 }
 
 /// Cria uma tarefa aplicando os defaults da criação rápida quando não informados.
@@ -61,6 +73,7 @@ class CreateTaskUseCase implements UseCase<TaskEntity, CreateTaskParams> {
           params.estimatedMinutes ?? AppDefaults.defaultEstimatedMinutes,
       dueDate: params.dueDate ?? params.today,
       importance: params.importance ?? ImportanceEnum.min,
+      recurringTaskId: params.recurringTaskId,
     );
 
     return _repository.create(task);

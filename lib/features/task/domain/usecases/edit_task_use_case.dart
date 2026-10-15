@@ -27,8 +27,14 @@ class EditTaskParams extends Equatable {
   final String? listId;
 
   @override
-  List<Object?> get props =>
-      [taskId, title, estimatedMinutes, dueDate, importance, listId];
+  List<Object?> get props => [
+    taskId,
+    title,
+    estimatedMinutes,
+    dueDate,
+    importance,
+    listId,
+  ];
 }
 
 /// Edita os campos de uma tarefa (título e, na folha, tempo/prazo/importância/
@@ -73,6 +79,7 @@ class EditTaskUseCase implements UseCase<Unit, EditTaskParams> {
       isDone: task.isDone,
       hasChildren: task.hasChildren,
       spentMinutes: task.spentMinutes,
+      recurringTaskId: task.recurringTaskId,
     );
 
     // Regra: trocar a lista de uma mãe/avó propaga para todas as filhas/netas
@@ -98,6 +105,7 @@ class EditTaskUseCase implements UseCase<Unit, EditTaskParams> {
           isDone: d.isDone,
           hasChildren: d.hasChildren,
           spentMinutes: d.spentMinutes,
+          recurringTaskId: d.recurringTaskId,
         ),
     ]);
   }

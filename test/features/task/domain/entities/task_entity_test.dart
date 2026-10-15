@@ -3,12 +3,18 @@ import 'package:meu_tempo/features/task/domain/entities/importance_enum.dart';
 import 'package:meu_tempo/features/task/domain/entities/task_entity.dart';
 
 void main() {
-  TaskEntity build({bool hasChildren = false}) => TaskEntity(
+  TaskEntity build({
+    bool hasChildren = false,
+    bool isDone = false,
+    String? recurringTaskId,
+  }) => TaskEntity(
     id: '1',
     title: 'Tela de login',
     listId: 'inbox',
     createdAt: DateTime(2026, 7, 20),
     hasChildren: hasChildren,
+    isDone: isDone,
+    recurringTaskId: recurringTaskId,
   );
 
   group('TaskEntity.isLeaf', () {
@@ -18,6 +24,28 @@ void main() {
 
     test('não é folha quando tem filhas', () {
       expect(build(hasChildren: true).isLeaf, isFalse);
+    });
+  });
+
+  group('TaskEntity.isPendingInstanceOf', () {
+    test(
+      'isPendingInstanceOf should be true for pending instance of the template',
+      () {
+        expect(build(recurringTaskId: 'r1').isPendingInstanceOf('r1'), isTrue);
+      },
+    );
+
+    test('isPendingInstanceOf should be false when done or other template', () {
+      expect(
+        build(recurringTaskId: 'r1', isDone: true).isPendingInstanceOf('r1'),
+        isFalse,
+      );
+      expect(build(recurringTaskId: 'r2').isPendingInstanceOf('r1'), isFalse);
+      expect(build().isPendingInstanceOf('r1'), isFalse);
+    });
+
+    test('entities differing only by recurringTaskId are not equal', () {
+      expect(build(recurringTaskId: 'r1'), isNot(equals(build())));
     });
   });
 

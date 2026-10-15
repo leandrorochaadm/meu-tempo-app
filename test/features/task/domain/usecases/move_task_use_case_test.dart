@@ -206,6 +206,7 @@ void main() {
       dueDate: today,
       spentMinutes: 20,
       isDone: true,
+      recurringTaskId: 'r1',
     );
     when(() => repo.getTasks()).thenAnswer(
       (_) async => Right([t('destino'), t('mae', hasChildren: true), filha]),
@@ -221,6 +222,7 @@ void main() {
     expect(moved.estimatedMinutes, 45);
     expect(moved.spentMinutes, 20);
     expect(moved.isDone, isTrue);
+    expect(moved.recurringTaskId, 'r1');
   });
 
   test('tarefa inexistente retorna TaskNotFoundFailure sem escrever', () async {

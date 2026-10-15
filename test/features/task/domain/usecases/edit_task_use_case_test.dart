@@ -64,6 +64,62 @@ void main() {
     expect(captured.listId, 'inbox'); // preservado
   });
 
+  test('preserva o recurringTaskId ao editar', () async {
+    when(() => repo.getTasks()).thenAnswer(
+      (_) async => Right([
+        TaskEntity(
+          id: 't1',
+          title: 'Antigo',
+          listId: 'inbox',
+          createdAt: today,
+          recurringTaskId: 'r1',
+        ),
+      ]),
+    );
+
+    await EditTaskUseCase(repo)(
+      const EditTaskParams(taskId: 't1', title: 'Novo'),
+    );
+
+    final captured =
+        verify(() => repo.update(captureAny())).captured.single as TaskEntity;
+    expect(captured.recurringTaskId, 'r1');
+  });
+
+  test(
+    'mantém o recurringTaskId do descendente na propagação de lista',
+    () async {
+      when(() => repo.getTasks()).thenAnswer(
+        (_) async => Right([
+          TaskEntity(
+            id: 'm1',
+            title: 'Mãe',
+            listId: 'inbox',
+            createdAt: today,
+            hasChildren: true,
+          ),
+          TaskEntity(
+            id: 'f1',
+            title: 'Filha',
+            listId: 'inbox',
+            createdAt: today,
+            parentId: 'm1',
+            recurringTaskId: 'r1',
+          ),
+        ]),
+      );
+
+      await EditTaskUseCase(repo)(
+        const EditTaskParams(taskId: 'm1', title: 'Mãe', listId: 'work'),
+      );
+
+      final captured =
+          verify(() => repo.updateAll(captureAny())).captured.single
+              as List<TaskEntity>;
+      expect(captured.firstWhere((t) => t.id == 'f1').recurringTaskId, 'r1');
+    },
+  );
+
   group('propagação de lista para descendentes', () {
     // Árvore: mãe (m1) → filha (f1) → neta (n1), todas em 'inbox'.
     void seedTree() {

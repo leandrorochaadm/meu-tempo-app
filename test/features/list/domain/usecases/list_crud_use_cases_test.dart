@@ -75,7 +75,13 @@ void main() {
       ).thenAnswer((_) async => Right([list('a'), list('b')]));
       when(() => taskRepo.getTasks()).thenAnswer(
         (_) async => Right([
-          TaskEntity(id: 't1', title: 't1', listId: 'a', createdAt: today),
+          TaskEntity(
+            id: 't1',
+            title: 't1',
+            listId: 'a',
+            createdAt: today,
+            recurringTaskId: 'r1',
+          ),
         ]),
       );
       when(
@@ -93,6 +99,7 @@ void main() {
           verify(() => taskRepo.updateAll(captureAny())).captured.single
               as List<TaskEntity>;
       expect(moved.single.listId, 'b');
+      expect(moved.single.recurringTaskId, 'r1');
       verify(() => listRepo.delete('a')).called(1);
     });
 

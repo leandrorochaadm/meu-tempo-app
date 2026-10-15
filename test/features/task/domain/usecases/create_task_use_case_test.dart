@@ -57,8 +57,29 @@ void main() {
       expect(captured.importance, ImportanceEnum.min);
       expect(captured.dueDate, today);
       expect(captured.listId, 'inbox');
+      expect(captured.recurringTaskId, isNull);
     },
   );
+
+  test('should pass recurringTaskId to the created task', () async {
+    when(() => repository.create(any())).thenAnswer(
+      (inv) async => Right(inv.positionalArguments.first as TaskEntity),
+    );
+
+    await useCase(
+      CreateTaskParams(
+        title: 'Estudar',
+        listId: 'inbox',
+        today: today,
+        recurringTaskId: 'r1',
+      ),
+    );
+
+    final captured =
+        verify(() => repository.create(captureAny())).captured.single
+            as TaskEntity;
+    expect(captured.recurringTaskId, 'r1');
+  });
 
   test('propaga Right do repositório no sucesso', () async {
     final task = TaskEntity(
