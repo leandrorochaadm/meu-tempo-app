@@ -7,6 +7,9 @@ class Routes {
   static const String login = '/login';
   static const String home = '/';
   static const String lists = '/lists';
+
+  /// Tarefas recorrentes (modelos de tarefa) — CRUD e "Adicionar hoje" (H15).
+  static const String recurringTasks = '/recurring-tasks';
   static const String agenda = '/agenda';
   static const String report = '/report';
 

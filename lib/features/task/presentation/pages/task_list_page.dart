@@ -151,17 +151,19 @@ class _TaskListPageState extends State<TaskListPage> {
     }
   }
 
-  void _onMenu(String value) {
-    switch (value) {
-      case 'agenda':
+  void _onMenu(_HomeMenuActionEnum action) {
+    switch (action) {
+      case _HomeMenuActionEnum.agenda:
         context.push(Routes.agenda);
-      case 'lists':
+      case _HomeMenuActionEnum.lists:
         context.push(Routes.lists);
-      case 'report':
+      case _HomeMenuActionEnum.recurringTasks:
+        context.push(Routes.recurringTasks);
+      case _HomeMenuActionEnum.report:
         context.push(Routes.report);
-      case 'settings':
+      case _HomeMenuActionEnum.settings:
         context.push(Routes.settings);
-      case 'logout':
+      case _HomeMenuActionEnum.logout:
         context.read<AuthBloc>().add(const AuthSignOutRequested());
     }
   }
@@ -267,15 +269,34 @@ class _TaskListPageState extends State<TaskListPage> {
             tooltip: _priorityView ? 'Ver hierarquia' : 'Ver por prioridade',
             onPressed: () => setState(() => _priorityView = !_priorityView),
           ),
-          PopupMenuButton<String>(
+          PopupMenuButton<_HomeMenuActionEnum>(
             icon: const Icon(Icons.more_vert_rounded),
             onSelected: _onMenu,
             itemBuilder: (context) => const [
-              PopupMenuItem(value: 'agenda', child: Text('Agenda')),
-              PopupMenuItem(value: 'lists', child: Text('Listas')),
-              PopupMenuItem(value: 'report', child: Text('Relatório')),
-              PopupMenuItem(value: 'settings', child: Text('Configurações')),
-              PopupMenuItem(value: 'logout', child: Text('Sair')),
+              PopupMenuItem(
+                value: _HomeMenuActionEnum.agenda,
+                child: Text('Agenda'),
+              ),
+              PopupMenuItem(
+                value: _HomeMenuActionEnum.lists,
+                child: Text('Listas'),
+              ),
+              PopupMenuItem(
+                value: _HomeMenuActionEnum.recurringTasks,
+                child: Text('Tarefas recorrentes'),
+              ),
+              PopupMenuItem(
+                value: _HomeMenuActionEnum.report,
+                child: Text('Relatório'),
+              ),
+              PopupMenuItem(
+                value: _HomeMenuActionEnum.settings,
+                child: Text('Configurações'),
+              ),
+              PopupMenuItem(
+                value: _HomeMenuActionEnum.logout,
+                child: Text('Sair'),
+              ),
             ],
           ),
         ],
@@ -533,4 +554,14 @@ class _PriorityList extends StatelessWidget {
       },
     );
   }
+}
+
+/// Ações do menu ⋮ da home.
+enum _HomeMenuActionEnum {
+  agenda,
+  lists,
+  recurringTasks,
+  report,
+  settings,
+  logout,
 }

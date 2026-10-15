@@ -388,6 +388,26 @@ void main() {
     verify(() => taskBloc.add(const HideDoneToggled(true))).called(1);
   });
 
+  testWidgets('menu ⋮ mostra Tarefas recorrentes', (tester) async {
+    setView(tester);
+    when(() => taskBloc.state).thenReturn(const TaskListEmpty());
+
+    await tester.pumpWidget(harness());
+    await tester.tap(find.byIcon(Icons.more_vert_rounded));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Tarefas recorrentes'), findsOneWidget);
+    for (final item in [
+      'Agenda',
+      'Listas',
+      'Relatório',
+      'Configurações',
+      'Sair',
+    ]) {
+      expect(find.text(item), findsOneWidget);
+    }
+  });
+
   testWidgets('vazio com concluídas ocultas mostra "Nada pendente"', (
     tester,
   ) async {
