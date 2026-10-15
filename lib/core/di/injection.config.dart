@@ -243,6 +243,8 @@ import 'package:meu_tempo/features/task/presentation/bloc/active_timer_bloc.dart
     as _i282;
 import 'package:meu_tempo/features/task/presentation/bloc/edit_task_by_id_bloc.dart'
     as _i49;
+import 'package:meu_tempo/features/task/presentation/bloc/recurring_task_bloc.dart'
+    as _i1004;
 import 'package:meu_tempo/features/task/presentation/bloc/task_list_bloc.dart'
     as _i35;
 import 'package:meu_tempo/features/task/presentation/bloc/time_entry_bloc.dart'
@@ -689,6 +691,17 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i1025.RegisterManualTimeUseCase>(),
         gh<_i115.UpdateTimeEntryUseCase>(),
         gh<_i855.DeleteTimeEntryUseCase>(),
+      ),
+    );
+    gh.factory<_i1004.RecurringTaskBloc>(
+      () => _i1004.RecurringTaskBloc(
+        gh<_i449.WatchRecurringTasksUseCase>(),
+        gh<_i689.WatchListsUseCase>(),
+        gh<_i1051.CreateRecurringTaskUseCase>(),
+        gh<_i222.UpdateRecurringTaskUseCase>(),
+        gh<_i91.DeleteRecurringTaskUseCase>(),
+        gh<_i308.RestoreRecurringTaskUseCase>(),
+        gh<_i50.AddRecurringTaskTodayUseCase>(),
       ),
     );
     gh.factory<_i830.SettingsBloc>(
