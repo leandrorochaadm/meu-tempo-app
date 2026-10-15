@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/constants/app_defaults.dart';
 import '../../../../core/router/routes.dart';
 import '../../../../core/theme/theme_context_extensions.dart';
 import '../../../../core/ui/app_primary_button.dart';
@@ -63,8 +64,6 @@ class _EditTaskPageState extends State<EditTaskPage> {
   late String? _parentId = _task.parentId;
   late String _parentLabel = widget.args.currentParentLabel;
   bool _parentChanged = false;
-
-  static const _minuteOptions = [15, 30, 60, 120];
 
   bool get _isLeaf => !_task.hasChildren;
 
@@ -163,7 +162,7 @@ class _EditTaskPageState extends State<EditTaskPage> {
               Wrap(
                 spacing: context.space.sm,
                 children: [
-                  for (final m in _minuteOptions)
+                  for (final m in AppDefaults.estimatedMinuteOptions)
                     ChoiceChip(
                       label: Text('$m min'),
                       selected: _estimated == m,

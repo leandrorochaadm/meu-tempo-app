@@ -8,6 +8,10 @@ class AppDefaults {
   /// Tempo estimado padrão da criação rápida (minutos).
   static const int defaultEstimatedMinutes = 30;
 
+  /// Atalhos de tempo estimado nos formulários de tarefa e de tarefa recorrente,
+  /// em minutos.
+  static const List<int> estimatedMinuteOptions = [15, 30, 60, 120];
+
   /// Atalho de tempo manual da listagem ("Somar 30 min" no menu ⋮), em minutos.
   static const int quickAddTimeMinutes = 30;
 
