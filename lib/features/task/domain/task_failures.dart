@@ -42,3 +42,10 @@ class InvalidDurationFailure extends Failure {
 class InvalidMoveFailure extends Failure {
   const InvalidMoveFailure();
 }
+
+/// "Adicionar hoje" num modelo com dias da semana que já tem instância
+/// pendente (não concluída). A `presentation` pergunta "Criar mesmo assim?"
+/// e, se o usuário confirmar, chama de novo com confirmação (R4, H15).
+class PendingRecurringInstanceFailure extends Failure {
+  const PendingRecurringInstanceFailure();
+}

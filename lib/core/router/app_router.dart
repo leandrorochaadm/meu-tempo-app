@@ -21,11 +21,13 @@ import '../../features/report/presentation/pages/report_page.dart';
 import '../../features/task/domain/entities/task_entity.dart';
 import '../../features/task/domain/entities/timer_target_type_enum.dart';
 import '../../features/task/presentation/bloc/edit_task_by_id_bloc.dart';
+import '../../features/task/presentation/bloc/recurring_task_bloc.dart';
 import '../../features/task/presentation/bloc/task_list_bloc.dart';
 import '../../features/task/presentation/bloc/time_entry_bloc.dart';
 import '../../features/task/presentation/pages/edit_task_args.dart';
 import '../../features/task/presentation/pages/edit_task_by_id_page.dart';
 import '../../features/task/presentation/pages/edit_task_page.dart';
+import '../../features/task/presentation/pages/recurring_tasks_page.dart';
 import '../../features/task/presentation/pages/task_list_page.dart';
 import '../../features/task/presentation/pages/time_entry_page.dart';
 import '../../features/task/presentation/widgets/active_timer_bar.dart';
@@ -75,6 +77,15 @@ class AppRouter {
             builder: (_, _) => BlocProvider(
               create: (_) => getIt<ListManagerBloc>(),
               child: const ListsPage(),
+            ),
+          ),
+          GoRoute(
+            path: Routes.recurringTasks,
+            builder: (_, _) => BlocProvider(
+              create: (_) =>
+                  getIt<RecurringTaskBloc>()
+                    ..add(const RecurringTasksStarted()),
+              child: const RecurringTasksPage(),
             ),
           ),
           GoRoute(

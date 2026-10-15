@@ -8,12 +8,15 @@ import 'package:meu_tempo/features/list/domain/usecases/create_list_use_case.dar
 import 'package:meu_tempo/features/list/domain/usecases/delete_list_use_case.dart';
 import 'package:meu_tempo/features/list/domain/usecases/rename_list_use_case.dart';
 import 'package:meu_tempo/features/task/domain/entities/task_entity.dart';
+import 'package:meu_tempo/features/task/domain/repositories/recurring_task_repository.dart';
 import 'package:meu_tempo/features/task/domain/repositories/task_repository.dart';
 import 'package:mocktail/mocktail.dart';
 
 class _MockListRepo extends Mock implements TaskListRepository {}
 
 class _MockTaskRepo extends Mock implements TaskRepository {}
+
+class _MockRecurringRepo extends Mock implements RecurringTaskRepository {}
 
 class _FakeListEntity extends Fake implements TaskListEntity {}
 
@@ -22,6 +25,7 @@ class _FakeTaskEntity extends Fake implements TaskEntity {}
 void main() {
   late _MockListRepo listRepo;
   late _MockTaskRepo taskRepo;
+  late _MockRecurringRepo recurringRepo;
   final today = DateTime(2026, 7, 20);
 
   setUpAll(() {
@@ -32,6 +36,13 @@ void main() {
   setUp(() {
     listRepo = _MockListRepo();
     taskRepo = _MockTaskRepo();
+    recurringRepo = _MockRecurringRepo();
+    when(
+      () => recurringRepo.moveToList(any(), any()),
+    ).thenAnswer((_) async => const Right(unit));
+    when(
+      () => recurringRepo.deleteByList(any()),
+    ).thenAnswer((_) async => const Right(unit));
   });
 
   test('CreateList recusa nome vazio', () async {
@@ -60,13 +71,14 @@ void main() {
       when(
         () => listRepo.getLists(),
       ).thenAnswer((_) async => Right([list('inbox', isDefault: true)]));
-      final r = await DeleteListUseCase(listRepo, taskRepo)(
+      final r = await DeleteListUseCase(listRepo, taskRepo, recurringRepo)(
         const DeleteListParams(listId: 'inbox'),
       );
       r.getLeft().fold(
         () => fail('esperava Left'),
         (f) => expect(f, isA<CannotDeleteInboxFailure>()),
       );
+      verifyNever(() => recurringRepo.deleteByList(any()));
     });
 
     test('move as tarefas para outra lista e exclui', () async {
@@ -75,7 +87,13 @@ void main() {
       ).thenAnswer((_) async => Right([list('a'), list('b')]));
       when(() => taskRepo.getTasks()).thenAnswer(
         (_) async => Right([
-          TaskEntity(id: 't1', title: 't1', listId: 'a', createdAt: today),
+          TaskEntity(
+            id: 't1',
+            title: 't1',
+            listId: 'a',
+            createdAt: today,
+            recurringTaskId: 'r1',
+          ),
         ]),
       );
       when(
@@ -85,7 +103,7 @@ void main() {
         () => listRepo.delete(any()),
       ).thenAnswer((_) async => const Right(unit));
 
-      await DeleteListUseCase(listRepo, taskRepo)(
+      await DeleteListUseCase(listRepo, taskRepo, recurringRepo)(
         const DeleteListParams(listId: 'a', moveToListId: 'b'),
       );
 
@@ -93,6 +111,7 @@ void main() {
           verify(() => taskRepo.updateAll(captureAny())).captured.single
               as List<TaskEntity>;
       expect(moved.single.listId, 'b');
+      expect(moved.single.recurringTaskId, 'r1');
       verify(() => listRepo.delete('a')).called(1);
     });
 
@@ -133,7 +152,7 @@ void main() {
           () => listRepo.delete(any()),
         ).thenAnswer((_) async => const Right(unit));
 
-        await DeleteListUseCase(listRepo, taskRepo)(
+        await DeleteListUseCase(listRepo, taskRepo, recurringRepo)(
           const DeleteListParams(listId: 'a', moveToListId: 'b'),
         );
 
@@ -166,7 +185,7 @@ void main() {
         () => listRepo.delete(any()),
       ).thenAnswer((_) async => const Right(unit));
 
-      await DeleteListUseCase(listRepo, taskRepo)(
+      await DeleteListUseCase(listRepo, taskRepo, recurringRepo)(
         const DeleteListParams(listId: 'a'),
       );
 
@@ -191,7 +210,7 @@ void main() {
         () => listRepo.delete(any()),
       ).thenAnswer((_) async => const Right(unit));
 
-      await DeleteListUseCase(listRepo, taskRepo)(
+      await DeleteListUseCase(listRepo, taskRepo, recurringRepo)(
         const DeleteListParams(listId: 'a'),
       );
 
@@ -203,6 +222,59 @@ void main() {
         ),
       );
       verify(() => listRepo.delete('a')).called(1);
+      // A lista pode ter só modelos.
+      verify(() => recurringRepo.deleteByList('a')).called(1);
+    });
+
+    test('move os modelos quando move as tarefas', () async {
+      when(
+        () => listRepo.getLists(),
+      ).thenAnswer((_) async => Right([list('a'), list('b')]));
+      when(() => taskRepo.getTasks()).thenAnswer((_) async => const Right([]));
+      when(
+        () => listRepo.delete(any()),
+      ).thenAnswer((_) async => const Right(unit));
+
+      await DeleteListUseCase(listRepo, taskRepo, recurringRepo)(
+        const DeleteListParams(listId: 'a', moveToListId: 'b'),
+      );
+
+      verify(() => recurringRepo.moveToList('a', 'b')).called(1);
+      verifyNever(() => recurringRepo.deleteByList(any()));
+    });
+
+    test('exclui os modelos quando exclui as tarefas', () async {
+      when(
+        () => listRepo.getLists(),
+      ).thenAnswer((_) async => Right([list('a')]));
+      when(() => taskRepo.getTasks()).thenAnswer((_) async => const Right([]));
+      when(
+        () => listRepo.delete(any()),
+      ).thenAnswer((_) async => const Right(unit));
+
+      await DeleteListUseCase(listRepo, taskRepo, recurringRepo)(
+        const DeleteListParams(listId: 'a'),
+      );
+
+      verify(() => recurringRepo.deleteByList('a')).called(1);
+      verifyNever(() => recurringRepo.moveToList(any(), any()));
+    });
+
+    test('não exclui a lista se os modelos falharem', () async {
+      when(
+        () => listRepo.getLists(),
+      ).thenAnswer((_) async => Right([list('a')]));
+      when(() => taskRepo.getTasks()).thenAnswer((_) async => const Right([]));
+      when(
+        () => recurringRepo.deleteByList(any()),
+      ).thenAnswer((_) async => const Left(ServerFailure()));
+
+      final r = await DeleteListUseCase(listRepo, taskRepo, recurringRepo)(
+        const DeleteListParams(listId: 'a'),
+      );
+
+      expect(r, const Left<Failure, Unit>(ServerFailure()));
+      verifyNever(() => listRepo.delete(any()));
     });
   });
 }

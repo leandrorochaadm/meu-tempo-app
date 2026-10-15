@@ -20,6 +20,7 @@ class TaskEntity extends Equatable {
     this.isDone = false,
     this.hasChildren = false,
     this.spentMinutes = 0,
+    this.recurringTaskId,
   });
 
   final String id;
@@ -41,21 +42,30 @@ class TaskEntity extends Equatable {
   /// Tempo real acumulado na folha (cronômetro + manual), em minutos.
   final int spentMinutes;
 
+  /// Modelo recorrente que gerou esta tarefa; `null` = tarefa comum.
+  final String? recurringTaskId;
+
   /// Regra intrínseca: folha = tarefa sem filhas.
   bool get isLeaf => !hasChildren;
 
+  /// Regra intrínseca (R5/H15): instância ainda não concluída do modelo
+  /// [recurringId]. Usada para avisar/evitar duplicata na geração.
+  bool isPendingInstanceOf(String recurringId) =>
+      recurringTaskId == recurringId && !isDone;
+
   @override
   List<Object?> get props => [
-        id,
-        title,
-        listId,
-        createdAt,
-        parentId,
-        estimatedMinutes,
-        dueDate,
-        importance,
-        isDone,
-        hasChildren,
-        spentMinutes,
-      ];
+    id,
+    title,
+    listId,
+    createdAt,
+    parentId,
+    estimatedMinutes,
+    dueDate,
+    importance,
+    isDone,
+    hasChildren,
+    spentMinutes,
+    recurringTaskId,
+  ];
 }

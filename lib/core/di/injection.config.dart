@@ -133,6 +133,8 @@ import 'package:meu_tempo/features/report/presentation/bloc/report_bloc.dart'
     as _i318;
 import 'package:meu_tempo/features/report/presentation/bloc/report_detail_bloc.dart'
     as _i73;
+import 'package:meu_tempo/features/task/data/datasources/recurring_task_remote_data_source.dart'
+    as _i696;
 import 'package:meu_tempo/features/task/data/datasources/task_list_filter_local_data_source.dart'
     as _i820;
 import 'package:meu_tempo/features/task/data/datasources/task_remote_data_source.dart'
@@ -141,6 +143,8 @@ import 'package:meu_tempo/features/task/data/datasources/time_entry_remote_data_
     as _i52;
 import 'package:meu_tempo/features/task/data/datasources/timer_remote_data_source.dart'
     as _i588;
+import 'package:meu_tempo/features/task/data/repositories/recurring_task_repository_impl.dart'
+    as _i133;
 import 'package:meu_tempo/features/task/data/repositories/task_list_filter_repository_impl.dart'
     as _i372;
 import 'package:meu_tempo/features/task/data/repositories/task_repository_impl.dart'
@@ -149,6 +153,8 @@ import 'package:meu_tempo/features/task/data/repositories/time_entry_repository_
     as _i877;
 import 'package:meu_tempo/features/task/data/repositories/timer_repository_impl.dart'
     as _i825;
+import 'package:meu_tempo/features/task/domain/repositories/recurring_task_repository.dart'
+    as _i641;
 import 'package:meu_tempo/features/task/domain/repositories/task_list_filter_repository.dart'
     as _i74;
 import 'package:meu_tempo/features/task/domain/repositories/task_repository.dart'
@@ -157,16 +163,22 @@ import 'package:meu_tempo/features/task/domain/repositories/time_entry_repositor
     as _i706;
 import 'package:meu_tempo/features/task/domain/repositories/timer_repository.dart'
     as _i381;
+import 'package:meu_tempo/features/task/domain/usecases/add_recurring_task_today_use_case.dart'
+    as _i50;
 import 'package:meu_tempo/features/task/domain/usecases/add_subtask_use_case.dart'
     as _i650;
 import 'package:meu_tempo/features/task/domain/usecases/build_task_tree_use_case.dart'
     as _i27;
 import 'package:meu_tempo/features/task/domain/usecases/complete_task_use_case.dart'
     as _i623;
+import 'package:meu_tempo/features/task/domain/usecases/create_recurring_task_use_case.dart'
+    as _i1051;
 import 'package:meu_tempo/features/task/domain/usecases/create_task_and_start_timer_use_case.dart'
     as _i268;
 import 'package:meu_tempo/features/task/domain/usecases/create_task_use_case.dart'
     as _i658;
+import 'package:meu_tempo/features/task/domain/usecases/delete_recurring_task_use_case.dart'
+    as _i91;
 import 'package:meu_tempo/features/task/domain/usecases/delete_task_use_case.dart'
     as _i162;
 import 'package:meu_tempo/features/task/domain/usecases/delete_time_entry_use_case.dart'
@@ -189,6 +201,8 @@ import 'package:meu_tempo/features/task/domain/usecases/get_task_edit_target_use
     as _i337;
 import 'package:meu_tempo/features/task/domain/usecases/get_task_list_filter_use_case.dart'
     as _i247;
+import 'package:meu_tempo/features/task/domain/usecases/materialize_recurring_tasks_use_case.dart'
+    as _i779;
 import 'package:meu_tempo/features/task/domain/usecases/move_task_use_case.dart'
     as _i213;
 import 'package:meu_tempo/features/task/domain/usecases/pause_timer_use_case.dart'
@@ -197,6 +211,8 @@ import 'package:meu_tempo/features/task/domain/usecases/record_timer_session_use
     as _i131;
 import 'package:meu_tempo/features/task/domain/usecases/register_manual_time_use_case.dart'
     as _i1025;
+import 'package:meu_tempo/features/task/domain/usecases/restore_recurring_task_use_case.dart'
+    as _i308;
 import 'package:meu_tempo/features/task/domain/usecases/restore_tasks_use_case.dart'
     as _i942;
 import 'package:meu_tempo/features/task/domain/usecases/resume_timer_use_case.dart'
@@ -209,10 +225,14 @@ import 'package:meu_tempo/features/task/domain/usecases/start_timer_use_case.dar
     as _i210;
 import 'package:meu_tempo/features/task/domain/usecases/stop_timer_use_case.dart'
     as _i726;
+import 'package:meu_tempo/features/task/domain/usecases/update_recurring_task_use_case.dart'
+    as _i222;
 import 'package:meu_tempo/features/task/domain/usecases/update_time_entry_use_case.dart'
     as _i115;
 import 'package:meu_tempo/features/task/domain/usecases/watch_active_timer_use_case.dart'
     as _i397;
+import 'package:meu_tempo/features/task/domain/usecases/watch_recurring_tasks_use_case.dart'
+    as _i449;
 import 'package:meu_tempo/features/task/domain/usecases/watch_tasks_use_case.dart'
     as _i1035;
 import 'package:meu_tempo/features/task/domain/usecases/watch_time_entries_by_target_use_case.dart'
@@ -223,6 +243,8 @@ import 'package:meu_tempo/features/task/presentation/bloc/active_timer_bloc.dart
     as _i282;
 import 'package:meu_tempo/features/task/presentation/bloc/edit_task_by_id_bloc.dart'
     as _i49;
+import 'package:meu_tempo/features/task/presentation/bloc/recurring_task_bloc.dart'
+    as _i1004;
 import 'package:meu_tempo/features/task/presentation/bloc/task_list_bloc.dart'
     as _i35;
 import 'package:meu_tempo/features/task/presentation/bloc/time_entry_bloc.dart'
@@ -336,6 +358,12 @@ extension GetItInjectableX on _i174.GetIt {
       () =>
           _i482.WatchLockScreenTapsUseCase(gh<_i684.LockScreenTimerGateway>()),
     );
+    gh.lazySingleton<_i696.RecurringTaskRemoteDataSource>(
+      () => _i696.RecurringTaskRemoteDataSourceImpl(
+        gh<_i974.FirebaseFirestore>(),
+        gh<_i59.FirebaseAuth>(),
+      ),
+    );
     gh.lazySingleton<_i592.TaskRemoteDataSource>(
       () => _i592.TaskRemoteDataSourceImpl(
         gh<_i974.FirebaseFirestore>(),
@@ -376,8 +404,35 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i397.LockScreenTapBloc>(
       () => _i397.LockScreenTapBloc(gh<_i482.WatchLockScreenTapsUseCase>()),
     );
+    gh.lazySingleton<_i641.RecurringTaskRepository>(
+      () => _i133.RecurringTaskRepositoryImpl(
+        gh<_i696.RecurringTaskRemoteDataSource>(),
+      ),
+    );
     gh.lazySingleton<_i397.WatchActiveTimerUseCase>(
       () => _i397.WatchActiveTimerUseCase(gh<_i381.TimerRepository>()),
+    );
+    gh.lazySingleton<_i1051.CreateRecurringTaskUseCase>(
+      () => _i1051.CreateRecurringTaskUseCase(
+        gh<_i641.RecurringTaskRepository>(),
+      ),
+    );
+    gh.lazySingleton<_i91.DeleteRecurringTaskUseCase>(
+      () =>
+          _i91.DeleteRecurringTaskUseCase(gh<_i641.RecurringTaskRepository>()),
+    );
+    gh.lazySingleton<_i308.RestoreRecurringTaskUseCase>(
+      () => _i308.RestoreRecurringTaskUseCase(
+        gh<_i641.RecurringTaskRepository>(),
+      ),
+    );
+    gh.lazySingleton<_i222.UpdateRecurringTaskUseCase>(
+      () =>
+          _i222.UpdateRecurringTaskUseCase(gh<_i641.RecurringTaskRepository>()),
+    );
+    gh.lazySingleton<_i449.WatchRecurringTasksUseCase>(
+      () =>
+          _i449.WatchRecurringTasksUseCase(gh<_i641.RecurringTaskRepository>()),
     );
     gh.lazySingleton<_i176.CreateAppointmentUseCase>(
       () => _i176.CreateAppointmentUseCase(gh<_i259.AppointmentRepository>()),
@@ -419,6 +474,13 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i115.UpdateTimeEntryUseCase(
         gh<_i706.TimeEntryRepository>(),
         gh<_i521.TaskRepository>(),
+      ),
+    );
+    gh.lazySingleton<_i666.DeleteListUseCase>(
+      () => _i666.DeleteListUseCase(
+        gh<_i219.TaskListRepository>(),
+        gh<_i521.TaskRepository>(),
+        gh<_i641.RecurringTaskRepository>(),
       ),
     );
     gh.lazySingleton<_i488.CreateListUseCase>(
@@ -471,12 +533,6 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i539.RefreshOverrunAlertScheduleUseCase(
         gh<_i86.WatchOverrunAlertPlanUseCase>(),
         gh<_i941.SyncOverrunAlertScheduleUseCase>(),
-      ),
-    );
-    gh.lazySingleton<_i666.DeleteListUseCase>(
-      () => _i666.DeleteListUseCase(
-        gh<_i219.TaskListRepository>(),
-        gh<_i521.TaskRepository>(),
       ),
     );
     gh.lazySingleton<_i98.SignInWithGoogleUseCase>(
@@ -607,6 +663,13 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i485.SyncLockScreenTimerUseCase>(),
       ),
     );
+    gh.lazySingleton<_i50.AddRecurringTaskTodayUseCase>(
+      () => _i50.AddRecurringTaskTodayUseCase(
+        gh<_i521.TaskRepository>(),
+        gh<_i641.RecurringTaskRepository>(),
+        gh<_i658.CreateTaskUseCase>(),
+      ),
+    );
     gh.factory<_i318.ReportBloc>(
       () => _i318.ReportBloc(
         gh<_i1035.WatchTasksUseCase>(),
@@ -628,6 +691,17 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i1025.RegisterManualTimeUseCase>(),
         gh<_i115.UpdateTimeEntryUseCase>(),
         gh<_i855.DeleteTimeEntryUseCase>(),
+      ),
+    );
+    gh.factory<_i1004.RecurringTaskBloc>(
+      () => _i1004.RecurringTaskBloc(
+        gh<_i449.WatchRecurringTasksUseCase>(),
+        gh<_i689.WatchListsUseCase>(),
+        gh<_i1051.CreateRecurringTaskUseCase>(),
+        gh<_i222.UpdateRecurringTaskUseCase>(),
+        gh<_i91.DeleteRecurringTaskUseCase>(),
+        gh<_i308.RestoreRecurringTaskUseCase>(),
+        gh<_i50.AddRecurringTaskTodayUseCase>(),
       ),
     );
     gh.factory<_i830.SettingsBloc>(
@@ -694,6 +768,21 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i805.FinishTimerUseCase>(),
       ),
     );
+    gh.lazySingleton<_i779.MaterializeRecurringTasksUseCase>(
+      () => _i779.MaterializeRecurringTasksUseCase(
+        gh<_i641.RecurringTaskRepository>(),
+        gh<_i521.TaskRepository>(),
+        gh<_i50.AddRecurringTaskTodayUseCase>(),
+      ),
+    );
+    gh.lazySingleton<_i1017.ProcessLockScreenActionUseCase>(
+      () => _i1017.ProcessLockScreenActionUseCase(
+        gh<_i224.AuthRepository>(),
+        gh<_i98.HandleLockScreenActionUseCase>(),
+        gh<_i188.WatchLockScreenTimerUseCase>(),
+        gh<_i539.RefreshOverrunAlertScheduleUseCase>(),
+      ),
+    );
     gh.factory<_i35.TaskListBloc>(
       () => _i35.TaskListBloc(
         gh<_i1035.WatchTasksUseCase>(),
@@ -719,14 +808,7 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i843.GetTaskEditContextUseCase>(),
         gh<_i268.CreateTaskAndStartTimerUseCase>(),
         gh<_i499.GetDefaultCreationListUseCase>(),
-      ),
-    );
-    gh.lazySingleton<_i1017.ProcessLockScreenActionUseCase>(
-      () => _i1017.ProcessLockScreenActionUseCase(
-        gh<_i224.AuthRepository>(),
-        gh<_i98.HandleLockScreenActionUseCase>(),
-        gh<_i188.WatchLockScreenTimerUseCase>(),
-        gh<_i539.RefreshOverrunAlertScheduleUseCase>(),
+        gh<_i779.MaterializeRecurringTasksUseCase>(),
       ),
     );
     return this;

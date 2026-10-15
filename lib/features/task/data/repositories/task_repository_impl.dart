@@ -42,6 +42,9 @@ class TaskRepositoryImpl implements TaskRepository {
     } on AppException catch (e, s) {
       AppLogger.logError('create task falhou', error: e, stackTrace: s);
       return Left(e.toFailure());
+    } catch (e, s) {
+      AppLogger.logError('create task falhou', error: e, stackTrace: s);
+      return const Left(ServerFailure());
     }
   }
 
@@ -148,6 +151,9 @@ class TaskRepositoryImpl implements TaskRepository {
     } on AppException catch (e, s) {
       AppLogger.logError('getTasks falhou', error: e, stackTrace: s);
       return Left(e.toFailure());
+    } catch (e, s) {
+      AppLogger.logError('getTasks falhou', error: e, stackTrace: s);
+      return const Left(ServerFailure());
     }
   }
 

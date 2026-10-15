@@ -62,8 +62,9 @@ class MoveTaskUseCase implements UseCase<Unit, MoveTaskParams> {
     }
 
     // Limite de 3 níveis: profundidade do novo pai + altura da subárvore movida.
-    final newParentDepth =
-        params.newParentId == null ? -1 : _depth(params.newParentId!, byId);
+    final newParentDepth = params.newParentId == null
+        ? -1
+        : _depth(params.newParentId!, byId);
     final subtreeHeight = _height(params.taskId, childrenOf);
     if ((newParentDepth + 1) + subtreeHeight > 2) {
       return const Left(MaxLevelExceededFailure());
@@ -74,8 +75,9 @@ class MoveTaskUseCase implements UseCase<Unit, MoveTaskParams> {
     // Regra: **a lista pertence à árvore**. Ao ganhar uma nova mãe, a tarefa e
     // toda a sua subárvore passam para a lista dela. Movendo para raiz
     // (`newParentId == null`), a lista atual é mantida.
-    final newParent =
-        params.newParentId == null ? null : byId[params.newParentId];
+    final newParent = params.newParentId == null
+        ? null
+        : byId[params.newParentId];
     final newListId = newParent?.listId ?? task.listId;
 
     final moved = TaskEntity(
@@ -90,6 +92,7 @@ class MoveTaskUseCase implements UseCase<Unit, MoveTaskParams> {
       isDone: task.isDone,
       hasChildren: task.hasChildren,
       spentMinutes: task.spentMinutes,
+      recurringTaskId: task.recurringTaskId,
     );
 
     // Descendentes acompanham a lista da nova mãe (o `parentId` deles não muda).
@@ -97,19 +100,22 @@ class MoveTaskUseCase implements UseCase<Unit, MoveTaskParams> {
     if (newListId != task.listId) {
       void collect(String parentId) {
         for (final c in childrenOf[parentId] ?? const <TaskEntity>[]) {
-          subtree.add(TaskEntity(
-            id: c.id,
-            title: c.title,
-            listId: newListId,
-            createdAt: c.createdAt,
-            parentId: c.parentId,
-            estimatedMinutes: c.estimatedMinutes,
-            dueDate: c.dueDate,
-            importance: c.importance,
-            isDone: c.isDone,
-            hasChildren: c.hasChildren,
-            spentMinutes: c.spentMinutes,
-          ));
+          subtree.add(
+            TaskEntity(
+              id: c.id,
+              title: c.title,
+              listId: newListId,
+              createdAt: c.createdAt,
+              parentId: c.parentId,
+              estimatedMinutes: c.estimatedMinutes,
+              dueDate: c.dueDate,
+              importance: c.importance,
+              isDone: c.isDone,
+              hasChildren: c.hasChildren,
+              spentMinutes: c.spentMinutes,
+              recurringTaskId: c.recurringTaskId,
+            ),
+          );
           collect(c.id);
         }
       }

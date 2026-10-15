@@ -1,5 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -57,6 +58,64 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
   }
+
+  Future<void> setLifecycle(
+    WidgetTester tester,
+    AppLifecycleState state,
+  ) async {
+    await tester.binding.defaultBinaryMessenger.handlePlatformMessage(
+      SystemChannels.lifecycle.name,
+      SystemChannels.lifecycle.codec.encodeMessage(state.toString()),
+      (_) {},
+    );
+    await tester.pump();
+  }
+
+  Future<void> goToBackground(WidgetTester tester) async {
+    await setLifecycle(tester, AppLifecycleState.inactive);
+    await setLifecycle(tester, AppLifecycleState.hidden);
+    await setLifecycle(tester, AppLifecycleState.paused);
+  }
+
+  Future<void> backToForeground(WidgetTester tester) async {
+    await setLifecycle(tester, AppLifecycleState.hidden);
+    await setLifecycle(tester, AppLifecycleState.inactive);
+    await setLifecycle(tester, AppLifecycleState.resumed);
+  }
+
+  testWidgets('abrir a tela não dispara TaskListResumed', (tester) async {
+    setView(tester);
+    when(() => taskBloc.state).thenReturn(const TaskListEmpty());
+
+    await tester.pumpWidget(harness());
+
+    verify(() => taskBloc.add(const TaskListStarted())).called(1);
+    verifyNever(() => taskBloc.add(const TaskListResumed()));
+  });
+
+  testWidgets('voltar para o app dispara TaskListResumed', (tester) async {
+    setView(tester);
+    when(() => taskBloc.state).thenReturn(const TaskListEmpty());
+
+    await tester.pumpWidget(harness());
+    await goToBackground(tester);
+    await backToForeground(tester);
+
+    verify(() => taskBloc.add(const TaskListResumed())).called(1);
+  });
+
+  testWidgets('depois de sair da tela, voltar para o app não dispara '
+      'TaskListResumed', (tester) async {
+    setView(tester);
+    when(() => taskBloc.state).thenReturn(const TaskListEmpty());
+
+    await tester.pumpWidget(harness());
+    await tester.pumpWidget(const SizedBox());
+    await goToBackground(tester);
+    await backToForeground(tester);
+
+    verifyNever(() => taskBloc.add(const TaskListResumed()));
+  });
 
   testWidgets('mostra empty state quando não há tarefas', (tester) async {
     setView(tester);
@@ -327,6 +386,26 @@ void main() {
     await tester.pump();
 
     verify(() => taskBloc.add(const HideDoneToggled(true))).called(1);
+  });
+
+  testWidgets('menu ⋮ mostra Tarefas recorrentes', (tester) async {
+    setView(tester);
+    when(() => taskBloc.state).thenReturn(const TaskListEmpty());
+
+    await tester.pumpWidget(harness());
+    await tester.tap(find.byIcon(Icons.more_vert_rounded));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Tarefas recorrentes'), findsOneWidget);
+    for (final item in [
+      'Agenda',
+      'Listas',
+      'Relatório',
+      'Configurações',
+      'Sair',
+    ]) {
+      expect(find.text(item), findsOneWidget);
+    }
   });
 
   testWidgets('vazio com concluídas ocultas mostra "Nada pendente"', (

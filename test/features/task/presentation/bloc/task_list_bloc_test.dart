@@ -25,6 +25,7 @@ import 'package:meu_tempo/features/task/domain/usecases/filter_tasks_by_list_use
 import 'package:meu_tempo/features/task/domain/usecases/get_prioritized_leaves_use_case.dart';
 import 'package:meu_tempo/features/task/domain/usecases/get_task_edit_context_use_case.dart';
 import 'package:meu_tempo/features/task/domain/usecases/get_task_list_filter_use_case.dart';
+import 'package:meu_tempo/features/task/domain/usecases/materialize_recurring_tasks_use_case.dart';
 import 'package:meu_tempo/features/task/domain/usecases/move_task_use_case.dart';
 import 'package:meu_tempo/features/task/domain/usecases/register_manual_time_use_case.dart';
 import 'package:meu_tempo/features/task/domain/usecases/restore_tasks_use_case.dart';
@@ -38,6 +39,9 @@ import 'package:meu_tempo/features/task/presentation/bloc/task_list_bloc.dart';
 import 'package:mocktail/mocktail.dart';
 
 class _MockWatchTasks extends Mock implements WatchTasksUseCase {}
+
+class _MockMaterializeRecurring extends Mock
+    implements MaterializeRecurringTasksUseCase {}
 
 class _MockCreateTask extends Mock implements CreateTaskUseCase {}
 
@@ -122,6 +126,7 @@ void main() {
   late _MockGetFilter getFilter;
   late _MockSaveFilter saveFilter;
   late _MockCreateAndStart createAndStart;
+  late _MockMaterializeRecurring materializeRecurring;
   const getDefaultCreationList = GetDefaultCreationListUseCase();
   const buildTree = BuildTaskTreeUseCase(GetPrioritizedLeavesUseCase());
   const filterByList = FilterTasksByListUseCase();
@@ -150,6 +155,9 @@ void main() {
     registerFallbackValue(_FakeRestoreParams());
     registerFallbackValue(_FakeSaveFilterParams());
     registerFallbackValue(_FakeCreateAndStartParams());
+    registerFallbackValue(
+      MaterializeRecurringTasksParams(today: DateTime(2026)),
+    );
   });
 
   setUp(() {
@@ -171,6 +179,10 @@ void main() {
     getFilter = _MockGetFilter();
     saveFilter = _MockSaveFilter();
     createAndStart = _MockCreateAndStart();
+    materializeRecurring = _MockMaterializeRecurring();
+    when(
+      () => materializeRecurring(any()),
+    ).thenAnswer((_) async => const Right(0));
     when(
       () => getFilter(any()),
     ).thenAnswer((_) async => const Right<Failure, String?>(null));
@@ -214,6 +226,7 @@ void main() {
     getEditContext,
     createAndStart,
     getDefaultCreationList,
+    materializeRecurring,
   );
 
   blocTest<TaskListBloc, TaskListState>(
@@ -1174,7 +1187,103 @@ void main() {
     verify: (_) {
       verifyNever(() => watchTasks(any()));
       verifyNever(() => seedFirstAccess(any()));
+      verifyNever(() => materializeRecurring(any()));
     },
+  );
+
+  blocTest<TaskListBloc, TaskListState>(
+    'started gera as recorrentes do dia depois do seed e antes de assinar as tarefas',
+    build: () {
+      when(
+        () => watchTasks(any()),
+      ).thenAnswer((_) => Stream.value(Right([task])));
+      return build();
+    },
+    act: (bloc) => bloc.add(const TaskListStarted()),
+    expect: () => [const TaskListLoading(), isA<TaskListLoaded>()],
+    verify: (_) {
+      verifyInOrder([
+        () => seedFirstAccess(any()),
+        () => materializeRecurring(any()),
+        () => watchTasks(any()),
+      ]);
+    },
+  );
+
+  blocTest<TaskListBloc, TaskListState>(
+    'started passa a data de hoje para a geração',
+    build: () {
+      when(
+        () => watchTasks(any()),
+      ).thenAnswer((_) => Stream.value(Right([task])));
+      return build();
+    },
+    act: (bloc) => bloc.add(const TaskListStarted()),
+    verify: (_) {
+      final params =
+          verify(() => materializeRecurring(captureAny())).captured.single
+              as MaterializeRecurringTasksParams;
+      final now = DateTime.now();
+      expect(params.today.year, now.year);
+      expect(params.today.month, now.month);
+      expect(params.today.day, now.day);
+    },
+  );
+
+  blocTest<TaskListBloc, TaskListState>(
+    'falha na geração não muda a tela no started',
+    build: () {
+      when(
+        () => watchTasks(any()),
+      ).thenAnswer((_) => Stream.value(Right([task])));
+      when(
+        () => materializeRecurring(any()),
+      ).thenAnswer((_) async => const Left(NetworkFailure()));
+      return build();
+    },
+    act: (bloc) => bloc.add(const TaskListStarted()),
+    expect: () => [const TaskListLoading(), isA<TaskListLoaded>()],
+    verify: (_) {
+      verify(() => watchTasks(any())).called(1);
+    },
+  );
+
+  blocTest<TaskListBloc, TaskListState>(
+    'exceção na geração não trava o started',
+    build: () {
+      when(
+        () => watchTasks(any()),
+      ).thenAnswer((_) => Stream.value(Right([task])));
+      when(() => materializeRecurring(any())).thenThrow(ArgumentError());
+      return build();
+    },
+    act: (bloc) => bloc.add(const TaskListStarted()),
+    expect: () => [const TaskListLoading(), isA<TaskListLoaded>()],
+    verify: (_) {
+      verify(() => watchTasks(any())).called(1);
+    },
+  );
+
+  blocTest<TaskListBloc, TaskListState>(
+    'resumed chama a geração e não emite estado',
+    build: build,
+    act: (bloc) => bloc.add(const TaskListResumed()),
+    expect: () => <TaskListState>[],
+    verify: (_) {
+      verify(() => materializeRecurring(any())).called(1);
+    },
+  );
+
+  blocTest<TaskListBloc, TaskListState>(
+    'resumed com falha não emite erro',
+    build: () {
+      when(
+        () => materializeRecurring(any()),
+      ).thenAnswer((_) async => const Left(NetworkFailure()));
+      return build();
+    },
+    act: (bloc) => bloc.add(const TaskListResumed()),
+    expect: () => <TaskListState>[],
   );
 
   blocTest<TaskListBloc, TaskListState>(

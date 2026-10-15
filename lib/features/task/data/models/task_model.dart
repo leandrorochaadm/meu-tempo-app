@@ -21,6 +21,7 @@ class TaskModel {
     this.isDone = false,
     this.hasChildren = false,
     this.spentMinutes = 0,
+    this.recurringTaskId,
   });
 
   @JsonKey(includeToJson: false) // id vem do doc.id
@@ -37,6 +38,7 @@ class TaskModel {
   final bool isDone;
   final bool hasChildren;
   final int spentMinutes;
+  final String? recurringTaskId;
 
   factory TaskModel.fromDoc(String id, Map<String, dynamic> data) =>
       TaskModel.fromJson({...data, 'id': id});
@@ -47,30 +49,32 @@ class TaskModel {
   Map<String, dynamic> toJson() => _$TaskModelToJson(this);
 
   TaskEntity toEntity() => TaskEntity(
-        id: id,
-        title: title,
-        listId: listId,
-        createdAt: createdAt ?? DateTime.fromMillisecondsSinceEpoch(0),
-        parentId: parentId,
-        estimatedMinutes: estimatedMinutes,
-        dueDate: dueDate,
-        importance: importance,
-        isDone: isDone,
-        hasChildren: hasChildren,
-        spentMinutes: spentMinutes,
-      );
+    id: id,
+    title: title,
+    listId: listId,
+    createdAt: createdAt ?? DateTime.fromMillisecondsSinceEpoch(0),
+    parentId: parentId,
+    estimatedMinutes: estimatedMinutes,
+    dueDate: dueDate,
+    importance: importance,
+    isDone: isDone,
+    hasChildren: hasChildren,
+    spentMinutes: spentMinutes,
+    recurringTaskId: recurringTaskId,
+  );
 
   factory TaskModel.fromEntity(TaskEntity e) => TaskModel(
-        id: e.id,
-        title: e.title,
-        listId: e.listId,
-        createdAt: e.createdAt,
-        parentId: e.parentId,
-        estimatedMinutes: e.estimatedMinutes,
-        dueDate: e.dueDate,
-        importance: e.importance,
-        isDone: e.isDone,
-        hasChildren: e.hasChildren,
-        spentMinutes: e.spentMinutes,
-      );
+    id: e.id,
+    title: e.title,
+    listId: e.listId,
+    createdAt: e.createdAt,
+    parentId: e.parentId,
+    estimatedMinutes: e.estimatedMinutes,
+    dueDate: e.dueDate,
+    importance: e.importance,
+    isDone: e.isDone,
+    hasChildren: e.hasChildren,
+    spentMinutes: e.spentMinutes,
+    recurringTaskId: e.recurringTaskId,
+  );
 }

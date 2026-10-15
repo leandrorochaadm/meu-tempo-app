@@ -9,11 +9,15 @@ class AppEmptyState extends StatelessWidget {
     required this.icon,
     required this.title,
     required this.message,
+    this.action,
   });
 
   final IconData icon;
   final String title;
   final String message;
+
+  /// Ação do próximo passo (ex.: botão de criar), opcional.
+  final Widget? action;
 
   @override
   Widget build(BuildContext context) {
@@ -40,6 +44,10 @@ class AppEmptyState extends StatelessWidget {
               textAlign: TextAlign.center,
               style: context.text.bodySmall,
             ),
+            if (action != null) ...[
+              SizedBox(height: context.space.xl),
+              action!,
+            ],
           ],
         ),
       ),

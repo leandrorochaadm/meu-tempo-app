@@ -8,4 +8,5 @@ class TaskFields {
   static const String parentId = 'parentId';
   static const String listId = 'listId';
   static const String spentMinutes = 'spentMinutes';
+  static const String recurringTaskId = 'recurringTaskId';
 }

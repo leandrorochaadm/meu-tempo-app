@@ -16,8 +16,10 @@ import 'package:meu_tempo/features/overrun_alert/presentation/bloc/overrun_alert
 import 'package:meu_tempo/features/task/domain/entities/timer_target_type_enum.dart';
 import 'package:meu_tempo/features/task/presentation/bloc/active_timer_bloc.dart';
 import 'package:meu_tempo/features/task/presentation/bloc/edit_task_by_id_bloc.dart';
+import 'package:meu_tempo/features/task/presentation/bloc/recurring_task_bloc.dart';
 import 'package:meu_tempo/features/task/presentation/bloc/task_list_bloc.dart';
 import 'package:meu_tempo/features/task/presentation/pages/edit_task_by_id_page.dart';
+import 'package:meu_tempo/features/task/presentation/pages/recurring_tasks_page.dart';
 import 'package:meu_tempo/features/task/presentation/pages/task_list_page.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -47,15 +49,21 @@ class _MockAgendaBloc extends MockBloc<AgendaEvent, AgendaState>
 class _MockEditByIdBloc extends MockBloc<EditTaskByIdEvent, EditTaskByIdState>
     implements EditTaskByIdBloc {}
 
+class _MockRecurringTaskBloc
+    extends MockBloc<RecurringTaskEvent, RecurringTaskState>
+    implements RecurringTaskBloc {}
+
 void main() {
   late _MockAuthBloc authBloc;
   late _MockActiveTimerBloc timerBloc;
   late _MockPermissionBloc permissionBloc;
   late _MockTapBloc tapBloc;
   late _MockOverrunAlertBloc overrunBloc;
+  late _MockRecurringTaskBloc recurringBloc;
   late AppRouter appRouter;
 
   setUpAll(() {
+    registerFallbackValue(const RecurringTasksStarted());
     registerFallbackValue(const ActiveTimerStarted());
     registerFallbackValue(const LockScreenPermissionStarted());
     registerFallbackValue(const LockScreenTapStarted());
@@ -71,6 +79,8 @@ void main() {
     final taskListBloc = _MockTaskListBloc();
     final agendaBloc = _MockAgendaBloc();
     final editByIdBloc = _MockEditByIdBloc();
+    recurringBloc = _MockRecurringTaskBloc();
+    when(() => recurringBloc.state).thenReturn(const RecurringTaskLoading());
 
     whenListen(
       authBloc,
@@ -91,7 +101,8 @@ void main() {
     getIt
       ..registerFactory<TaskListBloc>(() => taskListBloc)
       ..registerFactory<AgendaBloc>(() => agendaBloc)
-      ..registerFactory<EditTaskByIdBloc>(() => editByIdBloc);
+      ..registerFactory<EditTaskByIdBloc>(() => editByIdBloc)
+      ..registerFactory<RecurringTaskBloc>(() => recurringBloc);
     appRouter = AppRouter(authBloc);
   });
 
@@ -129,6 +140,15 @@ void main() {
       tester.widget<EditTaskByIdPage>(find.byType(EditTaskByIdPage)).taskId,
       't1',
     );
+  });
+
+  testWidgets('recurring tasks route opens the page and starts the bloc', (
+    tester,
+  ) async {
+    await open(tester, Routes.recurringTasks);
+
+    expect(find.byType(RecurringTasksPage), findsOneWidget);
+    verify(() => recurringBloc.add(const RecurringTasksStarted())).called(1);
   });
 
   testWidgets('appointment opens the agenda', (tester) async {
