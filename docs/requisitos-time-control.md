@@ -59,8 +59,9 @@ compartilhamento entre eles.
 Este documento descreve o **produto completo**. A **versão 1** foi propositalmente
 focada no **gerenciador de tarefas com medição de tempo + agenda**: tarefas em 3
 níveis, cronômetro, priorização, listas, relatórios, conclusão/progresso,
-compromissos com horário e conta na nuvem. Água, hábitos, humor/energia, sono,
-rituais e demais medições ficam em **Próximas versões**.
+compromissos com horário, tarefas recorrentes e conta na nuvem. Água, hábitos, humor/energia, sono,
+rituais e demais medições ficam em **Próximas versões**. A versão 1 também tem
+**tarefas recorrentes** (modelos que viram tarefa nos dias marcados).
 
 ### Essencial (versão 1)
 
@@ -189,6 +190,16 @@ rituais e demais medições ficam em **Próximas versões**.
     - O compromisso **pertence a uma lista** (ou cai na "Entrada") e entra no **relatório por lista**; na tela é mostrado com um **ícone diferente** do de tarefa.
     - O compromisso **pode ser concluído** (e reaberto, ver req. 10); na agenda ele **continua igual, com um sinal de "feito"** ao lado.
     - _Pronto quando:_ crio "Reunião hoje 15h, 1h" na lista "Profissional", ela aparece na agenda às 15h com ícone de compromisso, desconta 1h do dia, e o tempo dela soma no relatório da lista "Profissional"; ao concluí-la, aparece o sinal de "feito" na agenda, e ao reabri-la o sinal some.
+15. **Tarefas recorrentes (modelos de tarefa).**
+    - O modelo é sempre uma **folha**: título, lista, tempo estimado e importância; **sem filhas** (R1).
+    - Repete por **dias da semana** (seg–dom, vários) ou **sem dia fixo** — nenhum dia marcado = só pelo botão (R2).
+    - **Geração automática** ao abrir a lista de tarefas e ao voltar para o app, só para modelos do dia, **no máximo 1 vez por dia**, mesmo com mais de um aparelho; apagar a tarefa gerada não a recria no mesmo dia (R3).
+    - Botão **"Adicionar hoje"** em cada modelo: se o modelo vence hoje, conta como a geração do dia; modelo sem dia fixo cria quantas vezes quiser; modelo com dias e tarefa pendente pergunta **"Criar mesmo assim?"** e cria se o usuário confirmar (R4).
+    - A geração automática **não cria** se houver tarefa **pendente** (não concluída) do mesmo modelo, de qualquer data (R5).
+    - A tarefa gerada nasce com entrega **hoje** e guarda o vínculo com o modelo; editar ou excluir o modelo não mexe nas já geradas (R6).
+    - **Sem retroativo:** dia em que o app não foi aberto não gera tarefa (R7).
+    - **Excluir uma lista** leva os modelos dela junto: se o usuário escolhe **mover as tarefas**, os modelos vão para a mesma lista; se escolhe **excluir todas**, os modelos também são excluídos.
+    - _Pronto quando:_ crio o modelo "Academia" para seg/qua/sex e, ao abrir o app na segunda, nasce uma tarefa "Academia" para hoje (e só uma, mesmo abrindo de novo); e crio "Reunião" sem dia fixo e toco em "Adicionar hoje" duas vezes no mesmo dia, criando duas tarefas.
 
 ### Próximas versões
 
@@ -208,7 +219,7 @@ _Já conversados e detalhados; ficam para depois da versão 1 (sem ordem definid
 - **Metas por semana e mês** (além das diárias).
 
 **Agenda avançada e visão de período:**
-- **Tarefas e compromissos recorrentes** (ex.: academia seg/qua/sex).
+- **Compromissos recorrentes** (ex.: reunião semanal).
 - **Picos de energia** (melhores horários para tarefas difíceis).
 - **Visão de semana e de mês para planejar** (distribuir tarefas ao longo dos dias).
 
@@ -271,7 +282,16 @@ _Já conversados e detalhados; ficam para depois da versão 1 (sem ordem definid
 - **Excluir em cascata:** excluir uma tarefa com filhas apaga também todas as
   filhas/netas, sempre com **confirmação** antes.
 - **Excluir lista com tarefas:** o app pergunta ao usuário — **mover as tarefas**
-  para outra lista ou **excluir todas**.
+  para outra lista ou **excluir todas**. Os modelos de tarefa recorrente da lista
+  seguem a mesma escolha: vão junto para a outra lista ou são excluídos.
+- **Tarefas recorrentes:** a tarefa nasce sozinha **no máximo 1 vez por dia** por
+  modelo, só nos dias marcados, ao abrir a lista ou voltar para o app (mesmo com
+  mais de um aparelho). A geração automática **não cria** se já existe uma tarefa
+  **pendente** (não concluída) do mesmo modelo, de qualquer data. No botão
+  "Adicionar hoje", modelo com dias e tarefa pendente pergunta "Criar mesmo
+  assim?"; modelo sem dia fixo cria sempre. **Sem retroativo:** dia sem abrir o
+  app não gera tarefa. A tarefa gerada guarda o vínculo com o modelo; editar ou
+  excluir o modelo não muda as já geradas.
 - **Valores padrão da criação rápida:** importância **4**, entrega **hoje**,
   tempo estimado **30 min**, lista **"Entrada"** (lista fixa que já existe por padrão).
 - **Desfazer:** concluir, excluir e migrar podem ser **desfeitos** logo após a ação
@@ -418,7 +438,8 @@ Decisões que encerraram as pendências anteriores:
 - **urgênciaDoPrazo** → faixas graduais até 14 dias (hoje = 6 … +14 dias = 1); atrasada
   = 6 + 1 por dia de atraso, sem teto.
 - **Excluir lista com tarefas** → o app pergunta: **mover as tarefas** para outra
-  lista ou **excluir todas**.
+  lista ou **excluir todas**. Os modelos de tarefa recorrente da lista seguem a
+  mesma escolha.
 
 ## Glossário
 
@@ -446,6 +467,9 @@ Decisões que encerraram as pendências anteriores:
 - **Energia**: sensação de disposição física/mental, registrada de 1 a 4 com horário.
 - **Duração estimada**: quanto tempo o Leandro acha que a tarefa vai levar
   (comparada depois com o tempo real).
+- **Tarefa recorrente (modelo)**: molde de folha (título, lista, tempo estimado e
+  importância) que vira tarefa nos dias da semana marcados ou pelo botão
+  "Adicionar hoje". Sem dia marcado = "sem dia fixo": só entra pelo botão.
 - **Compromisso**: evento agendado com data, **hora de início** e **duração**
   (fim = início + duração); pertence a uma **lista**, aparece na agenda do dia
   (com ícone próprio), ocupa o "cabe no dia" e tem cronômetro/registro de tempo.
@@ -463,7 +487,7 @@ Decisões que encerraram as pendências anteriores:
 - [x] Informações — dados e monitoráveis genéricos
 - [ ] Volume e ritmo — quantidades, picos _(pouco relevante: uso pessoal, vários usuários sem número fixo)_
 - [x] Limites — só celular, sempre online, backup na nuvem; sem prazo/orçamento
-- [x] Prioridade — **versão 1 = gerenciador de tarefas (3 níveis) + tempo/cronômetro + listas + relatórios + conclusão/progresso + CRUD + uso sem fricção + facilidade p/ leigo + agenda/compromissos + login/nuvem** (req. 1–14); o resto em "Próximas versões"
+- [x] Prioridade — **versão 1 = gerenciador de tarefas (3 níveis) + tempo/cronômetro + listas + relatórios + conclusão/progresso + CRUD + uso sem fricção + facilidade p/ leigo + agenda/compromissos + tarefas recorrentes + login/nuvem** (req. 1–15); o resto em "Próximas versões"
 - [x] Não-objetivos confirmados
 - [x] Validação de qualidade dos Essenciais _(régua de sucesso definida; "pronto quando" preenchidos)_
 
@@ -596,3 +620,7 @@ Decisões que encerraram as pendências anteriores:
   e **aviso de tempo estourado** a cada 1 hora (desejável), que substitui a regra
   antiga de "o app não avisa". Atualizados req. 10 e 14, "Desejável", "Futuro",
   "Regras de negócio", "Quando dá errado" e o glossário.
+- 2026-10-15 — **Tarefas recorrentes entram na versão 1** (req. 15, regras R1–R7):
+  modelos de tarefa que viram tarefa sozinhos nos dias marcados ou pelo botão
+  "Adicionar hoje". **Compromissos recorrentes** continuam em "Próximas versões".
+  Excluir uma lista leva os modelos dela junto (mover ou excluir, como as tarefas).

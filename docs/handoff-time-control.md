@@ -9,7 +9,7 @@ metodologia Bullet Journal e resolve a dor de "o dia passa e não sei onde foi o
 tempo". A **versão 1** é um **gerenciador de tarefas hierárquico com medição de
 tempo**: tarefas em 3 níveis, cronômetro nas folhas e compromissos, priorização automática,
 listas (categorias), agenda com compromissos por horário, relatórios de tempo por
-lista e comparação estimado × real, tudo por usuário com login e persistência na nuvem. As demais funcionalidades
+lista, comparação estimado × real e tarefas recorrentes, tudo por usuário com login e persistência na nuvem. As demais funcionalidades
 (água, hábitos, humor/energia, sono, rituais, monitoráveis genéricos, etc.) estão
 no backlog de próximas versões.
 
@@ -236,6 +236,44 @@ começar a usar sem curva de aprendizado.
 **Regras de negócio envolvidas:** Planejamento cabe no dia (tarefas + compromissos);
 Um cronômetro por vez (inclui compromissos).
 
+### H15 — Tarefas recorrentes `(origem: Requisito Essencial 15)`
+
+**Como** usuário, **quero** cadastrar modelos de tarefa que se repetem,
+**para** não digitar a mesma tarefa sempre.
+
+**Critérios de aceitação:**
+- **Dado** o cadastro de um modelo, **quando** o crio, **então** informo título,
+  lista, tempo estimado e importância; os **dias da semana são opcionais** — sem
+  dia marcado, o modelo é "sem dia fixo". O modelo nunca tem filhas.
+- **Dado** um modelo seg/qua/sex, **quando** abro o app numa segunda, **então**
+  nasce **1 tarefa** com entrega hoje e vínculo com o modelo.
+- **Dado** que a tarefa de hoje já foi gerada, **quando** abro a lista de novo ou
+  volto ao app, **então** não nasce outra.
+- **Dado** que apaguei a tarefa gerada, **quando** abro o app de novo no mesmo dia,
+  **então** ela não volta.
+- **Dado** o mesmo usuário com dois aparelhos abertos, **quando** os dois geram,
+  **então** só **1 tarefa** é criada.
+- **Dado** um modelo seg/qua/sex, **quando** abro o app numa terça, **então**
+  nada é gerado.
+- **Dado** que fiquei dias sem abrir o app, **quando** abro, **então** nada
+  retroativo é gerado (só vale o dia de hoje).
+- **Dado** um modelo **sem dia fixo**, **quando** toco em "Adicionar hoje",
+  **então** a tarefa é criada sempre, mesmo com tarefas pendentes do modelo.
+- **Dado** um modelo com dias e uma tarefa pendente dele, **quando** toco em
+  "Adicionar hoje", **então** o app pergunta **"Criar mesmo assim?"**; ao tocar
+  em "Criar" a tarefa nasce, ao tocar em "Cancelar" nada acontece.
+- **Dado** um modelo que vence hoje, **quando** uso "Adicionar hoje", **então**
+  conta como a geração do dia e a automática não cria outra.
+- **Dado** uma tarefa gerada na segunda ainda pendente na quarta, **quando** abro
+  o app num dia do modelo, **então** a geração automática **não** cria outra.
+- **Dado** tarefas já geradas, **quando** edito ou excluo o modelo, **então** elas
+  não mudam.
+- **Dado** uma lista com modelos, **quando** a excluo e escolho **mover as
+  tarefas**, **então** os modelos vão para a lista escolhida; se escolho
+  **excluir todas**, os modelos também são excluídos.
+
+**Regras de negócio envolvidas:** Tarefas recorrentes; Excluir lista com tarefas.
+
 ## Backlog (Próximas versões / Desejável / Futuro)
 
 **Próximas versões** (já detalhado no documento de requisitos):
@@ -247,7 +285,7 @@ Um cronômetro por vez (inclui compromissos).
 - Revisão de fim de dia + planejamento do dia seguinte (noturno) `(origem: Próximas versões)`
 - Calibragem de estimativa `(origem: Próximas versões)`
 - Metas por semana e mês `(origem: Próximas versões)`
-- Tarefas/compromissos recorrentes `(origem: Próximas versões)`
+- Compromissos recorrentes `(origem: Próximas versões)`
 - Picos de energia `(origem: Próximas versões)`
 - Visão de semana e de mês para planejar `(origem: Próximas versões)`
 - Lembretes (água, humor/energia, tarefas/compromissos) `(origem: Próximas versões)`
@@ -273,7 +311,10 @@ Um cronômetro por vez (inclui compromissos).
 - **Usuário** (login; isolamento total de dados por usuário).
 - **Lista** (nome; lista fixa "Entrada" criada por padrão).
 - **Tarefa** (título, nível mãe/filha/neta, referência ao pai, lista; nas folhas:
-  tempo estimado, data de entrega, importância 1–4, status concluída/pendente).
+  tempo estimado, data de entrega, importância 1–4, status concluída/pendente;
+  vínculo opcional com o modelo de tarefa recorrente que a gerou).
+- **Tarefa recorrente (modelo)** (título, lista, tempo estimado, importância, dias
+  da semana — vazio = sem dia fixo —, dia da última geração).
 - **Compromisso** (data, hora de início, duração, **lista**; tem registro de tempo
   real e entra no "cabe no dia", na agenda do dia e no relatório por lista; ícone
   distinto na UI).
@@ -309,6 +350,9 @@ relevante e sem picos. Carga baixa — dimensionamento não é preocupação par
   mais que prazo e importância. Os 30 min da criação rápida têm faixa própria.
 - **Migração**: reavaliar uma tarefa não feita e decidir migrar ou descartar.
 - **Duração estimada**: tempo que o usuário acha que a tarefa levará (comparado com o real).
+- **Tarefa recorrente (modelo)**: molde de folha (título, lista, tempo estimado e
+  importância) que vira tarefa nos dias da semana marcados ou pelo botão
+  "Adicionar hoje". Sem dia marcado = "sem dia fixo": só entra pelo botão.
 - **Compromisso**: evento agendado (data + hora de início + duração; fim = início +
   duração); pertence a uma lista, aparece na agenda do dia (ícone próprio), ocupa o
   "cabe no dia", tem registro de tempo e entra no relatório por lista.

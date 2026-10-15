@@ -25,8 +25,8 @@ implementar. Detalhes e anti-patterns em `.claude/rules/architecture.md`.
 Os documentos em `docs/` são a **fonte da verdade** do que o app faz. Leia antes de
 implementar qualquer funcionalidade e cite o requisito/critério de origem:
 
-- `docs/requisitos-time-control.md` — requisitos de negócio (14 essenciais da v1).
-- `docs/handoff-time-control.md` — histórias de usuário H1–H14 com critérios de aceite.
+- `docs/requisitos-time-control.md` — requisitos de negócio (15 essenciais da v1).
+- `docs/handoff-time-control.md` — histórias de usuário H1–H15 com critérios de aceite.
 - `docs/gerenciador_tarefas_v1_diagrams.md` — fluxogramas dos UseCases (CEN/CA, Failures).
 
 Nunca invente requisito. Se algo não está nos documentos, **pergunte** (ver skill
