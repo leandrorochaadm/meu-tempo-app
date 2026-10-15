@@ -149,6 +149,8 @@ import 'package:meu_tempo/features/task/data/repositories/time_entry_repository_
     as _i877;
 import 'package:meu_tempo/features/task/data/repositories/timer_repository_impl.dart'
     as _i825;
+import 'package:meu_tempo/features/task/domain/repositories/recurring_task_repository.dart'
+    as _i641;
 import 'package:meu_tempo/features/task/domain/repositories/task_list_filter_repository.dart'
     as _i74;
 import 'package:meu_tempo/features/task/domain/repositories/task_repository.dart'
@@ -163,10 +165,14 @@ import 'package:meu_tempo/features/task/domain/usecases/build_task_tree_use_case
     as _i27;
 import 'package:meu_tempo/features/task/domain/usecases/complete_task_use_case.dart'
     as _i623;
+import 'package:meu_tempo/features/task/domain/usecases/create_recurring_task_use_case.dart'
+    as _i1051;
 import 'package:meu_tempo/features/task/domain/usecases/create_task_and_start_timer_use_case.dart'
     as _i268;
 import 'package:meu_tempo/features/task/domain/usecases/create_task_use_case.dart'
     as _i658;
+import 'package:meu_tempo/features/task/domain/usecases/delete_recurring_task_use_case.dart'
+    as _i91;
 import 'package:meu_tempo/features/task/domain/usecases/delete_task_use_case.dart'
     as _i162;
 import 'package:meu_tempo/features/task/domain/usecases/delete_time_entry_use_case.dart'
@@ -197,6 +203,8 @@ import 'package:meu_tempo/features/task/domain/usecases/record_timer_session_use
     as _i131;
 import 'package:meu_tempo/features/task/domain/usecases/register_manual_time_use_case.dart'
     as _i1025;
+import 'package:meu_tempo/features/task/domain/usecases/restore_recurring_task_use_case.dart'
+    as _i308;
 import 'package:meu_tempo/features/task/domain/usecases/restore_tasks_use_case.dart'
     as _i942;
 import 'package:meu_tempo/features/task/domain/usecases/resume_timer_use_case.dart'
@@ -209,10 +217,14 @@ import 'package:meu_tempo/features/task/domain/usecases/start_timer_use_case.dar
     as _i210;
 import 'package:meu_tempo/features/task/domain/usecases/stop_timer_use_case.dart'
     as _i726;
+import 'package:meu_tempo/features/task/domain/usecases/update_recurring_task_use_case.dart'
+    as _i222;
 import 'package:meu_tempo/features/task/domain/usecases/update_time_entry_use_case.dart'
     as _i115;
 import 'package:meu_tempo/features/task/domain/usecases/watch_active_timer_use_case.dart'
     as _i397;
+import 'package:meu_tempo/features/task/domain/usecases/watch_recurring_tasks_use_case.dart'
+    as _i449;
 import 'package:meu_tempo/features/task/domain/usecases/watch_tasks_use_case.dart'
     as _i1035;
 import 'package:meu_tempo/features/task/domain/usecases/watch_time_entries_by_target_use_case.dart'
@@ -288,6 +300,28 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i298.WatchOverrunAlertsUseCase>(
       () => _i298.WatchOverrunAlertsUseCase(gh<_i191.OverrunAlertScheduler>()),
+    );
+    gh.lazySingleton<_i1051.CreateRecurringTaskUseCase>(
+      () => _i1051.CreateRecurringTaskUseCase(
+        gh<_i641.RecurringTaskRepository>(),
+      ),
+    );
+    gh.lazySingleton<_i91.DeleteRecurringTaskUseCase>(
+      () =>
+          _i91.DeleteRecurringTaskUseCase(gh<_i641.RecurringTaskRepository>()),
+    );
+    gh.lazySingleton<_i308.RestoreRecurringTaskUseCase>(
+      () => _i308.RestoreRecurringTaskUseCase(
+        gh<_i641.RecurringTaskRepository>(),
+      ),
+    );
+    gh.lazySingleton<_i222.UpdateRecurringTaskUseCase>(
+      () =>
+          _i222.UpdateRecurringTaskUseCase(gh<_i641.RecurringTaskRepository>()),
+    );
+    gh.lazySingleton<_i449.WatchRecurringTasksUseCase>(
+      () =>
+          _i449.WatchRecurringTasksUseCase(gh<_i641.RecurringTaskRepository>()),
     );
     gh.lazySingleton<_i813.TaskListRemoteDataSource>(
       () => _i813.TaskListRemoteDataSourceImpl(
