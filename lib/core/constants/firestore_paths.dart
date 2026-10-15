@@ -10,6 +10,7 @@ class FirestorePaths {
   static const String tasksSegment = 'tasks';
   static const String appointmentsSegment = 'appointments';
   static const String timeEntriesSegment = 'timeEntries';
+  static const String recurringTasksSegment = 'recurringTasks';
   static const String configSegment = 'config';
 
   /// Nome do doc do cronômetro ativo (dentro de `config`).
@@ -23,5 +24,7 @@ class FirestorePaths {
   static String tasks(String uid) => '${user(uid)}/$tasksSegment';
   static String appointments(String uid) => '${user(uid)}/$appointmentsSegment';
   static String timeEntries(String uid) => '${user(uid)}/$timeEntriesSegment';
+  static String recurringTasks(String uid) =>
+      '${user(uid)}/$recurringTasksSegment';
   static String config(String uid) => '${user(uid)}/$configSegment';
 }

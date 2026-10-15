@@ -133,6 +133,8 @@ import 'package:meu_tempo/features/report/presentation/bloc/report_bloc.dart'
     as _i318;
 import 'package:meu_tempo/features/report/presentation/bloc/report_detail_bloc.dart'
     as _i73;
+import 'package:meu_tempo/features/task/data/datasources/recurring_task_remote_data_source.dart'
+    as _i696;
 import 'package:meu_tempo/features/task/data/datasources/task_list_filter_local_data_source.dart'
     as _i820;
 import 'package:meu_tempo/features/task/data/datasources/task_remote_data_source.dart'
@@ -141,6 +143,8 @@ import 'package:meu_tempo/features/task/data/datasources/time_entry_remote_data_
     as _i52;
 import 'package:meu_tempo/features/task/data/datasources/timer_remote_data_source.dart'
     as _i588;
+import 'package:meu_tempo/features/task/data/repositories/recurring_task_repository_impl.dart'
+    as _i133;
 import 'package:meu_tempo/features/task/data/repositories/task_list_filter_repository_impl.dart'
     as _i372;
 import 'package:meu_tempo/features/task/data/repositories/task_repository_impl.dart'
@@ -305,28 +309,6 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i298.WatchOverrunAlertsUseCase>(
       () => _i298.WatchOverrunAlertsUseCase(gh<_i191.OverrunAlertScheduler>()),
     );
-    gh.lazySingleton<_i1051.CreateRecurringTaskUseCase>(
-      () => _i1051.CreateRecurringTaskUseCase(
-        gh<_i641.RecurringTaskRepository>(),
-      ),
-    );
-    gh.lazySingleton<_i91.DeleteRecurringTaskUseCase>(
-      () =>
-          _i91.DeleteRecurringTaskUseCase(gh<_i641.RecurringTaskRepository>()),
-    );
-    gh.lazySingleton<_i308.RestoreRecurringTaskUseCase>(
-      () => _i308.RestoreRecurringTaskUseCase(
-        gh<_i641.RecurringTaskRepository>(),
-      ),
-    );
-    gh.lazySingleton<_i222.UpdateRecurringTaskUseCase>(
-      () =>
-          _i222.UpdateRecurringTaskUseCase(gh<_i641.RecurringTaskRepository>()),
-    );
-    gh.lazySingleton<_i449.WatchRecurringTasksUseCase>(
-      () =>
-          _i449.WatchRecurringTasksUseCase(gh<_i641.RecurringTaskRepository>()),
-    );
     gh.lazySingleton<_i813.TaskListRemoteDataSource>(
       () => _i813.TaskListRemoteDataSourceImpl(
         gh<_i974.FirebaseFirestore>(),
@@ -374,6 +356,12 @@ extension GetItInjectableX on _i174.GetIt {
       () =>
           _i482.WatchLockScreenTapsUseCase(gh<_i684.LockScreenTimerGateway>()),
     );
+    gh.lazySingleton<_i696.RecurringTaskRemoteDataSource>(
+      () => _i696.RecurringTaskRemoteDataSourceImpl(
+        gh<_i974.FirebaseFirestore>(),
+        gh<_i59.FirebaseAuth>(),
+      ),
+    );
     gh.lazySingleton<_i592.TaskRemoteDataSource>(
       () => _i592.TaskRemoteDataSourceImpl(
         gh<_i974.FirebaseFirestore>(),
@@ -414,8 +402,35 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i397.LockScreenTapBloc>(
       () => _i397.LockScreenTapBloc(gh<_i482.WatchLockScreenTapsUseCase>()),
     );
+    gh.lazySingleton<_i641.RecurringTaskRepository>(
+      () => _i133.RecurringTaskRepositoryImpl(
+        gh<_i696.RecurringTaskRemoteDataSource>(),
+      ),
+    );
     gh.lazySingleton<_i397.WatchActiveTimerUseCase>(
       () => _i397.WatchActiveTimerUseCase(gh<_i381.TimerRepository>()),
+    );
+    gh.lazySingleton<_i1051.CreateRecurringTaskUseCase>(
+      () => _i1051.CreateRecurringTaskUseCase(
+        gh<_i641.RecurringTaskRepository>(),
+      ),
+    );
+    gh.lazySingleton<_i91.DeleteRecurringTaskUseCase>(
+      () =>
+          _i91.DeleteRecurringTaskUseCase(gh<_i641.RecurringTaskRepository>()),
+    );
+    gh.lazySingleton<_i308.RestoreRecurringTaskUseCase>(
+      () => _i308.RestoreRecurringTaskUseCase(
+        gh<_i641.RecurringTaskRepository>(),
+      ),
+    );
+    gh.lazySingleton<_i222.UpdateRecurringTaskUseCase>(
+      () =>
+          _i222.UpdateRecurringTaskUseCase(gh<_i641.RecurringTaskRepository>()),
+    );
+    gh.lazySingleton<_i449.WatchRecurringTasksUseCase>(
+      () =>
+          _i449.WatchRecurringTasksUseCase(gh<_i641.RecurringTaskRepository>()),
     );
     gh.lazySingleton<_i176.CreateAppointmentUseCase>(
       () => _i176.CreateAppointmentUseCase(gh<_i259.AppointmentRepository>()),
