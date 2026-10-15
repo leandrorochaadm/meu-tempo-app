@@ -5,6 +5,7 @@ import 'package:injectable/injectable.dart';
 import '../../../../core/error/failures.dart';
 import '../../../../core/usecase/usecase.dart';
 import '../../../task/domain/entities/task_entity.dart';
+import '../../../task/domain/repositories/recurring_task_repository.dart';
 import '../../../task/domain/repositories/task_repository.dart';
 import '../entities/task_list_entity.dart';
 import '../list_failures.dart';
@@ -24,13 +25,19 @@ class DeleteListParams extends Equatable {
 }
 
 /// Exclui uma lista tratando as tarefas dela: **mover** para outra lista ou
-/// **excluir todas**. A lista fixa "Entrada" não pode ser excluída.
+/// **excluir todas**, e os modelos recorrentes dela seguem o mesmo destino.
+/// A lista fixa "Entrada" não pode ser excluída.
 @lazySingleton
 class DeleteListUseCase implements UseCase<Unit, DeleteListParams> {
-  const DeleteListUseCase(this._listRepository, this._taskRepository);
+  const DeleteListUseCase(
+    this._listRepository,
+    this._taskRepository,
+    this._recurringTaskRepository,
+  );
 
   final TaskListRepository _listRepository;
   final TaskRepository _taskRepository;
+  final RecurringTaskRepository _recurringTaskRepository;
 
   @override
   Future<Either<Failure, Unit>> call(DeleteListParams params) async {
@@ -71,6 +78,18 @@ class DeleteListUseCase implements UseCase<Unit, DeleteListParams> {
       final f = res.getLeft().toNullable();
       if (f != null) return Left(f);
     }
+
+    // Modelos recorrentes seguem as tarefas; sem isso a geração criaria tarefa
+    // numa lista que não existe mais. Roda mesmo sem tarefas: a lista pode ter
+    // só modelos.
+    final templatesResult = params.moveToListId != null
+        ? await _recurringTaskRepository.moveToList(
+            params.listId,
+            params.moveToListId!,
+          )
+        : await _recurringTaskRepository.deleteByList(params.listId);
+    final templatesFailure = templatesResult.getLeft().toNullable();
+    if (templatesFailure != null) return Left(templatesFailure);
 
     return _listRepository.delete(params.listId);
   }
