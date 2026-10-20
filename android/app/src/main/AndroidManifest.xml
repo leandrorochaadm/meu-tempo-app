@@ -67,5 +67,11 @@
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
         </intent>
+        <!-- Lets firebase_auth's signInWithProvider open Google sign-in in a Custom Tab.
+             Without it (Android 11+ package visibility) the flow falls back to the full
+             browser, which never redirects back to the app. -->
+        <intent>
+            <action android:name="android.support.customtabs.action.CustomTabsService"/>
+        </intent>
     </queries>
 </manifest>
