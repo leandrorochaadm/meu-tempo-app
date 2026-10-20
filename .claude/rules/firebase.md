@@ -55,6 +55,36 @@ service cloud.firestore {
 - Ao **logout**, resetar o estado dos Blocs dependentes (fechar/reabrir o `MultiBlocProvider`
   ou disparar evento de reset) — não deixar dado do usuário anterior em memória.
 
+### Login Google no Android (`signInWithProvider`)
+
+- O `android/app/src/main/AndroidManifest.xml` **deve** declarar, dentro de `<queries>`,
+  o serviço de Custom Tabs — não remover:
+  ```xml
+  <intent>
+      <action android:name="android.support.customtabs.action.CustomTabsService"/>
+  </intent>
+  ```
+- **Por quê:** no Android 11+ (visibilidade de pacotes) o `firebase_auth` não enxerga o
+  Custom Tabs do Chrome sem isso e abre o login no Chrome completo, que não redireciona
+  de volta ao app. Sintoma: login funciona no web, mas no Android volta para a tela de
+  login (no logcat, `GenericIdpActivity` destruída e `ChromeTabbedActivity` no lugar de
+  Custom Tab).
+- O **Web client (auto created by Google Service)** no Google Cloud Console
+  (Credenciais → IDs do cliente OAuth 2.0) **deve** ter os dois URIs de redirecionamento —
+  não remover nenhum:
+  - `https://meu-tempo-dev.web.app/__/auth/handler` — web (usa o `authDomain` do
+    `firebase_options.dart`, trocado para `web.app` por causa do bloqueio de cookies de
+    terceiros no redirect).
+  - `https://meu-tempo-dev.firebaseapp.com/__/auth/handler` — Android/iOS: o SDK nativo
+    ignora o `authDomain` do web e usa o domínio padrão `<projectId>.firebaseapp.com`.
+  - Sem o do `firebaseapp.com`, o login nativo falha com `Erro 400: redirect_uri_mismatch`.
+  - Decisão (20/10/2026): manter os dois URIs em vez de unificar via `authDomain` nas
+    opções nativas.
+- Ao diagnosticar falha de login nativo, nesta ordem: SHA-1/SHA-256 da máquina no
+  Firebase (`firebase apps:android:sha:list`); `<queries>` do Custom Tabs; URI do
+  `firebaseapp.com` no Web client; só então remover `android:taskAffinity=""` da
+  `MainActivity`.
+
 ## Acesso ao Firestore
 
 - Injetar `FirebaseFirestore` e `FirebaseAuth` (nunca `.instance` direto no DataSource) —

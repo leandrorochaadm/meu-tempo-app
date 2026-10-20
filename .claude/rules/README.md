@@ -14,7 +14,7 @@ Carregar sob demanda via `@.claude/rules/<arquivo>.md`.
 | `data-layer.md` | Models, DataSources, RepositoryImpl (Firestore) |
 | `presentation-layer.md` | BLoC (event→state), Pages, widgets, switch exaustivo |
 | `bloc.md` | Padrões de BLoC (`flutter_bloc`): Bloc, Event, State, DI |
-| `firebase.md` | Firebase Auth + Cloud Firestore: coleções, isolamento por usuário |
+| `firebase.md` | Firebase Auth + Cloud Firestore: coleções, isolamento por usuário, login no Android |
 | `navigation.md` | `go_router` + `BlocListener` para navegação reativa |
 | `layout.md` | UI mobile-first, chips em vez de dropdown, sem fricção |
 | `design.md` | Identidade visual: tema escuro, paleta rica, tipografia, movimento |
