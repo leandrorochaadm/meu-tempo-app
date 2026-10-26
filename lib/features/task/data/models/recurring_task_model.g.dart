@@ -7,52 +7,32 @@ part of 'recurring_task_model.dart';
 // **************************************************************************
 
 RecurringTaskModel _$RecurringTaskModelFromJson(Map<String, dynamic> json) =>
-    RecurringTaskModel(
+    RecurringTaskModel.raw(
       id: json['id'] as String,
       title: json['title'] as String,
-      listId: json['listId'] as String,
-      estimatedMinutes: (json['estimatedMinutes'] as num).toInt(),
-      importance: $enumDecode(_$ImportanceEnumEnumMap, json['importance']),
-      weekdays:
-          (json['weekdays'] as List<dynamic>?)
-              ?.map((e) => $enumDecode(_$WeekdayEnumEnumMap, e))
-              .toList() ??
-          const [],
-      createdAt: const TimestampConverter().fromJson(
-        json['createdAt'] as Timestamp?,
+      listId: json['list'] as String,
+      estimatedMinutes: (json['estimated_minutes'] as num?)?.toInt() ?? 0,
+      importance: json['importance'] as String?,
+      weekdays: json['weekdays'] == null
+          ? const []
+          : _rawWeekdays(json['weekdays']),
+      createdAt: const InstantConverter().fromJson(
+        json['created_at'] as String?,
       ),
-      lastGeneratedOn: const TimestampConverter().fromJson(
-        json['lastGeneratedOn'] as Timestamp?,
+      lastGeneratedOn: const CalendarDateConverter().fromJson(
+        json['last_generated_on'] as String?,
       ),
     );
 
-Map<String, dynamic> _$RecurringTaskModelToJson(
-  RecurringTaskModel instance,
-) => <String, dynamic>{
-  'title': instance.title,
-  'listId': instance.listId,
-  'estimatedMinutes': instance.estimatedMinutes,
-  'importance': _$ImportanceEnumEnumMap[instance.importance]!,
-  'weekdays': instance.weekdays.map((e) => _$WeekdayEnumEnumMap[e]!).toList(),
-  'createdAt': ?const TimestampConverter().toJson(instance.createdAt),
-  'lastGeneratedOn': ?const TimestampConverter().toJson(
-    instance.lastGeneratedOn,
-  ),
-};
-
-const _$ImportanceEnumEnumMap = {
-  ImportanceEnum.max: 'max',
-  ImportanceEnum.high: 'high',
-  ImportanceEnum.low: 'low',
-  ImportanceEnum.min: 'min',
-};
-
-const _$WeekdayEnumEnumMap = {
-  WeekdayEnum.monday: 'monday',
-  WeekdayEnum.tuesday: 'tuesday',
-  WeekdayEnum.wednesday: 'wednesday',
-  WeekdayEnum.thursday: 'thursday',
-  WeekdayEnum.friday: 'friday',
-  WeekdayEnum.saturday: 'saturday',
-  WeekdayEnum.sunday: 'sunday',
-};
+Map<String, dynamic> _$RecurringTaskModelToJson(RecurringTaskModel instance) =>
+    <String, dynamic>{
+      'title': instance.title,
+      'list': instance.listId,
+      'estimated_minutes': instance.estimatedMinutes,
+      'importance': instance.importance,
+      'weekdays': instance.weekdays,
+      'created_at': const InstantConverter().toJson(instance.createdAt),
+      'last_generated_on': const CalendarDateConverter().toJson(
+        instance.lastGeneratedOn,
+      ),
+    };
