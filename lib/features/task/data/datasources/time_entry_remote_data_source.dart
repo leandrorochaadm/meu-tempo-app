@@ -1,11 +1,13 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:injectable/injectable.dart';
+import 'package:pocketbase/pocketbase.dart';
 
-import '../../../../core/constants/firestore_paths.dart';
+import '../../../../core/constants/pb_schema.dart';
+import '../../../../core/data/pocketbase/pocketbase_session.dart';
+import '../../../../core/data/pocketbase/record_watcher.dart';
 import '../../../../core/error/exceptions.dart';
+import '../../../../core/error/pocketbase_error_mapper.dart';
+import '../../../../core/utils/instant_codec.dart';
 import '../models/time_entry_model.dart';
-import '../time_entry_fields.dart';
 
 abstract class TimeEntryRemoteDataSource {
   Future<void> add(TimeEntryModel entry);
@@ -17,89 +19,76 @@ abstract class TimeEntryRemoteDataSource {
 
 @LazySingleton(as: TimeEntryRemoteDataSource)
 class TimeEntryRemoteDataSourceImpl implements TimeEntryRemoteDataSource {
-  TimeEntryRemoteDataSourceImpl(this._firestore, this._auth);
+  TimeEntryRemoteDataSourceImpl(this._session, this._watcher);
 
-  final FirebaseFirestore _firestore;
-  final FirebaseAuth _auth;
+  final PocketBaseSession _session;
+  final RecordWatcher _watcher;
 
-  String get _uid {
-    final uid = _auth.currentUser?.uid;
-    if (uid == null) throw const UnauthenticatedException();
-    return uid;
+  RecordService get _records =>
+      _session.client.collection(PbCollections.timeEntries);
+
+  Future<List<TimeEntryModel>> _fetch({
+    required String filter,
+    required String sort,
+  }) async {
+    final records = await _records.getFullList(filter: filter, sort: sort);
+    return records.map(TimeEntryModel.fromRecord).toList();
   }
-
-  CollectionReference<Map<String, dynamic>> get _collection =>
-      _firestore.collection(FirestorePaths.timeEntries(_uid));
 
   @override
   Future<void> add(TimeEntryModel entry) async {
+    final userId = _session.userId;
     try {
-      await _collection.add(entry.toJson());
-    } on FirebaseException catch (e) {
-      throw mapFirestoreException(e);
+      await _records.create(body: {...entry.toJson(), PbFields.user: userId});
+    } on ClientException catch (e) {
+      throw mapPocketBaseError(e);
     }
   }
 
   @override
   Stream<List<TimeEntryModel>> watchBetween(DateTime start, DateTime end) {
-    try {
-      return _collection
-          .where(TimeEntryFields.occurredAt,
-              isGreaterThanOrEqualTo: Timestamp.fromDate(start))
-          .where(TimeEntryFields.occurredAt,
-              isLessThan: Timestamp.fromDate(end))
-          .orderBy(TimeEntryFields.occurredAt)
-          .snapshots()
-          .map((snap) => snap.docs
-              .map((d) => TimeEntryModel.fromDoc(d.id, d.data()))
-              .toList());
-    } on FirebaseException catch (e) {
-      throw mapFirestoreException(e);
-    }
+    _session.userId;
+    final filter = _session.client.filter(
+      '${PbFields.occurredAt} >= {:a} && ${PbFields.occurredAt} < {:b}',
+      {'a': InstantCodec.format(start), 'b': InstantCodec.format(end)},
+    );
+    return _watcher.watch(
+      collection: PbCollections.timeEntries,
+      load: () => _fetch(filter: filter, sort: PbFields.occurredAt),
+    );
   }
 
   @override
   Stream<List<TimeEntryModel>> watchByTarget(String targetId) {
-    try {
-      // Sem `orderBy` na query: ordena em memória (mais recentes primeiro) para
-      // não exigir índice composto `targetId` + `occurredAt` (volume baixo).
-      return _collection
-          .where(TimeEntryFields.targetId, isEqualTo: targetId)
-          .snapshots()
-          .map((snap) {
-        final models = snap.docs
-            .map((d) => TimeEntryModel.fromDoc(d.id, d.data()))
-            .toList()
-          ..sort((a, b) {
-            final da = a.occurredAt;
-            final db = b.occurredAt;
-            if (da == null && db == null) return 0;
-            if (da == null) return 1;
-            if (db == null) return -1;
-            return db.compareTo(da);
-          });
-        return models;
-      });
-    } on FirebaseException catch (e) {
-      throw mapFirestoreException(e);
-    }
+    _session.userId;
+    final filter = _session.client.filter('${PbFields.targetId} = {:t}', {
+      't': targetId,
+    });
+    return _watcher.watch(
+      collection: PbCollections.timeEntries,
+      load: () => _fetch(filter: filter, sort: '-${PbFields.occurredAt}'),
+    );
   }
 
   @override
   Future<void> update(TimeEntryModel entry) async {
+    _session.userId;
     try {
-      await _collection.doc(entry.id).set(entry.toJson());
-    } on FirebaseException catch (e) {
-      throw mapFirestoreException(e);
+      await _records.update(entry.id, body: entry.toJson());
+    } on ClientException catch (e) {
+      throw mapPocketBaseError(e);
     }
   }
 
   @override
   Future<void> delete(String id) async {
+    _session.userId;
     try {
-      await _collection.doc(id).delete();
-    } on FirebaseException catch (e) {
-      throw mapFirestoreException(e);
+      await _records.delete(id);
+    } on ClientException catch (e) {
+      final error = mapPocketBaseError(e);
+      if (error is NotFoundException) return;
+      throw error;
     }
   }
 }

@@ -7,34 +7,24 @@ part of 'time_entry_model.dart';
 // **************************************************************************
 
 TimeEntryModel _$TimeEntryModelFromJson(Map<String, dynamic> json) =>
-    TimeEntryModel(
+    TimeEntryModel.raw(
       id: json['id'] as String,
-      targetId: json['targetId'] as String,
-      targetType: $enumDecode(_$TimerTargetTypeEnumEnumMap, json['targetType']),
-      listId: json['listId'] as String,
+      targetId: json['target_id'] as String,
+      targetType: json['target_type'] as String?,
+      listId: json['list_id'] as String,
       minutes: (json['minutes'] as num).toInt(),
-      origin: $enumDecode(_$TimeEntryOriginEnumEnumMap, json['origin']),
-      occurredAt: const TimestampConverter().fromJson(
-        json['occurredAt'] as Timestamp?,
+      origin: json['origin'] as String?,
+      occurredAt: const InstantConverter().fromJson(
+        json['occurred_at'] as String?,
       ),
     );
 
 Map<String, dynamic> _$TimeEntryModelToJson(TimeEntryModel instance) =>
     <String, dynamic>{
-      'targetId': instance.targetId,
-      'targetType': _$TimerTargetTypeEnumEnumMap[instance.targetType]!,
-      'listId': instance.listId,
+      'target_id': instance.targetId,
+      'target_type': instance.targetType,
+      'list_id': instance.listId,
       'minutes': instance.minutes,
-      'origin': _$TimeEntryOriginEnumEnumMap[instance.origin]!,
-      'occurredAt': ?const TimestampConverter().toJson(instance.occurredAt),
+      'origin': instance.origin,
+      'occurred_at': const InstantConverter().toJson(instance.occurredAt),
     };
-
-const _$TimerTargetTypeEnumEnumMap = {
-  TimerTargetTypeEnum.task: 'task',
-  TimerTargetTypeEnum.appointment: 'appointment',
-};
-
-const _$TimeEntryOriginEnumEnumMap = {
-  TimeEntryOriginEnum.timer: 'timer',
-  TimeEntryOriginEnum.manual: 'manual',
-};
