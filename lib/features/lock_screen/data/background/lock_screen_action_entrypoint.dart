@@ -5,6 +5,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 import '../../../../core/bootstrap/app_services_bootstrap.dart';
+import '../../../../core/config/app_config.dart';
+import '../../../../core/data/pocketbase/pocketbase_session.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/logging/app_logger.dart';
 import '../../domain/usecases/process_lock_screen_action_use_case.dart';
@@ -22,7 +24,17 @@ Future<void> runLockScreenActionEntrypoint() async {
       WidgetsFlutterBinding.ensureInitialized();
       DartPluginRegistrant.ensureInitialized();
       try {
-        await initializeAppServices();
+        if (AppConfig.missingKeys.isNotEmpty) {
+          AppLogger.logError('Lock screen background has no app config');
+          await _notify(channel, LockScreenChannelMethodEnum.backgroundFailed);
+          return;
+        }
+        await initializeAppServices(refreshSession: false);
+        if (!getIt<PocketBaseSession>().isSignedIn) {
+          AppLogger.logWarning('Lock screen background has no session');
+          await _notify(channel, LockScreenChannelMethodEnum.backgroundFailed);
+          return;
+        }
         final handler = LockScreenActionChannelHandler(
           getIt<ProcessLockScreenActionUseCase>(),
         );

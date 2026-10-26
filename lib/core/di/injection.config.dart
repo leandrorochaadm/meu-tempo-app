@@ -14,6 +14,8 @@ import 'package:cloud_firestore/cloud_firestore.dart' as _i974;
 import 'package:firebase_auth/firebase_auth.dart' as _i59;
 import 'package:get_it/get_it.dart' as _i174;
 import 'package:injectable/injectable.dart' as _i526;
+import 'package:meu_tempo/core/data/pocketbase/pocketbase_session.dart'
+    as _i864;
 import 'package:meu_tempo/core/di/injection.dart' as _i767;
 import 'package:meu_tempo/features/appointment/data/datasources/appointment_remote_data_source.dart'
     as _i621;
@@ -249,6 +251,7 @@ import 'package:meu_tempo/features/task/presentation/bloc/task_list_bloc.dart'
     as _i35;
 import 'package:meu_tempo/features/task/presentation/bloc/time_entry_bloc.dart'
     as _i821;
+import 'package:pocketbase/pocketbase.dart' as _i169;
 import 'package:shared_preferences/shared_preferences.dart' as _i460;
 
 extension GetItInjectableX on _i174.GetIt {
@@ -259,11 +262,16 @@ extension GetItInjectableX on _i174.GetIt {
   }) async {
     final gh = _i526.GetItHelper(this, environment, environmentFilter);
     final preferencesModule = _$PreferencesModule();
+    final pocketBaseModule = _$PocketBaseModule();
     final firebaseModule = _$FirebaseModule();
     final lockScreenGatewayModule = _$LockScreenGatewayModule();
     final overrunAlertSchedulerModule = _$OverrunAlertSchedulerModule();
     await gh.factoryAsync<_i460.SharedPreferences>(
       () => preferencesModule.prefs,
+      preResolve: true,
+    );
+    await gh.singletonAsync<_i169.PocketBase>(
+      () => pocketBaseModule.pocketBase,
       preResolve: true,
     );
     gh.lazySingleton<_i59.FirebaseAuth>(() => firebaseModule.firebaseAuth);
@@ -310,6 +318,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i298.WatchOverrunAlertsUseCase>(
       () => _i298.WatchOverrunAlertsUseCase(gh<_i191.OverrunAlertScheduler>()),
+    );
+    gh.lazySingleton<_i864.PocketBaseSession>(
+      () => _i864.PocketBaseSession(gh<_i169.PocketBase>()),
     );
     gh.lazySingleton<_i813.TaskListRemoteDataSource>(
       () => _i813.TaskListRemoteDataSourceImpl(
@@ -816,6 +827,8 @@ extension GetItInjectableX on _i174.GetIt {
 }
 
 class _$PreferencesModule extends _i767.PreferencesModule {}
+
+class _$PocketBaseModule extends _i767.PocketBaseModule {}
 
 class _$FirebaseModule extends _i767.FirebaseModule {}
 
