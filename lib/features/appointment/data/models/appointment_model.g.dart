@@ -10,21 +10,21 @@ AppointmentModel _$AppointmentModelFromJson(Map<String, dynamic> json) =>
     AppointmentModel(
       id: json['id'] as String,
       title: json['title'] as String,
-      listId: json['listId'] as String,
-      date: const TimestampConverter().fromJson(json['date'] as Timestamp?),
-      startMinute: (json['startMinute'] as num).toInt(),
-      durationMinutes: (json['durationMinutes'] as num).toInt(),
-      spentMinutes: (json['spentMinutes'] as num?)?.toInt() ?? 0,
-      isDone: json['isDone'] as bool? ?? false,
+      listId: json['list_id'] as String,
+      date: const CalendarDateConverter().fromJson(json['date'] as String?),
+      startMinute: (json['start_minute'] as num).toInt(),
+      durationMinutes: (json['duration_minutes'] as num).toInt(),
+      spentMinutes: (json['spent_minutes'] as num?)?.toInt() ?? 0,
+      isDone: json['is_done'] as bool? ?? false,
     );
 
 Map<String, dynamic> _$AppointmentModelToJson(AppointmentModel instance) =>
     <String, dynamic>{
       'title': instance.title,
-      'listId': instance.listId,
-      'date': ?const TimestampConverter().toJson(instance.date),
-      'startMinute': instance.startMinute,
-      'durationMinutes': instance.durationMinutes,
-      'spentMinutes': instance.spentMinutes,
-      'isDone': instance.isDone,
+      'list_id': instance.listId,
+      'date': const CalendarDateConverter().toJson(instance.date),
+      'start_minute': instance.startMinute,
+      'duration_minutes': instance.durationMinutes,
+      'spent_minutes': instance.spentMinutes,
+      'is_done': instance.isDone,
     };

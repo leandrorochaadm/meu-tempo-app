@@ -334,12 +334,6 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i843.GetTaskEditContextUseCase>(
       () => _i843.GetTaskEditContextUseCase(gh<_i27.BuildTaskTreeUseCase>()),
     );
-    gh.lazySingleton<_i621.AppointmentRemoteDataSource>(
-      () => _i621.AppointmentRemoteDataSourceImpl(
-        gh<_i974.FirebaseFirestore>(),
-        gh<_i59.FirebaseAuth>(),
-      ),
-    );
     gh.lazySingleton<_i52.TimeEntryRemoteDataSource>(
       () => _i52.TimeEntryRemoteDataSourceImpl(
         gh<_i974.FirebaseFirestore>(),
@@ -379,11 +373,6 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i592.TaskRemoteDataSourceImpl(
         gh<_i974.FirebaseFirestore>(),
         gh<_i59.FirebaseAuth>(),
-      ),
-    );
-    gh.lazySingleton<_i259.AppointmentRepository>(
-      () => _i266.AppointmentRepositoryImpl(
-        gh<_i621.AppointmentRemoteDataSource>(),
       ),
     );
     gh.lazySingleton<_i588.TimerRemoteDataSource>(
@@ -448,24 +437,6 @@ extension GetItInjectableX on _i174.GetIt {
       () =>
           _i449.WatchRecurringTasksUseCase(gh<_i641.RecurringTaskRepository>()),
     );
-    gh.lazySingleton<_i176.CreateAppointmentUseCase>(
-      () => _i176.CreateAppointmentUseCase(gh<_i259.AppointmentRepository>()),
-    );
-    gh.lazySingleton<_i502.DeleteAppointmentUseCase>(
-      () => _i502.DeleteAppointmentUseCase(gh<_i259.AppointmentRepository>()),
-    );
-    gh.lazySingleton<_i348.SetAppointmentDoneUseCase>(
-      () => _i348.SetAppointmentDoneUseCase(gh<_i259.AppointmentRepository>()),
-    );
-    gh.lazySingleton<_i897.WatchAllAppointmentsUseCase>(
-      () =>
-          _i897.WatchAllAppointmentsUseCase(gh<_i259.AppointmentRepository>()),
-    );
-    gh.lazySingleton<_i777.WatchAppointmentsForDayUseCase>(
-      () => _i777.WatchAppointmentsForDayUseCase(
-        gh<_i259.AppointmentRepository>(),
-      ),
-    );
     gh.factory<_i708.AuthBloc>(
       () => _i708.AuthBloc(
         gh<_i850.SignInWithEmailUseCase>(),
@@ -491,21 +462,8 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i521.TaskRepository>(),
       ),
     );
-    gh.lazySingleton<_i131.RecordTimerSessionUseCase>(
-      () => _i131.RecordTimerSessionUseCase(
-        gh<_i521.TaskRepository>(),
-        gh<_i259.AppointmentRepository>(),
-        gh<_i706.TimeEntryRepository>(),
-      ),
-    );
     gh.lazySingleton<_i811.RecordWatcher>(
       () => _i811.RecordWatcher(gh<_i208.RealtimeSubscriber>()),
-    );
-    gh.lazySingleton<_i543.RegisterAppointmentTimeUseCase>(
-      () => _i543.RegisterAppointmentTimeUseCase(
-        gh<_i259.AppointmentRepository>(),
-        gh<_i706.TimeEntryRepository>(),
-      ),
     );
     gh.lazySingleton<_i247.GetTaskListFilterUseCase>(
       () => _i247.GetTaskListFilterUseCase(gh<_i74.TaskListFilterRepository>()),
@@ -524,24 +482,6 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i539.RefreshOverrunAlertScheduleUseCase(
         gh<_i86.WatchOverrunAlertPlanUseCase>(),
         gh<_i941.SyncOverrunAlertScheduleUseCase>(),
-      ),
-    );
-    gh.lazySingleton<_i197.PauseTimerUseCase>(
-      () => _i197.PauseTimerUseCase(
-        gh<_i381.TimerRepository>(),
-        gh<_i131.RecordTimerSessionUseCase>(),
-      ),
-    );
-    gh.lazySingleton<_i210.StartTimerUseCase>(
-      () => _i210.StartTimerUseCase(
-        gh<_i381.TimerRepository>(),
-        gh<_i131.RecordTimerSessionUseCase>(),
-      ),
-    );
-    gh.lazySingleton<_i726.StopTimerUseCase>(
-      () => _i726.StopTimerUseCase(
-        gh<_i381.TimerRepository>(),
-        gh<_i131.RecordTimerSessionUseCase>(),
       ),
     );
     gh.lazySingleton<_i813.TaskListRemoteDataSource>(
@@ -601,6 +541,24 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i658.CreateTaskUseCase>(),
       ),
     );
+    gh.lazySingleton<_i621.AppointmentRemoteDataSource>(
+      () => _i621.AppointmentRemoteDataSourceImpl(
+        gh<_i864.PocketBaseSession>(),
+        gh<_i811.RecordWatcher>(),
+      ),
+    );
+    gh.lazySingleton<_i259.AppointmentRepository>(
+      () => _i266.AppointmentRepositoryImpl(
+        gh<_i621.AppointmentRemoteDataSource>(),
+      ),
+    );
+    gh.lazySingleton<_i131.RecordTimerSessionUseCase>(
+      () => _i131.RecordTimerSessionUseCase(
+        gh<_i521.TaskRepository>(),
+        gh<_i259.AppointmentRepository>(),
+        gh<_i706.TimeEntryRepository>(),
+      ),
+    );
     gh.factory<_i821.TimeEntryBloc>(
       () => _i821.TimeEntryBloc(
         gh<_i280.WatchTimeEntriesByTargetUseCase>(),
@@ -609,22 +567,49 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i855.DeleteTimeEntryUseCase>(),
       ),
     );
+    gh.lazySingleton<_i543.RegisterAppointmentTimeUseCase>(
+      () => _i543.RegisterAppointmentTimeUseCase(
+        gh<_i259.AppointmentRepository>(),
+        gh<_i706.TimeEntryRepository>(),
+      ),
+    );
     gh.lazySingleton<_i219.TaskListRepository>(
       () => _i924.TaskListRepositoryImpl(gh<_i813.TaskListRemoteDataSource>()),
     );
-    gh.factory<_i1029.OverrunAlertBloc>(
-      () => _i1029.OverrunAlertBloc(
-        gh<_i86.WatchOverrunAlertPlanUseCase>(),
-        gh<_i941.SyncOverrunAlertScheduleUseCase>(),
-        gh<_i298.WatchOverrunAlertsUseCase>(),
-        gh<_i197.PauseTimerUseCase>(),
+    gh.lazySingleton<_i197.PauseTimerUseCase>(
+      () => _i197.PauseTimerUseCase(
+        gh<_i381.TimerRepository>(),
+        gh<_i131.RecordTimerSessionUseCase>(),
       ),
     );
-    gh.lazySingleton<_i268.CreateTaskAndStartTimerUseCase>(
-      () => _i268.CreateTaskAndStartTimerUseCase(
-        gh<_i658.CreateTaskUseCase>(),
-        gh<_i650.AddSubtaskUseCase>(),
-        gh<_i210.StartTimerUseCase>(),
+    gh.lazySingleton<_i210.StartTimerUseCase>(
+      () => _i210.StartTimerUseCase(
+        gh<_i381.TimerRepository>(),
+        gh<_i131.RecordTimerSessionUseCase>(),
+      ),
+    );
+    gh.lazySingleton<_i726.StopTimerUseCase>(
+      () => _i726.StopTimerUseCase(
+        gh<_i381.TimerRepository>(),
+        gh<_i131.RecordTimerSessionUseCase>(),
+      ),
+    );
+    gh.lazySingleton<_i176.CreateAppointmentUseCase>(
+      () => _i176.CreateAppointmentUseCase(gh<_i259.AppointmentRepository>()),
+    );
+    gh.lazySingleton<_i502.DeleteAppointmentUseCase>(
+      () => _i502.DeleteAppointmentUseCase(gh<_i259.AppointmentRepository>()),
+    );
+    gh.lazySingleton<_i348.SetAppointmentDoneUseCase>(
+      () => _i348.SetAppointmentDoneUseCase(gh<_i259.AppointmentRepository>()),
+    );
+    gh.lazySingleton<_i897.WatchAllAppointmentsUseCase>(
+      () =>
+          _i897.WatchAllAppointmentsUseCase(gh<_i259.AppointmentRepository>()),
+    );
+    gh.lazySingleton<_i777.WatchAppointmentsForDayUseCase>(
+      () => _i777.WatchAppointmentsForDayUseCase(
+        gh<_i259.AppointmentRepository>(),
       ),
     );
     gh.lazySingleton<_i805.FinishTimerUseCase>(
@@ -698,6 +683,21 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i521.TaskRepository>(),
         gh<_i259.AppointmentRepository>(),
         gh<_i219.TaskListRepository>(),
+      ),
+    );
+    gh.factory<_i1029.OverrunAlertBloc>(
+      () => _i1029.OverrunAlertBloc(
+        gh<_i86.WatchOverrunAlertPlanUseCase>(),
+        gh<_i941.SyncOverrunAlertScheduleUseCase>(),
+        gh<_i298.WatchOverrunAlertsUseCase>(),
+        gh<_i197.PauseTimerUseCase>(),
+      ),
+    );
+    gh.lazySingleton<_i268.CreateTaskAndStartTimerUseCase>(
+      () => _i268.CreateTaskAndStartTimerUseCase(
+        gh<_i658.CreateTaskUseCase>(),
+        gh<_i650.AddSubtaskUseCase>(),
+        gh<_i210.StartTimerUseCase>(),
       ),
     );
     gh.lazySingleton<_i159.SeedFirstAccessUseCase>(
