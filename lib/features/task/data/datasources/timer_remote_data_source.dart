@@ -1,9 +1,11 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:injectable/injectable.dart';
+import 'package:pocketbase/pocketbase.dart';
 
-import '../../../../core/constants/firestore_paths.dart';
+import '../../../../core/constants/pb_schema.dart';
+import '../../../../core/data/pocketbase/pocketbase_session.dart';
+import '../../../../core/data/pocketbase/record_watcher.dart';
 import '../../../../core/error/exceptions.dart';
+import '../../../../core/error/pocketbase_error_mapper.dart';
 import '../models/active_timer_model.dart';
 
 abstract class TimerRemoteDataSource {
@@ -12,17 +14,19 @@ abstract class TimerRemoteDataSource {
   Future<void> setActive(ActiveTimerModel timer);
   Future<ActiveTimerModel?> claimActive();
 
-  /// Numa transação: lê o doc do cronômetro ativo e, se [matches] aceitar o
-  /// atual (`null` = sem cronômetro), grava [replacement] e devolve `true`;
-  /// senão não grava nada e devolve `false`.
+  /// Lê o registro e grava só se ele não mudou (apagar pelo `id` lido volta 404
+  /// se mudou): se [matches] aceitar o atual (`null` = sem cronômetro), grava
+  /// [replacement] e devolve `true`; senão não grava nada e devolve `false`.
+  /// [matches] precisa ser puro.
   Future<bool> replaceActiveIf({
     required bool Function(ActiveTimerModel? current) matches,
     required ActiveTimerModel replacement,
   });
 
-  /// Numa transação: lê o doc do cronômetro ativo e, se [matches] aceitar o
-  /// atual (`null` = sem cronômetro), apaga o doc e devolve `true`; senão não
-  /// apaga nada e devolve `false`.
+  /// Lê o registro e grava só se ele não mudou (apagar pelo `id` lido volta 404
+  /// se mudou): se [matches] aceitar o atual (`null` = sem cronômetro), apaga o
+  /// registro e devolve `true`; senão não apaga nada e devolve `false`.
+  /// [matches] precisa ser puro.
   Future<bool> clearActiveIf({
     required bool Function(ActiveTimerModel? current) matches,
   });
@@ -31,70 +35,80 @@ abstract class TimerRemoteDataSource {
 
 @LazySingleton(as: TimerRemoteDataSource)
 class TimerRemoteDataSourceImpl implements TimerRemoteDataSource {
-  TimerRemoteDataSourceImpl(this._firestore, this._auth);
+  TimerRemoteDataSourceImpl(this._session, this._watcher);
 
-  final FirebaseFirestore _firestore;
-  final FirebaseAuth _auth;
+  final PocketBaseSession _session;
+  final RecordWatcher _watcher;
 
-  String get _uid {
-    final uid = _auth.currentUser?.uid;
-    if (uid == null) throw const UnauthenticatedException();
-    return uid;
+  RecordService get _records =>
+      _session.client.collection(PbCollections.activeTimers);
+
+  Future<RecordModel?> _fetchRecord() async {
+    final page = await _records.getList(page: 1, perPage: 1, skipTotal: true);
+    return page.items.isEmpty ? null : page.items.first;
   }
 
-  DocumentReference<Map<String, dynamic>> get _doc => _firestore
-      .collection(FirestorePaths.config(_uid))
-      .doc(FirestorePaths.activeTimerDoc);
-
-  ActiveTimerModel? _parse(DocumentSnapshot<Map<String, dynamic>> snap) {
-    final data = snap.data();
-    if (data == null) return null;
-    return ActiveTimerModel.fromJson(data);
+  Future<ActiveTimerModel?> _load() async {
+    final record = await _fetchRecord();
+    return record == null ? null : ActiveTimerModel.fromRecord(record);
   }
 
   @override
   Stream<ActiveTimerModel?> watchActive() {
-    try {
-      return _doc.snapshots().map(_parse);
-    } on FirebaseException catch (e) {
-      throw mapFirestoreException(e);
-    }
+    _session.userId;
+    return _watcher.watch(collection: PbCollections.activeTimers, load: _load);
   }
 
   @override
   Future<ActiveTimerModel?> getActive() async {
+    _session.userId;
     try {
-      return _parse(await _doc.get());
-    } on FirebaseException catch (e) {
-      throw mapFirestoreException(e);
+      return await _load();
+    } on ClientException catch (e) {
+      throw mapPocketBaseError(e);
     }
   }
 
   @override
   Future<void> setActive(ActiveTimerModel timer) async {
+    final userId = _session.userId;
     try {
-      await _doc.set(timer.toJson());
-    } on FirebaseException catch (e) {
-      throw mapFirestoreException(e);
+      final record = await _fetchRecord();
+      if (record != null) {
+        await _records.update(record.id, body: timer.toJson());
+        return;
+      }
+      try {
+        await _records.create(body: {...timer.toJson(), PbFields.user: userId});
+      } on ClientException catch (e) {
+        if (mapPocketBaseError(e) is! ConflictException) rethrow;
+        // Another device created it between the read and the write: read
+        // once more and overwrite (last writer wins).
+        final created = await _fetchRecord();
+        if (created == null) rethrow;
+        await _records.update(created.id, body: timer.toJson());
+      }
+    } on ClientException catch (e) {
+      throw mapPocketBaseError(e);
     }
   }
 
   @override
   Future<ActiveTimerModel?> claimActive() async {
+    _session.userId;
     try {
-      // Transação: lê e apaga o doc do cronômetro ativo atomicamente. Se dois
-      // "Parar" concorrem, o Firestore serializa — um commit vence e apaga; o
-      // outro reexecuta, encontra o doc já ausente e retorna `null`. Assim, só
-      // um chamador recebe o timer e registra o tempo (idempotência).
-      return await _firestore.runTransaction<ActiveTimerModel?>((txn) async {
-        final snap = await txn.get(_doc);
-        final model = _parse(snap);
-        if (model == null) return null;
-        txn.delete(_doc);
-        return model;
-      });
-    } on FirebaseException catch (e) {
-      throw mapFirestoreException(e);
+      // Reads and deletes by the id read. If two "Stop" race, a concurrent
+      // delete of the same record answers 404 to one of them, so only one
+      // caller receives the timer and records the time (idempotency).
+      final record = await _fetchRecord();
+      if (record == null) return null;
+      final model = ActiveTimerModel.fromRecord(record);
+      await _records.delete(record.id);
+      return model;
+    } on ClientException catch (e) {
+      final error = mapPocketBaseError(e);
+      if (error is NotFoundException) return null;
+      throw error;
     }
   }
 
@@ -103,18 +117,32 @@ class TimerRemoteDataSourceImpl implements TimerRemoteDataSource {
     required bool Function(ActiveTimerModel? current) matches,
     required ActiveTimerModel replacement,
   }) async {
+    final userId = _session.userId;
     try {
-      // Mesma garantia do claimActive: se dois toques concorrem, o Firestore
-      // serializa — o segundo reexecuta, o predicado recusa o doc já trocado e
-      // nada é gravado de novo. O predicado precisa ser puro.
-      return await _firestore.runTransaction<bool>((txn) async {
-        final snap = await txn.get(_doc);
-        if (!matches(_parse(snap))) return false;
-        txn.set(_doc, replacement.toJson());
-        return true;
-      });
-    } on FirebaseException catch (e) {
-      throw mapFirestoreException(e);
+      // Delete (by the id read) then create, in one batch: if the record was
+      // deleted or swapped after the read, the delete answers 404 and the
+      // whole batch fails. The delete goes first because of UNIQUE (user).
+      final record = await _fetchRecord();
+      if (!matches(
+        record == null ? null : ActiveTimerModel.fromRecord(record),
+      )) {
+        return false;
+      }
+      final batch = _session.client.createBatch();
+      if (record != null) {
+        batch.collection(PbCollections.activeTimers).delete(record.id);
+      }
+      batch
+          .collection(PbCollections.activeTimers)
+          .create(body: {...replacement.toJson(), PbFields.user: userId});
+      await batch.send();
+      return true;
+    } on ClientException catch (e) {
+      final error = mapPocketBaseError(e);
+      if (error is NotFoundException || error is ConflictException) {
+        return false;
+      }
+      throw error;
     }
   }
 
@@ -122,27 +150,35 @@ class TimerRemoteDataSourceImpl implements TimerRemoteDataSource {
   Future<bool> clearActiveIf({
     required bool Function(ActiveTimerModel? current) matches,
   }) async {
+    _session.userId;
     try {
-      // Mesma garantia do claimActive: se dois "parar" concorrem, o Firestore
-      // serializa — o segundo reexecuta e o predicado recusa o doc já apagado
-      // (ou trocado). O predicado precisa ser puro.
-      return await _firestore.runTransaction<bool>((txn) async {
-        final snap = await txn.get(_doc);
-        if (!matches(_parse(snap))) return false;
-        txn.delete(_doc);
-        return true;
-      });
-    } on FirebaseException catch (e) {
-      throw mapFirestoreException(e);
+      final record = await _fetchRecord();
+      if (!matches(
+        record == null ? null : ActiveTimerModel.fromRecord(record),
+      )) {
+        return false;
+      }
+      if (record == null) return true;
+      await _records.delete(record.id);
+      return true;
+    } on ClientException catch (e) {
+      final error = mapPocketBaseError(e);
+      if (error is NotFoundException) return false;
+      throw error;
     }
   }
 
   @override
   Future<void> clear() async {
+    _session.userId;
     try {
-      await _doc.delete();
-    } on FirebaseException catch (e) {
-      throw mapFirestoreException(e);
+      final record = await _fetchRecord();
+      if (record == null) return;
+      await _records.delete(record.id);
+    } on ClientException catch (e) {
+      final error = mapPocketBaseError(e);
+      if (error is NotFoundException) return;
+      throw error;
     }
   }
 }
