@@ -32,10 +32,11 @@ class TimeEntryRepositoryImpl implements TimeEntryRepository {
     DateTime end,
   ) async* {
     try {
-      yield* _dataSource.watchBetween(start, end).map<
-          Either<Failure, List<TimeEntryEntity>>>(
-        (models) => Right(models.map((m) => m.toEntity()).toList()),
-      );
+      yield* _dataSource
+          .watchBetween(start, end)
+          .map<Either<Failure, List<TimeEntryEntity>>>(
+            (models) => Right(models.map((m) => m.toEntity()).toList()),
+          );
     } on AppException catch (e, s) {
       AppLogger.logError('watchBetween falhou', error: e, stackTrace: s);
       yield Left(e.toFailure());
@@ -50,10 +51,11 @@ class TimeEntryRepositoryImpl implements TimeEntryRepository {
     String targetId,
   ) async* {
     try {
-      yield* _dataSource.watchByTarget(targetId).map<
-          Either<Failure, List<TimeEntryEntity>>>(
-        (models) => Right(models.map((m) => m.toEntity()).toList()),
-      );
+      yield* _dataSource
+          .watchByTarget(targetId)
+          .map<Either<Failure, List<TimeEntryEntity>>>(
+            (models) => Right(models.map((m) => m.toEntity()).toList()),
+          );
     } on AppException catch (e, s) {
       AppLogger.logError('watchByTarget falhou', error: e, stackTrace: s);
       yield Left(e.toFailure());

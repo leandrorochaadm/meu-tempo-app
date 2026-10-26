@@ -19,8 +19,8 @@ class TimerRepositoryImpl implements TimerRepository {
   Stream<Either<Failure, ActiveTimerEntity?>> watchActive() async* {
     try {
       yield* _dataSource.watchActive().map<Either<Failure, ActiveTimerEntity?>>(
-            (model) => Right(model?.toEntity()),
-          );
+        (model) => Right(model?.toEntity()),
+      );
     } on AppException catch (e, s) {
       AppLogger.logError('watchActive falhou', error: e, stackTrace: s);
       yield Left(e.toFailure());
