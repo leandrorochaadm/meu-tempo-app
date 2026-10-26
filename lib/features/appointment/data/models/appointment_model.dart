@@ -1,12 +1,13 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:json_annotation/json_annotation.dart';
+import 'package:pocketbase/pocketbase.dart';
 
-import '../../../../core/utils/timestamp_converter.dart';
+import '../../../../core/constants/pb_schema.dart';
+import '../../../../core/utils/calendar_date_codec.dart';
 import '../../domain/entities/appointment_entity.dart';
 
 part 'appointment_model.g.dart';
 
-@JsonSerializable(includeIfNull: false)
+@JsonSerializable(includeIfNull: true, fieldRename: FieldRename.snake)
 class AppointmentModel {
   const AppointmentModel({
     required this.id,
@@ -23,17 +24,17 @@ class AppointmentModel {
   final String id;
   final String title;
   final String listId;
-  @TimestampConverter()
+  @CalendarDateConverter()
   final DateTime? date;
   final int startMinute;
   final int durationMinutes;
   final int spentMinutes;
 
-  /// Doc antigo sem o campo é lido como não concluído (default do construtor).
+  /// Registro sem o campo é lido como não concluído (default do construtor).
   final bool isDone;
 
-  factory AppointmentModel.fromDoc(String id, Map<String, dynamic> data) =>
-      AppointmentModel.fromJson({...data, 'id': id});
+  factory AppointmentModel.fromRecord(RecordModel record) =>
+      AppointmentModel.fromJson({...record.data, PbFields.id: record.id});
 
   factory AppointmentModel.fromJson(Map<String, dynamic> json) =>
       _$AppointmentModelFromJson(json);
