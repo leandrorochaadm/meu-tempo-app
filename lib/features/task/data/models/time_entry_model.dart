@@ -1,16 +1,34 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:json_annotation/json_annotation.dart';
+import 'package:pocketbase/pocketbase.dart';
 
-import '../../../../core/utils/timestamp_converter.dart';
+import '../../../../core/constants/pb_schema.dart';
+import '../../../../core/utils/instant_codec.dart';
 import '../../domain/entities/time_entry_entity.dart';
 import '../../domain/entities/time_entry_origin_enum.dart';
 import '../../domain/entities/timer_target_type_enum.dart';
 
 part 'time_entry_model.g.dart';
 
-@JsonSerializable(includeIfNull: false)
+@JsonSerializable(
+  includeIfNull: true,
+  fieldRename: FieldRename.snake,
+  constructor: 'raw',
+)
 class TimeEntryModel {
-  const TimeEntryModel({
+  /// Cria o model a partir dos enums do domínio, gravando o texto externo.
+  TimeEntryModel({
+    required this.id,
+    required this.targetId,
+    required TimerTargetTypeEnum targetType,
+    required this.listId,
+    required this.minutes,
+    required TimeEntryOriginEnum origin,
+    required this.occurredAt,
+  }) : targetType = targetType.apiValue,
+       origin = origin.apiValue;
+
+  /// Leitura do servidor: o texto dos enums fica cru até o [toEntity].
+  const TimeEntryModel.raw({
     required this.id,
     required this.targetId,
     required this.targetType,
@@ -23,38 +41,48 @@ class TimeEntryModel {
   @JsonKey(includeToJson: false)
   final String id;
   final String targetId;
-  final TimerTargetTypeEnum targetType;
+  final String? targetType;
   final String listId;
   final int minutes;
-  final TimeEntryOriginEnum origin;
-  @TimestampConverter()
+  final String? origin;
+  @InstantConverter()
   final DateTime? occurredAt;
 
-  factory TimeEntryModel.fromDoc(String id, Map<String, dynamic> data) =>
-      TimeEntryModel.fromJson({...data, 'id': id});
+  factory TimeEntryModel.fromRecord(RecordModel record) =>
+      TimeEntryModel.fromJson({...record.data, PbFields.id: record.id});
 
   factory TimeEntryModel.fromJson(Map<String, dynamic> json) =>
       _$TimeEntryModelFromJson(json);
 
   Map<String, dynamic> toJson() => _$TimeEntryModelToJson(this);
 
-  TimeEntryEntity toEntity() => TimeEntryEntity(
-        id: id,
-        targetId: targetId,
-        targetType: targetType,
-        listId: listId,
-        minutes: minutes,
-        origin: origin,
-        occurredAt: occurredAt ?? DateTime.fromMillisecondsSinceEpoch(0),
-      );
+  TimeEntryEntity toEntity() {
+    final type = TimerTargetTypeEnum.fromApi(targetType);
+    if (type == null) {
+      throw FormatException('Invalid target_type', targetType);
+    }
+    final originValue = TimeEntryOriginEnum.fromApi(origin);
+    if (originValue == null) {
+      throw FormatException('Invalid origin', origin);
+    }
+    return TimeEntryEntity(
+      id: id,
+      targetId: targetId,
+      targetType: type,
+      listId: listId,
+      minutes: minutes,
+      origin: originValue,
+      occurredAt: occurredAt ?? DateTime.fromMillisecondsSinceEpoch(0),
+    );
+  }
 
   factory TimeEntryModel.fromEntity(TimeEntryEntity e) => TimeEntryModel(
-        id: e.id,
-        targetId: e.targetId,
-        targetType: e.targetType,
-        listId: e.listId,
-        minutes: e.minutes,
-        origin: e.origin,
-        occurredAt: e.occurredAt,
-      );
+    id: e.id,
+    targetId: e.targetId,
+    targetType: e.targetType,
+    listId: e.listId,
+    minutes: e.minutes,
+    origin: e.origin,
+    occurredAt: e.occurredAt,
+  );
 }

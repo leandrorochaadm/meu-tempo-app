@@ -334,12 +334,6 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i843.GetTaskEditContextUseCase>(
       () => _i843.GetTaskEditContextUseCase(gh<_i27.BuildTaskTreeUseCase>()),
     );
-    gh.lazySingleton<_i52.TimeEntryRemoteDataSource>(
-      () => _i52.TimeEntryRemoteDataSourceImpl(
-        gh<_i974.FirebaseFirestore>(),
-        gh<_i59.FirebaseAuth>(),
-      ),
-    );
     gh.lazySingleton<_i820.TaskListFilterLocalDataSource>(
       () => _i820.TaskListFilterLocalDataSourceImpl(
         gh<_i460.SharedPreferences>(),
@@ -444,23 +438,8 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i1046.WatchAuthStateUseCase>(),
       ),
     );
-    gh.lazySingleton<_i706.TimeEntryRepository>(
-      () => _i877.TimeEntryRepositoryImpl(gh<_i52.TimeEntryRemoteDataSource>()),
-    );
     gh.lazySingleton<_i521.TaskRepository>(
       () => _i1011.TaskRepositoryImpl(gh<_i592.TaskRemoteDataSource>()),
-    );
-    gh.lazySingleton<_i855.DeleteTimeEntryUseCase>(
-      () => _i855.DeleteTimeEntryUseCase(
-        gh<_i706.TimeEntryRepository>(),
-        gh<_i521.TaskRepository>(),
-      ),
-    );
-    gh.lazySingleton<_i115.UpdateTimeEntryUseCase>(
-      () => _i115.UpdateTimeEntryUseCase(
-        gh<_i706.TimeEntryRepository>(),
-        gh<_i521.TaskRepository>(),
-      ),
     );
     gh.lazySingleton<_i811.RecordWatcher>(
       () => _i811.RecordWatcher(gh<_i208.RealtimeSubscriber>()),
@@ -489,20 +468,6 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i864.PocketBaseSession>(),
         gh<_i811.RecordWatcher>(),
       ),
-    );
-    gh.lazySingleton<_i1025.RegisterManualTimeUseCase>(
-      () => _i1025.RegisterManualTimeUseCase(
-        gh<_i521.TaskRepository>(),
-        gh<_i706.TimeEntryRepository>(),
-      ),
-    );
-    gh.lazySingleton<_i280.WatchTimeEntriesByTargetUseCase>(
-      () => _i280.WatchTimeEntriesByTargetUseCase(
-        gh<_i706.TimeEntryRepository>(),
-      ),
-    );
-    gh.lazySingleton<_i892.WatchTimeEntriesUseCase>(
-      () => _i892.WatchTimeEntriesUseCase(gh<_i706.TimeEntryRepository>()),
     );
     gh.lazySingleton<_i650.AddSubtaskUseCase>(
       () => _i650.AddSubtaskUseCase(gh<_i521.TaskRepository>()),
@@ -534,6 +499,12 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i811.RecordWatcher>(),
       ),
     );
+    gh.lazySingleton<_i52.TimeEntryRemoteDataSource>(
+      () => _i52.TimeEntryRemoteDataSourceImpl(
+        gh<_i864.PocketBaseSession>(),
+        gh<_i811.RecordWatcher>(),
+      ),
+    );
     gh.lazySingleton<_i50.AddRecurringTaskTodayUseCase>(
       () => _i50.AddRecurringTaskTodayUseCase(
         gh<_i521.TaskRepository>(),
@@ -552,47 +523,8 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i621.AppointmentRemoteDataSource>(),
       ),
     );
-    gh.lazySingleton<_i131.RecordTimerSessionUseCase>(
-      () => _i131.RecordTimerSessionUseCase(
-        gh<_i521.TaskRepository>(),
-        gh<_i259.AppointmentRepository>(),
-        gh<_i706.TimeEntryRepository>(),
-      ),
-    );
-    gh.factory<_i821.TimeEntryBloc>(
-      () => _i821.TimeEntryBloc(
-        gh<_i280.WatchTimeEntriesByTargetUseCase>(),
-        gh<_i1025.RegisterManualTimeUseCase>(),
-        gh<_i115.UpdateTimeEntryUseCase>(),
-        gh<_i855.DeleteTimeEntryUseCase>(),
-      ),
-    );
-    gh.lazySingleton<_i543.RegisterAppointmentTimeUseCase>(
-      () => _i543.RegisterAppointmentTimeUseCase(
-        gh<_i259.AppointmentRepository>(),
-        gh<_i706.TimeEntryRepository>(),
-      ),
-    );
     gh.lazySingleton<_i219.TaskListRepository>(
       () => _i924.TaskListRepositoryImpl(gh<_i813.TaskListRemoteDataSource>()),
-    );
-    gh.lazySingleton<_i197.PauseTimerUseCase>(
-      () => _i197.PauseTimerUseCase(
-        gh<_i381.TimerRepository>(),
-        gh<_i131.RecordTimerSessionUseCase>(),
-      ),
-    );
-    gh.lazySingleton<_i210.StartTimerUseCase>(
-      () => _i210.StartTimerUseCase(
-        gh<_i381.TimerRepository>(),
-        gh<_i131.RecordTimerSessionUseCase>(),
-      ),
-    );
-    gh.lazySingleton<_i726.StopTimerUseCase>(
-      () => _i726.StopTimerUseCase(
-        gh<_i381.TimerRepository>(),
-        gh<_i131.RecordTimerSessionUseCase>(),
-      ),
     );
     gh.lazySingleton<_i176.CreateAppointmentUseCase>(
       () => _i176.CreateAppointmentUseCase(gh<_i259.AppointmentRepository>()),
@@ -612,14 +544,6 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i259.AppointmentRepository>(),
       ),
     );
-    gh.lazySingleton<_i805.FinishTimerUseCase>(
-      () => _i805.FinishTimerUseCase(
-        gh<_i381.TimerRepository>(),
-        gh<_i131.RecordTimerSessionUseCase>(),
-        gh<_i623.CompleteTaskUseCase>(),
-        gh<_i348.SetAppointmentDoneUseCase>(),
-      ),
-    );
     gh.lazySingleton<_i337.GetTaskEditTargetUseCase>(
       () => _i337.GetTaskEditTargetUseCase(
         gh<_i521.TaskRepository>(),
@@ -630,21 +554,29 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i49.EditTaskByIdBloc>(
       () => _i49.EditTaskByIdBloc(gh<_i337.GetTaskEditTargetUseCase>()),
     );
-    gh.lazySingleton<_i98.HandleLockScreenActionUseCase>(
-      () => _i98.HandleLockScreenActionUseCase(
-        gh<_i197.PauseTimerUseCase>(),
-        gh<_i73.ResumeTimerUseCase>(),
-        gh<_i805.FinishTimerUseCase>(),
-      ),
-    );
     gh.lazySingleton<_i330.ConfigRepository>(
       () => _i62.ConfigRepositoryImpl(gh<_i584.ConfigRemoteDataSource>()),
+    );
+    gh.lazySingleton<_i706.TimeEntryRepository>(
+      () => _i877.TimeEntryRepositoryImpl(gh<_i52.TimeEntryRemoteDataSource>()),
     );
     gh.lazySingleton<_i779.MaterializeRecurringTasksUseCase>(
       () => _i779.MaterializeRecurringTasksUseCase(
         gh<_i641.RecurringTaskRepository>(),
         gh<_i521.TaskRepository>(),
         gh<_i50.AddRecurringTaskTodayUseCase>(),
+      ),
+    );
+    gh.lazySingleton<_i855.DeleteTimeEntryUseCase>(
+      () => _i855.DeleteTimeEntryUseCase(
+        gh<_i706.TimeEntryRepository>(),
+        gh<_i521.TaskRepository>(),
+      ),
+    );
+    gh.lazySingleton<_i115.UpdateTimeEntryUseCase>(
+      () => _i115.UpdateTimeEntryUseCase(
+        gh<_i706.TimeEntryRepository>(),
+        gh<_i521.TaskRepository>(),
       ),
     );
     gh.lazySingleton<_i666.DeleteListUseCase>(
@@ -666,6 +598,13 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i689.WatchListsUseCase>(
       () => _i689.WatchListsUseCase(gh<_i219.TaskListRepository>()),
     );
+    gh.lazySingleton<_i131.RecordTimerSessionUseCase>(
+      () => _i131.RecordTimerSessionUseCase(
+        gh<_i521.TaskRepository>(),
+        gh<_i259.AppointmentRepository>(),
+        gh<_i706.TimeEntryRepository>(),
+      ),
+    );
     gh.factory<_i1004.RecurringTaskBloc>(
       () => _i1004.RecurringTaskBloc(
         gh<_i449.WatchRecurringTasksUseCase>(),
@@ -685,19 +624,10 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i219.TaskListRepository>(),
       ),
     );
-    gh.factory<_i1029.OverrunAlertBloc>(
-      () => _i1029.OverrunAlertBloc(
-        gh<_i86.WatchOverrunAlertPlanUseCase>(),
-        gh<_i941.SyncOverrunAlertScheduleUseCase>(),
-        gh<_i298.WatchOverrunAlertsUseCase>(),
-        gh<_i197.PauseTimerUseCase>(),
-      ),
-    );
-    gh.lazySingleton<_i268.CreateTaskAndStartTimerUseCase>(
-      () => _i268.CreateTaskAndStartTimerUseCase(
-        gh<_i658.CreateTaskUseCase>(),
-        gh<_i650.AddSubtaskUseCase>(),
-        gh<_i210.StartTimerUseCase>(),
+    gh.lazySingleton<_i543.RegisterAppointmentTimeUseCase>(
+      () => _i543.RegisterAppointmentTimeUseCase(
+        gh<_i259.AppointmentRepository>(),
+        gh<_i706.TimeEntryRepository>(),
       ),
     );
     gh.lazySingleton<_i159.SeedFirstAccessUseCase>(
@@ -720,38 +650,57 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i559.WatchConfigUseCase>(
       () => _i559.WatchConfigUseCase(gh<_i330.ConfigRepository>()),
     );
-    gh.factory<_i35.TaskListBloc>(
-      () => _i35.TaskListBloc(
-        gh<_i1035.WatchTasksUseCase>(),
-        gh<_i658.CreateTaskUseCase>(),
-        gh<_i655.EnsureInboxExistsUseCase>(),
-        gh<_i650.AddSubtaskUseCase>(),
-        gh<_i27.BuildTaskTreeUseCase>(),
-        gh<_i1067.GetPrioritizedLeavesUseCase>(),
-        gh<_i397.WatchActiveTimerUseCase>(),
-        gh<_i210.StartTimerUseCase>(),
-        gh<_i726.StopTimerUseCase>(),
-        gh<_i1025.RegisterManualTimeUseCase>(),
-        gh<_i623.CompleteTaskUseCase>(),
-        gh<_i162.DeleteTaskUseCase>(),
-        gh<_i43.EditTaskUseCase>(),
-        gh<_i213.MoveTaskUseCase>(),
-        gh<_i689.WatchListsUseCase>(),
-        gh<_i159.SeedFirstAccessUseCase>(),
-        gh<_i942.RestoreTasksUseCase>(),
-        gh<_i1069.FilterTasksByListUseCase>(),
-        gh<_i247.GetTaskListFilterUseCase>(),
-        gh<_i32.SaveTaskListFilterUseCase>(),
-        gh<_i843.GetTaskEditContextUseCase>(),
-        gh<_i268.CreateTaskAndStartTimerUseCase>(),
-        gh<_i499.GetDefaultCreationListUseCase>(),
-        gh<_i779.MaterializeRecurringTasksUseCase>(),
-      ),
-    );
     gh.lazySingleton<_i28.WatchLockScreenTimerStartsUseCase>(
       () => _i28.WatchLockScreenTimerStartsUseCase(
         gh<_i188.WatchLockScreenTimerUseCase>(),
       ),
+    );
+    gh.lazySingleton<_i197.PauseTimerUseCase>(
+      () => _i197.PauseTimerUseCase(
+        gh<_i381.TimerRepository>(),
+        gh<_i131.RecordTimerSessionUseCase>(),
+      ),
+    );
+    gh.lazySingleton<_i210.StartTimerUseCase>(
+      () => _i210.StartTimerUseCase(
+        gh<_i381.TimerRepository>(),
+        gh<_i131.RecordTimerSessionUseCase>(),
+      ),
+    );
+    gh.lazySingleton<_i726.StopTimerUseCase>(
+      () => _i726.StopTimerUseCase(
+        gh<_i381.TimerRepository>(),
+        gh<_i131.RecordTimerSessionUseCase>(),
+      ),
+    );
+    gh.lazySingleton<_i805.FinishTimerUseCase>(
+      () => _i805.FinishTimerUseCase(
+        gh<_i381.TimerRepository>(),
+        gh<_i131.RecordTimerSessionUseCase>(),
+        gh<_i623.CompleteTaskUseCase>(),
+        gh<_i348.SetAppointmentDoneUseCase>(),
+      ),
+    );
+    gh.lazySingleton<_i1025.RegisterManualTimeUseCase>(
+      () => _i1025.RegisterManualTimeUseCase(
+        gh<_i521.TaskRepository>(),
+        gh<_i706.TimeEntryRepository>(),
+      ),
+    );
+    gh.lazySingleton<_i98.HandleLockScreenActionUseCase>(
+      () => _i98.HandleLockScreenActionUseCase(
+        gh<_i197.PauseTimerUseCase>(),
+        gh<_i73.ResumeTimerUseCase>(),
+        gh<_i805.FinishTimerUseCase>(),
+      ),
+    );
+    gh.lazySingleton<_i280.WatchTimeEntriesByTargetUseCase>(
+      () => _i280.WatchTimeEntriesByTargetUseCase(
+        gh<_i706.TimeEntryRepository>(),
+      ),
+    );
+    gh.lazySingleton<_i892.WatchTimeEntriesUseCase>(
+      () => _i892.WatchTimeEntriesUseCase(gh<_i706.TimeEntryRepository>()),
     );
     gh.lazySingleton<_i382.WatchLockScreenPermissionWarningsUseCase>(
       () => _i382.WatchLockScreenPermissionWarningsUseCase(
@@ -795,6 +744,14 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i67.GetListReportUseCase>(),
       ),
     );
+    gh.factory<_i821.TimeEntryBloc>(
+      () => _i821.TimeEntryBloc(
+        gh<_i280.WatchTimeEntriesByTargetUseCase>(),
+        gh<_i1025.RegisterManualTimeUseCase>(),
+        gh<_i115.UpdateTimeEntryUseCase>(),
+        gh<_i855.DeleteTimeEntryUseCase>(),
+      ),
+    );
     gh.lazySingleton<_i1017.ProcessLockScreenActionUseCase>(
       () => _i1017.ProcessLockScreenActionUseCase(
         gh<_i224.AuthRepository>(),
@@ -816,6 +773,14 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i77.OpenNotificationSettingsUseCase>(),
       ),
     );
+    gh.factory<_i1029.OverrunAlertBloc>(
+      () => _i1029.OverrunAlertBloc(
+        gh<_i86.WatchOverrunAlertPlanUseCase>(),
+        gh<_i941.SyncOverrunAlertScheduleUseCase>(),
+        gh<_i298.WatchOverrunAlertsUseCase>(),
+        gh<_i197.PauseTimerUseCase>(),
+      ),
+    );
     gh.factory<_i990.AgendaBloc>(
       () => _i990.AgendaBloc(
         gh<_i777.WatchAppointmentsForDayUseCase>(),
@@ -829,6 +794,41 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i726.StopTimerUseCase>(),
         gh<_i397.WatchActiveTimerUseCase>(),
         gh<_i348.SetAppointmentDoneUseCase>(),
+      ),
+    );
+    gh.lazySingleton<_i268.CreateTaskAndStartTimerUseCase>(
+      () => _i268.CreateTaskAndStartTimerUseCase(
+        gh<_i658.CreateTaskUseCase>(),
+        gh<_i650.AddSubtaskUseCase>(),
+        gh<_i210.StartTimerUseCase>(),
+      ),
+    );
+    gh.factory<_i35.TaskListBloc>(
+      () => _i35.TaskListBloc(
+        gh<_i1035.WatchTasksUseCase>(),
+        gh<_i658.CreateTaskUseCase>(),
+        gh<_i655.EnsureInboxExistsUseCase>(),
+        gh<_i650.AddSubtaskUseCase>(),
+        gh<_i27.BuildTaskTreeUseCase>(),
+        gh<_i1067.GetPrioritizedLeavesUseCase>(),
+        gh<_i397.WatchActiveTimerUseCase>(),
+        gh<_i210.StartTimerUseCase>(),
+        gh<_i726.StopTimerUseCase>(),
+        gh<_i1025.RegisterManualTimeUseCase>(),
+        gh<_i623.CompleteTaskUseCase>(),
+        gh<_i162.DeleteTaskUseCase>(),
+        gh<_i43.EditTaskUseCase>(),
+        gh<_i213.MoveTaskUseCase>(),
+        gh<_i689.WatchListsUseCase>(),
+        gh<_i159.SeedFirstAccessUseCase>(),
+        gh<_i942.RestoreTasksUseCase>(),
+        gh<_i1069.FilterTasksByListUseCase>(),
+        gh<_i247.GetTaskListFilterUseCase>(),
+        gh<_i32.SaveTaskListFilterUseCase>(),
+        gh<_i843.GetTaskEditContextUseCase>(),
+        gh<_i268.CreateTaskAndStartTimerUseCase>(),
+        gh<_i499.GetDefaultCreationListUseCase>(),
+        gh<_i779.MaterializeRecurringTasksUseCase>(),
       ),
     );
     return this;
