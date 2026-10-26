@@ -23,4 +23,29 @@ void main() {
     expect(WeekdayEnum.monday.isoValue, DateTime.monday);
     expect(WeekdayEnum.sunday.isoValue, DateTime.sunday);
   });
+
+  test('apiValue of the 7 days', () {
+    expect(WeekdayEnum.values.map((d) => d.apiValue), [
+      'monday',
+      'tuesday',
+      'wednesday',
+      'thursday',
+      'friday',
+      'saturday',
+      'sunday',
+    ]);
+  });
+
+  test('fromApi reads each spelling back', () {
+    for (final day in WeekdayEnum.values) {
+      expect(WeekdayEnum.fromApi(day.apiValue), day);
+    }
+  });
+
+  test('fromApi unknown or missing returns null', () {
+    expect(WeekdayEnum.fromApi(null), isNull);
+    expect(WeekdayEnum.fromApi(''), isNull);
+    expect(WeekdayEnum.fromApi('Monday'), isNull);
+    expect(WeekdayEnum.fromApi('mon'), isNull);
+  });
 }

@@ -18,4 +18,8 @@ void main() {
     expect(TimerTargetTypeEnum.fromApi(''), isNull);
     expect(TimerTargetTypeEnum.fromApi(null), isNull);
   });
+
+  test('fromApi does not trim', () {
+    expect(TimerTargetTypeEnum.fromApi(' task'), isNull);
+  });
 }
