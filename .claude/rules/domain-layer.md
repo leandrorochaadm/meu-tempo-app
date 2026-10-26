@@ -7,7 +7,7 @@ paths:
 # Domain Layer Rules
 
 Camada de **Dart puro**. Só pode importar `equatable` e `fpdart` (tipos de apoio).
-NUNCA importa Firebase, json, nem nada de `data/`/`presentation/`.
+NUNCA importa PocketBase, json, nem nada de `data/`/`presentation/`.
 
 ## Entities
 
@@ -70,7 +70,7 @@ Pergunta-chave: _"Precisa de algo FORA do objeto para executar essa regra?"_ →
 
 - **MUST** usar apenas tipos Entity (nunca Model, nunca Map).
 - Retornar `Either<Failure, T>` onde T é Entity, `List<Entity>`, `void`, `bool`, `String` ou `int`.
-- Contratos puros de negócio — sem detalhe de implementação (Firestore não aparece aqui).
+- Contratos puros de negócio — sem detalhe de implementação (PocketBase não aparece aqui).
 
 ## Failures
 

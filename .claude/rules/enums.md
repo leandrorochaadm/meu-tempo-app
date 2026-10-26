@@ -32,27 +32,39 @@ String label(TaskStatusEnum s) => switch (s) {
 };
 ```
 
-### Enum ↔ Firestore (na camada data)
-O enum é do **domínio**; a persistência é responsabilidade do **Model**. Serializar o
-enum por **nome** (`.name`) — nunca por índice (`.index`), que quebra ao reordenar:
+### Enum ↔ PocketBase (na camada data)
+O enum é do **domínio**; a persistência é responsabilidade do **Model**. O enum carrega o
+texto externo em `apiValue` e a conversão inversa é o `fromApi` — nunca `.name`, `.index`
+nem `@JsonValue`:
 
 ```dart
-@JsonEnum()                       // json_serializable cuida do enum
-enum TaskStatusEnum { pending, done }
+@JsonEnum(valueField: 'apiValue')
+enum TimeEntryOriginEnum {
+  timer('timer'),
+  manual('manual');
 
-// no Model: @JsonKey(...) usa o .name automaticamente com json_serializable
+  const TimeEntryOriginEnum(this.apiValue);
+  final String apiValue;
+
+  /// Ausente ou desconhecido → `null`.
+  static TimeEntryOriginEnum? fromApi(String? raw) {
+    for (final origin in values) {
+      if (origin.apiValue == raw) return origin;
+    }
+    return null;
+  }
+}
 ```
-Se precisar de valor customizado no Firestore, usar `@JsonValue('...')` no membro do enum.
+Quem decide o que fazer com `null` (falhar ou usar padrão) é o Model, no `toEntity()`.
+Quando a tela precisa seguir funcionando, o enum pode ter um valor `unknown`/padrão.
 
 ## Quando usar constante nomeada (não-enum)
 
 Valores que **não** são conjunto fechado mas também não podem ser literais soltas:
 
-- **Caminhos/coleções do Firestore** → `lib/core/constants/firestore_paths.dart`
-  (ex.: `FirestorePaths.tasks(uid)`), nunca `'users'`/`'tasks'` espalhados (ver `firebase.md`).
-- **Chaves de campo do documento** → centralizar constantes por Model
-  (ex.: `class TaskFields { static const title = 'title'; }`) — evita typo em query
-  (`where(TaskFields.isDone, ...)`).
+- **Coleções e campos do PocketBase** → `lib/core/constants/pb_schema.dart`
+  (`PbCollections.tasks`, `PbFields.isDone`), nunca `'tasks'`/`'due_date'` espalhados
+  (ver `pocketbase.md`).
 - **Nomes de rota** → constantes em `app_router.dart` (ex.: `Routes.login = '/login'`),
   nunca `context.go('/login')` com literal espalhada.
 - **Defaults de negócio** (ex.: importância padrão 4, 30 min, "Entrada") → constantes
@@ -72,7 +84,7 @@ Valores que **não** são conjunto fechado mas também não podem ser literais s
 |---|---|
 | `if (task.status == 'done')` | `if (task.status == TaskStatusEnum.done)` |
 | `origin: 'manual'` | `origin: TimeEntryOriginEnum.manual` |
-| `_firestore.collection('tasks')` | `_firestore.collection(FirestorePaths.tasksSegment)` |
-| `data['dueDate']` na query | `data[TaskFields.dueDate]` |
+| `client.collection('tasks')` | `client.collection(PbCollections.tasks)` |
+| `data['due_date']` na query | `PbFields.dueDate` |
 | `context.go('/login')` | `context.go(Routes.login)` |
-| `enum` serializado por `.index` | serializar por `.name` / `@JsonValue` |
+| enum gravado por `.name`/`.index` | `apiValue` / `fromApi` |

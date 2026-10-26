@@ -40,7 +40,8 @@ Gerar o `injector.config.dart` com:
 Cadeia por camada, montada uma vez no boot (`await configureDependencies()` no `main`):
 
 ```
-FirebaseFirestore / FirebaseAuth   (@module — singletons)
+PocketBase   (@module PocketBaseModule — @preResolve, singleton)
+      → PocketBaseSession / RecordWatcher   (@lazySingleton)
       → RemoteDataSource   (@LazySingleton(as: ...))
       → RepositoryImpl     (@LazySingleton(as: ...))
       → UseCases           (@injectable)
@@ -50,15 +51,15 @@ FirebaseFirestore / FirebaseAuth   (@module — singletons)
 - DataSource/Repository/UseCase: **`@LazySingleton(as: Contrato)`** (registra pela interface).
 - Bloc: **`@injectable`** → factory (instância nova por tela, descartada no `close()`).
 - Blocs recebem **UseCases** por construtor, nunca Repository/DataSource.
-- Objetos externos (Firebase) entram por um `@module`:
+- Objetos externos (cliente do PocketBase, SharedPreferences) entram por um `@module`:
 
 ```dart
 @module
-abstract class FirebaseModule {
-  @lazySingleton
-  FirebaseFirestore get firestore => FirebaseFirestore.instance;
-  @lazySingleton
-  FirebaseAuth get auth => FirebaseAuth.instance;
+abstract class PocketBaseModule {
+  @preResolve
+  @singleton
+  Future<PocketBase> get pocketBase =>
+      PocketBaseClientFactory.create(baseUrl: AppConfig.pocketBaseUrl);
 }
 ```
 
@@ -97,9 +98,9 @@ Só **1 cronômetro ativo por usuário**. O estado do timer ativo é global → 
 `ActiveTimerBloc` no topo da árvore. Iniciar outro dispara o UseCase que pausa o
 anterior; a regra de pausar mora no **UseCase**, não no Bloc.
 
-## Streams do Firestore
+## Streams do PocketBase (tempo real)
 
-Quando o Bloc escuta `snapshots()`:
+Quando o Bloc escuta um `watch*` (montado pelo `RecordWatcher`; o repository já entrega `Either`):
 
 ```dart
 class TaskListBloc extends Bloc<TaskListEvent, TaskListState> {

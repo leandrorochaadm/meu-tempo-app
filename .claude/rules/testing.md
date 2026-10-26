@@ -7,7 +7,12 @@ paths:
 
 ## Ferramentas
 - `flutter_test` + `bloc_test` + `mocktail`.
-- Para DataSource/Firestore: `fake_cloud_firestore` (não mockar Firestore na mão).
+- DataSource/Model: `MockClient` (`package:http/testing.dart`) com payload cru do PocketBase
+  (snake_case, datas `YYYY-MM-DD HH:mm:ss.SSSZ`), via `test/helpers/pocketbase_test_support.dart`
+  (`signedInSession`, `signedOutSession`, `pbJson`, `pbPage`, `pbError`, `pbNotUnique`,
+  `FakeRealtimeSubscriber`).
+- Permissão de coleção (dono, sem login) não é teste Dart: é validada pelo `pb_check.py` da
+  skill `pocketbase-db`, num servidor descartável.
 - A estrutura de `test/` espelha `lib/`.
 
 ## Estrutura
@@ -15,8 +20,8 @@ paths:
 ```
 test/features/{feature}/
   data/
-    datasources/{feature}_remote_data_source_test.dart
-    models/{feature}_model_test.dart
+    datasources/{feature}_remote_data_source_impl_test.dart
+    models/{feature}_model_record_test.dart
     repositories/{feature}_repository_impl_test.dart
   domain/
     usecases/{action}_use_case_test.dart
@@ -37,10 +42,10 @@ test/features/{feature}/
 ## Regras por camada
 
 - **Mocke a dependência direta, não a da dependência.** No teste de Bloc, mocke os
-  **UseCases**; nunca `FirebaseFirestore` (isso é teste de `data`).
+  **UseCases**; nunca PocketBase/`MockClient` (isso é teste de `data`).
 - **UseCase**: mocke Repository, verifique delegação e Params corretos, cubra
   `Left(Failure)` e `Right(Entity)`.
-- **Repository**: use `fake_cloud_firestore`, verifique Model→Entity e Exception→Failure.
+- **Repository**: mocke o DataSource com `mocktail`, verifique Model→Entity e Exception→Failure.
 - **Bloc** (`bloc_test`): `build` → `act` (add event) → `expect` (sequência de estados).
   Cobrir Initial→Loading→Loaded **e** →Error.
 

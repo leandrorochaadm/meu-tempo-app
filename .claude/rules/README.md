@@ -1,7 +1,7 @@
 # Regras do projeto — Meu Tempo
 
 Regras de arquitetura e convenções, adaptadas do projeto `limit_spending` para a stack
-do **Meu Tempo**: **Flutter (PWA + Android + iOS, mobile)** + **Firebase** + **BLoC** + **fpdart**.
+do **Meu Tempo**: **Flutter (PWA + Android + iOS, mobile)** + **PocketBase** + **BLoC** + **fpdart**.
 
 Carregar sob demanda via `@.claude/rules/<arquivo>.md`.
 
@@ -11,10 +11,10 @@ Carregar sob demanda via `@.claude/rules/<arquivo>.md`.
 | `naming.md` | Nomenclatura de arquivos, classes e sufixos |
 | `enums.md` | Preferir `enum`/constantes; proibir strings hard-coded |
 | `domain-layer.md` | Entities, UseCases, Repositories (contratos), Failures |
-| `data-layer.md` | Models, DataSources, RepositoryImpl (Firestore) |
+| `data-layer.md` | Models, DataSources, RepositoryImpl (PocketBase) |
 | `presentation-layer.md` | BLoC (event→state), Pages, widgets, switch exaustivo |
 | `bloc.md` | Padrões de BLoC (`flutter_bloc`): Bloc, Event, State, DI |
-| `firebase.md` | Firebase Auth + Cloud Firestore: coleções, isolamento por usuário, login no Android |
+| `pocketbase.md` | PocketBase: coleções com `user`, API Rules de dono, sessão, tempo real, atomicidade |
 | `navigation.md` | `go_router` + `BlocListener` para navegação reativa |
 | `layout.md` | UI mobile-first, chips em vez de dropdown, sem fricção |
 | `design.md` | Identidade visual: tema escuro, paleta rica, tipografia, movimento |

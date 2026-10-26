@@ -36,7 +36,7 @@ class TaskDeleted extends TaskListEvent {
   List<Object?> get props => [taskId];
 }
 
-// Evento interno (ex.: atualização vinda de stream do Firestore) — prefixo _
+// Evento interno (ex.: atualização vinda de stream de tempo real do PocketBase) — prefixo _
 class _TasksUpdated extends TaskListEvent {
   final List<TaskEntity> tasks;
   const _TasksUpdated(this.tasks);

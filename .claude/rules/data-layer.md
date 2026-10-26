@@ -3,33 +3,37 @@ paths:
   - "lib/features/*/data/**"
 ---
 
-# Data Layer Rules (Firebase / Cloud Firestore)
+# Data Layer Rules (PocketBase)
 
 ## DataSources
 
 - Classe abstrata + implementação (`{Feature}RemoteDataSource` / `Impl`).
 - **MUST** retornar Models (fortemente tipados), NUNCA `Map<String, dynamic>`.
-- **MUST** envolver chamadas ao Firestore em try/catch e **relançar** exceptions
-  de `lib/core/error/exceptions.dart` (ver mapeamento abaixo).
-- Recebe o `FirebaseFirestore` (e o `uid` do usuário) por injeção — nunca usa
-  `FirebaseFirestore.instance` direto (testabilidade).
-- **Isolamento por usuário:** toda coleção é raiz `users/{uid}/...` (ver `firebase.md`).
+- **MUST** envolver chamadas ao PocketBase em try/catch (`on ClientException`) e **relançar**
+  exceptions de `lib/core/error/exceptions.dart` via `mapPocketBaseError` (ver mapeamento abaixo).
+- Recebe `PocketBaseSession` (e `RecordWatcher` quando tem `watch*`) por injeção — nunca cria
+  o cliente nem lê o armazenamento (testabilidade).
+- **Isolamento por usuário:** coleções planas com campo `user`, garantido pelas API Rules
+  (ver `pocketbase.md`).
 
 ```dart
+@LazySingleton(as: TaskRemoteDataSource)
 class TaskRemoteDataSourceImpl implements TaskRemoteDataSource {
-  final FirebaseFirestore _firestore;
-  TaskRemoteDataSourceImpl(this._firestore);
+  TaskRemoteDataSourceImpl(this._session, this._watcher);
 
-  CollectionReference<Map<String, dynamic>> _tasks(String uid) =>
-      _firestore.collection('users').doc(uid).collection('tasks');
+  final PocketBaseSession _session;
+  final RecordWatcher _watcher;
+
+  RecordService get _records => _session.client.collection(PbCollections.tasks);
 
   @override
-  Future<List<TaskModel>> getTasks(String uid) async {
+  Future<List<TaskModel>> getTasks() async {
+    _session.userId;
     try {
-      final snap = await _tasks(uid).get();
-      return snap.docs.map((d) => TaskModel.fromDoc(d.id, d.data())).toList();
-    } on FirebaseException catch (e) {
-      throw mapFirebaseException(e);   // → AppException (ServerException, PermissionException, ...)
+      final records = await _records.getFullList(sort: '-${PbFields.createdAt}');
+      return records.map(TaskModel.fromRecord).toList();
+    } on ClientException catch (e) {
+      throw mapPocketBaseError(e);   // → AppException (ServerException, PermissionException, ...)
     }
   }
 }
@@ -39,77 +43,62 @@ class TaskRemoteDataSourceImpl implements TaskRemoteDataSource {
 
 - **MUST NOT** extends Entity — são classes **separadas**.
 - **MUST** ter `toEntity()` e `fromEntity()` (quando precisar gravar).
-- **MUST** usar `json_serializable`: anotar com `@JsonSerializable(includeIfNull: false)`,
-  `part '{model}.g.dart'`, e expor `fromJson`/`toJson` gerados (`_$...FromJson`/`_$...ToJson`).
-- **MUST** ter o factory `fromDoc(String id, Map<String, dynamic> data)` que injeta o
-  `doc.id` no mapa antes do `fromJson` (o id vem do doc, não do corpo do documento).
-- **MUST** anotar o campo `id` com `@JsonKey(includeToJson: false)` — lido do doc, nunca gravado.
+- **MUST** usar `json_serializable`: `@JsonSerializable(includeIfNull: true, fieldRename: FieldRename.snake)`
+  (`null` limpa o campo no `update`), `part '{model}.g.dart'`, e expor `fromJson`/`toJson` gerados.
+- **MUST** ter o factory `fromRecord(RecordModel record)` que injeta o `record.id` no mapa
+  antes do `fromJson` (o id vem do registro, não do corpo).
+- **MUST** anotar o campo `id` com `@JsonKey(includeToJson: false)`; o `toJson()` sai sem `id`
+  e sem `user` (o DataSource acrescenta `PbFields.user` no `create`).
 - **MUST NOT** ter `copyWith()`.
-- Datas: usar o `TimestampConverter` central (`lib/core/utils/timestamp_converter.dart`)
-  via `@TimestampConverter()` no campo `DateTime?` — converte `Timestamp` ↔ `DateTime`.
-  Como o mapa vem cru do Firestore (com objetos `Timestamp`), o converter recebe/gera
-  `Timestamp` e o `toJson` pode ser gravado direto no Firestore.
+- Enum externo fica **cru** (`String?`) no Model e é convertido no `toEntity()` por
+  `Enum.fromApi(raw)`; valor desconhecido é decisão do model (`FormatException` ou padrão).
+  Para isso, construtor `raw` usado pelo `json_serializable` (`constructor: 'raw'`).
+- Datas: `@InstantConverter()` (instante) e `@CalendarDateConverter()` (dia) no campo
+  `DateTime?` (`lib/core/utils/`).
 
 ```dart
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:json_annotation/json_annotation.dart';
-import '../../../../core/utils/timestamp_converter.dart';
+import 'package:pocketbase/pocketbase.dart';
+
+import '../../../../core/constants/pb_schema.dart';
+import '../../../../core/utils/calendar_date_codec.dart';
+import '../../../../core/utils/instant_codec.dart';
 import '../../domain/entities/task_entity.dart';
 
 part 'task_model.g.dart';
 
-@JsonSerializable(includeIfNull: false)
+@JsonSerializable(includeIfNull: true, fieldRename: FieldRename.snake)
 class TaskModel {
-  @JsonKey(includeToJson: false)   // id vem do doc.id, não é gravado no corpo
+  TaskModel({required this.id, required this.title, required this.createdAt, this.dueDate});
+
+  @JsonKey(includeToJson: false)   // id vem do record.id, não é gravado no corpo
   final String id;
   final String title;
-  final int importance;
-  final int estimatedMinutes;
-  @TimestampConverter()
+  @InstantConverter()
+  final DateTime? createdAt;
+  @CalendarDateConverter()
   final DateTime? dueDate;
-  final String? parentId;
 
-  TaskModel({
-    required this.id,
-    required this.title,
-    required this.importance,
-    required this.estimatedMinutes,
-    this.dueDate,
-    this.parentId,
-  });
-
-  // Firestore doc -> Model (injeta o doc.id no mapa que já traz objetos Timestamp)
-  factory TaskModel.fromDoc(String id, Map<String, dynamic> data) =>
-      TaskModel.fromJson({...data, 'id': id});
+  factory TaskModel.fromRecord(RecordModel record) =>
+      TaskModel.fromJson({...record.data, PbFields.id: record.id});
 
   factory TaskModel.fromJson(Map<String, dynamic> json) => _$TaskModelFromJson(json);
-  Map<String, dynamic> toJson() => _$TaskModelToJson(this);   // grava direto no Firestore
+  Map<String, dynamic> toJson() => _$TaskModelToJson(this);
 
   TaskEntity toEntity() => TaskEntity(
-        id: id, title: title, importance: importance,
-        estimatedMinutes: estimatedMinutes, dueDate: dueDate,
+        id: id, title: title,
+        createdAt: createdAt ?? DateTime.fromMillisecondsSinceEpoch(0), dueDate: dueDate,
       );
 
   factory TaskModel.fromEntity(TaskEntity e) => TaskModel(
-        id: e.id, title: e.title, importance: e.importance,
-        estimatedMinutes: e.estimatedMinutes, dueDate: e.dueDate,
+        id: e.id, title: e.title, createdAt: e.createdAt, dueDate: e.dueDate,
       );
 }
 ```
 
-**Converter central** (`lib/core/utils/timestamp_converter.dart`):
-```dart
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:json_annotation/json_annotation.dart';
-
-class TimestampConverter implements JsonConverter<DateTime?, Timestamp?> {
-  const TimestampConverter();
-  @override
-  DateTime? fromJson(Timestamp? ts) => ts?.toDate();
-  @override
-  Timestamp? toJson(DateTime? date) => date == null ? null : Timestamp.fromDate(date);
-}
-```
+**Conversores centrais** (`lib/core/utils/instant_codec.dart`, `calendar_date_codec.dart`):
+ambos implementam `JsonConverter<DateTime?, String?>`; `null` e `''` viram `null`, texto fora
+do formato lança `FormatException`.
 
 ## Repositories (impl)
 
@@ -120,9 +109,9 @@ class TimestampConverter implements JsonConverter<DateTime?, Timestamp?> {
 
 ```dart
 @override
-Future<Either<Failure, List<TaskEntity>>> getTasks(String uid) async {
+Future<Either<Failure, List<TaskEntity>>> getTasks() async {
   try {
-    final models = await _dataSource.getTasks(uid);
+    final models = await _dataSource.getTasks();
     return Right(models.map((m) => m.toEntity()).toList());
   } on AppException catch (e) {
     return Left(e.toFailure());
@@ -136,21 +125,26 @@ Future<Either<Failure, List<TaskEntity>>> getTasks(String uid) async {
 
 ## Exception → Failure mapping
 
-Exceptions vivem em `lib/core/error/exceptions.dart`; o mapeamento (via helper ou
-`toFailure()`) converte para Failures de `lib/core/error/failures.dart`:
+Exceptions vivem em `lib/core/error/exceptions.dart`; `mapPocketBaseError`
+(`lib/core/error/pocketbase_error_mapper.dart`) converte o `ClientException` e o `toFailure()`
+da exception entrega a Failure de `lib/core/error/failures.dart`:
 
-| Origem (FirebaseException.code / exception) | Failure |
-|---|---|
-| `permission-denied` | `PermissionDeniedFailure` |
-| `unavailable` / rede | `NetworkFailure` |
-| `not-found` | `NotFoundFailure` |
-| `unauthenticated` | `UnauthenticatedFailure` |
-| qualquer outra | `ServerFailure` (fallback) |
+| Origem (`ClientException.statusCode`) | Exception | Failure |
+|---|---|---|
+| 0 (sem conexão) | `NetworkException` | `NetworkFailure` |
+| 401 / 403 | `PermissionException` | `PermissionDeniedFailure` |
+| 404 | `NotFoundException` | `NotFoundFailure` |
+| 400 `validation_not_unique` | `ConflictException` | `ServerFailure` (quem trata a disputa captura antes) |
+| 429 / 5xx / outro 400 | `ServerException` | `ServerFailure` |
+| sem sessão (`session.userId`) | `UnauthenticatedException` | `UnauthenticatedFailure` |
 
-## Coleções e caminhos
+Erro de lote vem embrulhado: o mapper desembrulha `data.requests.<i>.response` e traduz o
+status do pedido que falhou.
 
-- **NUNCA** hardcodar strings de coleção espalhadas. Centralizar em
-  `lib/core/constants/firestore_paths.dart` (ex.: `FirestorePaths.tasks(uid)`).
+## Coleções e campos
+
+- **NUNCA** hardcodar strings de coleção ou campo. Usar `PbCollections`/`PbFields` em
+  `lib/core/constants/pb_schema.dart`.
 
 ## Templates
 - Model: `@.claude/rules/templates/model_template.md`

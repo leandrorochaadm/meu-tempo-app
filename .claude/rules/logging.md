@@ -23,4 +23,4 @@ Motivo: `print` não tem nível, tag nem controle por ambiente; polui o console 
 
 - **RepositoryImpl**: logar `error`+`stackTrace` no `catch` antes de virar `Left(Failure)`.
 - **Bloc**: opcional logar transições relevantes; não logar dado sensível do usuário.
-- **DataSource**: logar a origem do erro do Firestore (code) para diagnóstico.
+- **DataSource**: o `mapPocketBaseError` já loga (`logWarning`) a mensagem do servidor; não repetir. A mensagem em inglês do servidor nunca vai para a tela.
