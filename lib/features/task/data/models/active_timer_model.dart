@@ -41,18 +41,18 @@ class ActiveTimerModel {
   Map<String, dynamic> toJson() => _$ActiveTimerModelToJson(this);
 
   ActiveTimerEntity toEntity() => ActiveTimerEntity(
-        targetId: targetId,
-        targetType: targetType ?? TimerTargetTypeEnum.task,
-        listId: listId ?? '',
-        startedAt: startedAt ?? DateTime.fromMillisecondsSinceEpoch(0),
-        status: TimerStatusEnum.fromApi(status),
-      );
+    targetId: targetId,
+    targetType: targetType ?? TimerTargetTypeEnum.task,
+    listId: listId ?? '',
+    startedAt: startedAt ?? DateTime.fromMillisecondsSinceEpoch(0),
+    status: TimerStatusEnum.fromApi(status),
+  );
 
   factory ActiveTimerModel.fromEntity(ActiveTimerEntity e) => ActiveTimerModel(
-        targetId: e.targetId,
-        targetType: e.targetType,
-        listId: e.listId,
-        startedAt: e.startedAt,
-        status: e.status.apiValue,
-      );
+    targetId: e.targetId,
+    targetType: e.targetType,
+    listId: e.listId,
+    startedAt: e.startedAt,
+    status: e.status.apiValue,
+  );
 }
