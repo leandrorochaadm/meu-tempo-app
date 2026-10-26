@@ -16,6 +16,9 @@ import 'package:get_it/get_it.dart' as _i174;
 import 'package:injectable/injectable.dart' as _i526;
 import 'package:meu_tempo/core/data/pocketbase/pocketbase_session.dart'
     as _i864;
+import 'package:meu_tempo/core/data/pocketbase/realtime_subscriber.dart'
+    as _i208;
+import 'package:meu_tempo/core/data/pocketbase/record_watcher.dart' as _i811;
 import 'package:meu_tempo/core/di/injection.dart' as _i767;
 import 'package:meu_tempo/features/appointment/data/datasources/appointment_remote_data_source.dart'
     as _i621;
@@ -415,6 +418,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i397.LockScreenTapBloc>(
       () => _i397.LockScreenTapBloc(gh<_i482.WatchLockScreenTapsUseCase>()),
     );
+    gh.lazySingleton<_i208.RealtimeSubscriber>(
+      () => _i208.PocketBaseRealtimeSubscriber(gh<_i864.PocketBaseSession>()),
+    );
     gh.lazySingleton<_i641.RecurringTaskRepository>(
       () => _i133.RecurringTaskRepositoryImpl(
         gh<_i696.RecurringTaskRemoteDataSource>(),
@@ -520,6 +526,9 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i259.AppointmentRepository>(),
         gh<_i219.TaskListRepository>(),
       ),
+    );
+    gh.lazySingleton<_i811.RecordWatcher>(
+      () => _i811.RecordWatcher(gh<_i208.RealtimeSubscriber>()),
     );
     gh.lazySingleton<_i543.RegisterAppointmentTimeUseCase>(
       () => _i543.RegisterAppointmentTimeUseCase(
