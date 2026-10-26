@@ -10,8 +10,8 @@ TaskListModel _$TaskListModelFromJson(Map<String, dynamic> json) =>
     TaskListModel(
       id: json['id'] as String,
       name: json['name'] as String,
-      isDefault: json['isDefault'] as bool? ?? false,
+      isDefault: json['is_default'] as bool? ?? false,
     );
 
 Map<String, dynamic> _$TaskListModelToJson(TaskListModel instance) =>
-    <String, dynamic>{'name': instance.name, 'isDefault': instance.isDefault};
+    <String, dynamic>{'name': instance.name, 'is_default': instance.isDefault};

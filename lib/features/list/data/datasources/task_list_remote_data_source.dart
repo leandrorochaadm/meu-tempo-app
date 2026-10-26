@@ -1,11 +1,12 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:injectable/injectable.dart';
+import 'package:pocketbase/pocketbase.dart';
 
-import '../../../../core/constants/firestore_paths.dart';
+import '../../../../core/constants/pb_schema.dart';
+import '../../../../core/data/pocketbase/pocketbase_session.dart';
+import '../../../../core/data/pocketbase/record_watcher.dart';
 import '../../../../core/error/exceptions.dart';
+import '../../../../core/error/pocketbase_error_mapper.dart';
 import '../models/task_list_model.dart';
-import '../task_list_fields.dart';
 
 abstract class TaskListRemoteDataSource {
   Stream<List<TaskListModel>> watchLists();
@@ -17,71 +18,70 @@ abstract class TaskListRemoteDataSource {
 
 @LazySingleton(as: TaskListRemoteDataSource)
 class TaskListRemoteDataSourceImpl implements TaskListRemoteDataSource {
-  TaskListRemoteDataSourceImpl(this._firestore, this._auth);
+  TaskListRemoteDataSourceImpl(this._session, this._watcher);
 
-  final FirebaseFirestore _firestore;
-  final FirebaseAuth _auth;
+  final PocketBaseSession _session;
+  final RecordWatcher _watcher;
 
-  String get _uid {
-    final uid = _auth.currentUser?.uid;
-    if (uid == null) throw const UnauthenticatedException();
-    return uid;
-  }
-
-  CollectionReference<Map<String, dynamic>> get _collection =>
-      _firestore.collection(FirestorePaths.lists(_uid));
+  RecordService get _records =>
+      _session.client.collection(PbCollections.taskLists);
 
   @override
   Stream<List<TaskListModel>> watchLists() {
-    try {
-      return _collection.orderBy(TaskListFields.name).snapshots().map(
-            (snap) => snap.docs
-                .map((d) => TaskListModel.fromDoc(d.id, d.data()))
-                .toList(),
-          );
-    } on FirebaseException catch (e) {
-      throw mapFirestoreException(e);
-    }
+    _session.userId;
+    return _watcher.watch(
+      collection: PbCollections.taskLists,
+      load: _fetchLists,
+    );
   }
 
   @override
   Future<List<TaskListModel>> getLists() async {
+    _session.userId;
+    return _fetchLists();
+  }
+
+  Future<List<TaskListModel>> _fetchLists() async {
     try {
-      final snap = await _collection.get();
-      return snap.docs
-          .map((d) => TaskListModel.fromDoc(d.id, d.data()))
-          .toList();
-    } on FirebaseException catch (e) {
-      throw mapFirestoreException(e);
+      final records = await _records.getFullList(sort: PbFields.name);
+      return records.map(TaskListModel.fromRecord).toList();
+    } on ClientException catch (e) {
+      throw mapPocketBaseError(e);
     }
   }
 
   @override
   Future<TaskListModel> create(TaskListModel list) async {
+    final userId = _session.userId;
     try {
-      final ref = await _collection.add(list.toJson());
-      final doc = await ref.get();
-      return TaskListModel.fromDoc(doc.id, doc.data()!);
-    } on FirebaseException catch (e) {
-      throw mapFirestoreException(e);
+      final record = await _records.create(
+        body: {...list.toJson(), PbFields.user: userId},
+      );
+      return TaskListModel.fromRecord(record);
+    } on ClientException catch (e) {
+      throw mapPocketBaseError(e);
     }
   }
 
   @override
   Future<void> rename(String listId, String name) async {
+    _session.userId;
     try {
-      await _collection.doc(listId).update({TaskListFields.name: name});
-    } on FirebaseException catch (e) {
-      throw mapFirestoreException(e);
+      await _records.update(listId, body: {PbFields.name: name});
+    } on ClientException catch (e) {
+      throw mapPocketBaseError(e);
     }
   }
 
   @override
   Future<void> delete(String listId) async {
+    _session.userId;
     try {
-      await _collection.doc(listId).delete();
-    } on FirebaseException catch (e) {
-      throw mapFirestoreException(e);
+      await _records.delete(listId);
+    } on ClientException catch (e) {
+      final error = mapPocketBaseError(e);
+      if (error is NotFoundException) return;
+      throw error;
     }
   }
 }

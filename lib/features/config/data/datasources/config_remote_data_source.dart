@@ -1,9 +1,11 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:injectable/injectable.dart';
+import 'package:pocketbase/pocketbase.dart';
 
-import '../../../../core/constants/firestore_paths.dart';
+import '../../../../core/constants/pb_schema.dart';
+import '../../../../core/data/pocketbase/pocketbase_session.dart';
+import '../../../../core/data/pocketbase/record_watcher.dart';
 import '../../../../core/error/exceptions.dart';
+import '../../../../core/error/pocketbase_error_mapper.dart';
 import '../models/day_config_model.dart';
 
 abstract class ConfigRemoteDataSource {
@@ -15,67 +17,77 @@ abstract class ConfigRemoteDataSource {
 
 @LazySingleton(as: ConfigRemoteDataSource)
 class ConfigRemoteDataSourceImpl implements ConfigRemoteDataSource {
-  ConfigRemoteDataSourceImpl(this._firestore, this._auth);
+  ConfigRemoteDataSourceImpl(this._session, this._watcher);
 
-  final FirebaseFirestore _firestore;
-  final FirebaseAuth _auth;
+  final PocketBaseSession _session;
+  final RecordWatcher _watcher;
 
-  static const String _availableField = 'availableMinutesPerDay';
-  static const String _onboardedField = 'onboarded';
+  RecordService get _records =>
+      _session.client.collection(PbCollections.dayConfigs);
 
-  String get _uid {
-    final uid = _auth.currentUser?.uid;
-    if (uid == null) throw const UnauthenticatedException();
-    return uid;
+  /// The user has at most one record (`UNIQUE (user)`).
+  Future<RecordModel?> _fetchRecord() async {
+    _session.userId;
+    try {
+      final page = await _records.getList(perPage: 1, skipTotal: true);
+      return page.items.isEmpty ? null : page.items.first;
+    } on ClientException catch (e) {
+      throw mapPocketBaseError(e);
+    }
   }
-
-  DocumentReference<Map<String, dynamic>> get _doc => _firestore
-      .collection(FirestorePaths.config(_uid))
-      .doc(FirestorePaths.settingsDoc);
 
   @override
   Stream<DayConfigModel> watchConfig() {
-    try {
-      return _doc.snapshots().map((snap) {
-        final data = snap.data();
-        // Sem doc ainda → usa o padrão da model.
-        return data == null
-            ? const DayConfigModel()
-            : DayConfigModel.fromJson(data);
-      });
-    } on FirebaseException catch (e) {
-      throw mapFirestoreException(e);
-    }
+    _session.userId;
+    return _watcher.watch(
+      collection: PbCollections.dayConfigs,
+      load: getConfig,
+    );
   }
 
   @override
   Future<DayConfigModel> getConfig() async {
-    try {
-      final snap = await _doc.get();
-      final data = snap.data();
-      return data == null
-          ? const DayConfigModel()
-          : DayConfigModel.fromJson(data);
-    } on FirebaseException catch (e) {
-      throw mapFirestoreException(e);
-    }
+    final record = await _fetchRecord();
+    // No record yet → model defaults.
+    return record == null
+        ? const DayConfigModel()
+        : DayConfigModel.fromRecord(record);
   }
 
   @override
-  Future<void> setAvailableMinutes(int minutes) async {
+  Future<void> setAvailableMinutes(int minutes) =>
+      _upsert({PbFields.availableMinutesPerDay: minutes});
+
+  @override
+  Future<void> markOnboarded() => _upsert({PbFields.onboarded: true});
+
+  Future<void> _update(String id, Map<String, dynamic> fields) async {
     try {
-      await _doc.set({_availableField: minutes}, SetOptions(merge: true));
-    } on FirebaseException catch (e) {
-      throw mapFirestoreException(e);
+      await _records.update(id, body: fields);
+    } on ClientException catch (e) {
+      throw mapPocketBaseError(e);
     }
   }
 
-  @override
-  Future<void> markOnboarded() async {
+  Future<void> _upsert(Map<String, dynamic> fields) async {
+    final existing = await _fetchRecord();
+    if (existing != null) return _update(existing.id, fields);
+    final userId = _session.userId;
     try {
-      await _doc.set({_onboardedField: true}, SetOptions(merge: true));
-    } on FirebaseException catch (e) {
-      throw mapFirestoreException(e);
+      await _records.create(
+        body: {
+          ...const DayConfigModel().toJson(),
+          ...fields,
+          PbFields.user: userId,
+        },
+      );
+    } on ClientException catch (e) {
+      final error = mapPocketBaseError(e);
+      if (error is! ConflictException) throw error;
+      // Another device created it first: update that one, once.
+      final created = await _fetchRecord();
+      if (created == null) throw error;
+      return _update(created.id, fields);
     }
   }
 }

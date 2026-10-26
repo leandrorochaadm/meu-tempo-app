@@ -1,10 +1,12 @@
 import 'package:json_annotation/json_annotation.dart';
+import 'package:pocketbase/pocketbase.dart';
 
+import '../../../../core/constants/pb_schema.dart';
 import '../../domain/entities/task_list_entity.dart';
 
 part 'task_list_model.g.dart';
 
-@JsonSerializable(includeIfNull: false)
+@JsonSerializable(includeIfNull: true, fieldRename: FieldRename.snake)
 class TaskListModel {
   const TaskListModel({
     required this.id,
@@ -12,13 +14,13 @@ class TaskListModel {
     this.isDefault = false,
   });
 
-  @JsonKey(includeToJson: false) // id vem do doc.id
+  @JsonKey(includeToJson: false) // id comes from the record id
   final String id;
   final String name;
   final bool isDefault;
 
-  factory TaskListModel.fromDoc(String id, Map<String, dynamic> data) =>
-      TaskListModel.fromJson({...data, 'id': id});
+  factory TaskListModel.fromRecord(RecordModel record) =>
+      TaskListModel.fromJson({...record.data, PbFields.id: record.id});
 
   factory TaskListModel.fromJson(Map<String, dynamic> json) =>
       _$TaskListModelFromJson(json);
