@@ -1,5 +1,22 @@
 # Atalhos de desenvolvimento — Meu Tempo
-.PHONY: gen watch test run run-ios run-ios-debug run-ios-release run-android run-android-debug run-android-release analyze build ship
+.PHONY: pb pb-superuser pb-test pb-check gen watch test run run-ios run-ios-debug run-ios-release run-android run-android-debug run-android-release analyze build ship
+
+# PocketBase local descartável em 127.0.0.1:8095
+pb:
+	tool/pb.sh serve
+
+# Cria/atualiza o superusuário local: make pb-superuser EMAIL=voce@exemplo.com
+pb-superuser:
+	@test -n "$(EMAIL)" || { echo "Uso: make pb-superuser EMAIL=voce@exemplo.com"; exit 1; }
+	tool/pb.sh superuser $(EMAIL)
+
+# Testes de permissão de dono (precisa do `make pb` rodando)
+pb-test:
+	uv run tool/pb_permissions_test.py
+
+# Valida migrations e API Rules (skill pocketbase-db)
+pb-check:
+	uv run ~/.claude/skills/pocketbase-db/scripts/pb_check.py
 
 # Gera código (json_serializable + injectable)
 gen:
