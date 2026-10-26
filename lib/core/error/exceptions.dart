@@ -35,6 +35,14 @@ class NotFoundException extends AppException {
   Failure toFailure() => const NotFoundFailure();
 }
 
+/// Repeated id or unique key (`UNIQUE (user)`, generation marker). Whoever
+/// does not handle it sees a server error.
+class ConflictException extends AppException {
+  const ConflictException();
+  @override
+  Failure toFailure() => const ServerFailure();
+}
+
 class UnauthenticatedException extends AppException {
   const UnauthenticatedException();
   @override
