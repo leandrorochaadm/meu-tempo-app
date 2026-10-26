@@ -34,14 +34,6 @@
 				<string>meutempo</string>
 			</array>
 		</dict>
-		<dict>
-			<key>CFBundleTypeRole</key>
-			<string>Editor</string>
-			<key>CFBundleURLSchemes</key>
-			<array>
-				<string>com.googleusercontent.apps.588975528122-fv4gjq4j1i8l1rconfm7arakn94bvb8n</string>
-			</array>
-		</dict>
 	</array>
 	<key>FlutterDeepLinkingEnabled</key>
 	<false/>

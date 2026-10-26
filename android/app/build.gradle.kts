@@ -3,9 +3,6 @@ import java.util.Properties
 
 plugins {
     id("com.android.application")
-    // START: FlutterFire Configuration
-    id("com.google.gms.google-services")
-    // END: FlutterFire Configuration
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
@@ -52,8 +49,6 @@ android {
     buildTypes {
         release {
             // Without key.properties (another machine) falls back to debug signing.
-            // Each machine has its own ~/.android/debug.keystore: Google sign-in only
-            // works there after that machine's debug SHA-1/SHA-256 is registered too.
             signingConfig = if (keystorePropertiesFile.exists()) {
                 signingConfigs.getByName("release")
             } else {

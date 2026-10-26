@@ -44,11 +44,8 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
-# Perfil persistente do Chrome em dev (mantém sessão do Firebase Auth)
+# Persistent Chrome profile in dev (keeps the login session)
 .dev-chrome/
-
-# Cache local de deploy do Firebase Hosting
-.firebase/
 
 # Artefatos locais (planos, arquivos de trabalho temporários)
 temp/
