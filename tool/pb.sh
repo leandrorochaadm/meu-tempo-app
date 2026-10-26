@@ -4,9 +4,9 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 PB_VERSION=0.40.5
-PB_PORT=8095
+PB_PORT="${PB_PORT:-8095}"
 BIN_DIR="tool/.bin/$PB_VERSION"
-DATA_DIR=".pb/pb_data"
+DATA_DIR="${PB_DATA_DIR:-.pb/pb_data}"
 MIGRATIONS_DIR="pocketbase/pb_migrations"
 
 download() {

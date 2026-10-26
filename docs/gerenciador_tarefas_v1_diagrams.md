@@ -474,7 +474,7 @@ Para não passar a impressão de que foram esquecidos, os requisitos abaixo são
 |-----------|--------|
 | 6 — Listagem (ordenação) | A ordenação em si é linear; a parte com decisão (cálculo da urgência) está no fluxo 4. |
 | 7 — Relatórios | Leitura e agregação; sem ramificação. |
-| 8 — Login | Autenticação padrão do Firebase; sem regra de negócio própria. |
+| 8 — Login | Login por e-mail e senha do PocketBase; sem regra de negócio própria. |
 | 9 — Backup na nuvem | Persistência automática; sem ramificação. |
 | 12 — Cronômetro em 1 toque / +15/+30 / padrões | Atalhos de UI sobre fluxos já cobertos (1 e 2). |
 | 13 — Começar simples / telas que ensinam / 1º acesso | Comportamento de UI, sem decisão de negócio (o "desfazer" está no fluxo 10). |

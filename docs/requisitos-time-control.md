@@ -50,8 +50,8 @@ que o papel não faz — medir e relatar o tempo gasto em cada tarefa.
 | Usuários (várias pessoas) | Cada um usa o app para acompanhar o próprio dia; cada um tem seu **login** e seu **diário separado** | Sim — cada um é dono dos próprios dados |
 
 **Observação:** o app terá **vários usuários independentes** (ex.: Leandro e
-outras pessoas), sem número fixo. **Qualquer pessoa** com conta Google pode se
-cadastrar. Cada um vê **apenas os seus dados** — não há
+outras pessoas), sem número fixo. As contas são criadas por quem cuida do app
+(cadastro fechado, desde 24/10/2026). Cada um vê **apenas os seus dados** — não há
 compartilhamento entre eles.
 
 ## Requisitos
@@ -581,7 +581,7 @@ Decisões que encerraram as pendências anteriores:
   filtrada, as duas visões da tela mostram sempre a mesma posição para a mesma tarefa.
 - 2026-07-25 (cont.) — **Escritas de hierarquia agora são atômicas.** O campo
   `hasChildren` (que diz se a tarefa tem filhas, base de "é folha") era mantido por 5
-  `update` avulsos no Firestore, sem transação com a escrita principal: se o segundo
+  `update` avulsos no banco, sem transação com a escrita principal: se o segundo
   falhasse, uma mãe ficava marcada como folha e voltava a aparecer na fila de prioridade
   com cronômetro e tempo próprio. As 4 operações que mexem na hierarquia — criar
   subtarefa, mover, excluir em cascata e desfazer a exclusão — passaram a usar
@@ -624,3 +624,6 @@ Decisões que encerraram as pendências anteriores:
   modelos de tarefa que viram tarefa sozinhos nos dias marcados ou pelo botão
   "Adicionar hoje". **Compromissos recorrentes** continuam em "Próximas versões".
   Excluir uma lista leva os modelos dela junto (mover ou excluir, como as tarefas).
+- 2026-10-24 — **Troca do backend para PocketBase.** O login passa a ser por e-mail e
+  senha, e as contas são criadas por quem cuida do app (cadastro fechado). O app ganha
+  endereço novo. Nenhuma regra de negócio muda. Atualizado em "Pessoas envolvidas".

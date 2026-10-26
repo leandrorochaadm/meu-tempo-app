@@ -43,12 +43,16 @@ Nunca invente requisito. Se algo não está nos documentos, **pergunte** (ver sk
     direta, sem lojas. Detalhes e riscos em `docs/tecnico-time-control.md`.
   - **Recurso só nativo:** cronômetro na tela bloqueada/notificação. No web, o código de
     plataforma fica atrás de uma abstração com implementação vazia (`kIsWeb`).
-  - **Alvos nativos criados:** `android/` e `ios/` com Firebase e login Google
-    (`signInWithProvider` no nativo; redirect/popup no web). Após rodar `flutterfire
-    configure`, restaurar o `authDomain` do web para `meu-tempo-dev.web.app`.
+  - **Alvos nativos criados:** `android/` e `ios/` sem configuração de backend própria; o
+    login por e-mail e senha é igual nas três plataformas. Builds Android/iOS só num Mac;
+    a VPS gera só o PWA.
 - **Sempre online** — sem modo offline nesta versão.
-- **Backend: Firebase** — Auth (login por usuário) + Cloud Firestore (persistência na
-  nuvem). **Dados isolados por usuário**: toda query filtra pelo `uid` do usuário logado.
+- **Backend: PocketBase** (0.40.5, na VPS, atrás do Caddy) — login por e-mail e senha
+  (cadastro fechado) + coleções planas. **Dados isolados por usuário**: todo registro tem
+  o campo `user`, e as API Rules de dono no servidor garantem que só o dono acessa.
+  Tempo real por `subscribe` (`RecordWatcher`). Schema e regras em
+  `pocketbase/pb_migrations/`. Detalhes em `.claude/rules/pocketbase.md` e
+  `~/.claude/rules/backend-record-ownership.md`.
 - **Estado: BLoC** (`flutter_bloc`) no estilo **event → state** (Bloc clássico com
   eventos, não Cubit). Um Bloc por feature/fluxo.
 - **Erros no domínio: `Either<Failure, T>`** (via `fpdart`). UseCase retorna
@@ -58,7 +62,7 @@ Nunca invente requisito. Se algo não está nos documentos, **pergunte** (ver sk
 
 As convenções completas vivem em `.claude/rules/` (carregar sob demanda). Índice em
 `.claude/rules/README.md`. Principais: `architecture.md`, `domain-layer.md`,
-`data-layer.md`, `presentation-layer.md`, `bloc.md`, `firebase.md`, `navigation.md`,
+`data-layer.md`, `presentation-layer.md`, `bloc.md`, `pocketbase.md`, `navigation.md`,
 `layout.md`, `enums.md`, `testing.md` + `templates/` por camada.
 
 **Enums sobre strings (obrigatório):** todo conjunto fixo de valores é `enum`; caminhos,
@@ -87,13 +91,13 @@ lib/
     usecase/usecase.dart      # contrato base do UseCase
   features/
     <feature>/
-      domain/                # regra de negócio pura — sem Flutter, sem Firebase
+      domain/                # regra de negócio pura — sem Flutter, sem backend
         entities/
         repositories/        # contratos (interfaces abstratas)
         usecases/
       data/                  # implementação
-        models/              # DTOs <-> Firestore (json_serializable + TimestampConverter)
-        datasources/         # acesso ao Firebase
+        models/              # DTOs <-> PocketBase (json_serializable + InstantConverter/CalendarDateConverter)
+        datasources/         # acesso ao PocketBase (PocketBaseSession)
         repositories/        # implementa o contrato do domain
       presentation/
         bloc/                # <feature>_bloc.dart, _event.dart, _state.dart
@@ -102,16 +106,17 @@ lib/
 ```
 
 **Regra de dependência:** `presentation → domain ← data`. O domínio não conhece
-Flutter nem Firebase. A UI (widget/page) fala com o **Bloc**, nunca chama Repository
+Flutter nem o PocketBase. A UI (widget/page) fala com o **Bloc**, nunca chama Repository
 ou DataSource direto.
 
 ## Regras do domínio (obrigatórias)
 
 - **Entity** é imutável e pura: sem `copyWith`, sem importar pacote externo (nada de
-  Firebase na entity). Conversão de/para Firestore (`Map`) vive no **Model** (camada
-  data), via `json_serializable` (`@JsonSerializable`, `fromJson`/`toJson` gerados) com
-  um `TimestampConverter` central para as datas do Firestore; o `id` vem do `doc.id`,
-  não do corpo do documento.
+  PocketBase na entity). Conversão de/para o registro do PocketBase (`RecordModel`) vive
+  no **Model** (camada data), via `json_serializable` (`@JsonSerializable(includeIfNull:
+  true, fieldRename: FieldRename.snake)`, `fromRecord`/`fromJson`/`toJson`) com
+  `InstantConverter` (instante) e `CalendarDateConverter` (dia) de `lib/core/utils/`; o
+  `id` vem do `record.id`, não do corpo do registro.
 - **Regras intrínsecas da entity** viram getters (ex.: `bool get isFolha`,
   `int get prioridade`) — não espalhe cálculo pela UI.
 - **Failure** não recebe `message` no construtor. Cada Failure é um tipo próprio
@@ -151,11 +156,17 @@ ou DataSource direto.
 ## Comandos úteis
 
 ```bash
-make run                         # web: rodar no Chrome com perfil persistente (mantém login)
+cp config/dev.json.example config/dev.json   # configuração local (aponta para http://127.0.0.1:8095)
+tool/pb.sh serve                 # PocketBase local descartável em 127.0.0.1:8095
+tool/pb.sh superuser <email>     # superusuário local (senha pedida no terminal)
+make run                         # web: Chrome com perfil persistente, usando config/dev.json
 flutter run -d chrome            # web: rodar sem perfil fixo (pede login a cada run)
 flutter run -d <device>          # nativo: rodar no celular (Android ou iPhone conectado)
 flutter test                     # testes
 flutter analyze                  # análise estática (manter zero issues)
+uv run tool/pb_permissions_test.py                          # permissões de dono e provas P1–P8
+uv run ~/.claude/skills/pocketbase-db/scripts/pb_check.py   # valida migrations e regras
+make build                       # build de produção do PWA (config/prod.json)
 flutter build web --release      # build de produção do PWA
-flutter build apk --release      # APK para instalação direta no Android
+flutter build apk --release      # APK para instalação direta no Android (num Mac; a VPS gera só o PWA)
 ```
