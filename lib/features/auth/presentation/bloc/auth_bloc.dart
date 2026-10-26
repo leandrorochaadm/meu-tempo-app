@@ -8,7 +8,7 @@ import '../../../../core/error/auth_failures.dart';
 import '../../../../core/error/failures.dart';
 import '../../../../core/usecase/usecase.dart';
 import '../../domain/entities/user_entity.dart';
-import '../../domain/usecases/sign_in_with_google_use_case.dart';
+import '../../domain/usecases/sign_in_with_email_use_case.dart';
 import '../../domain/usecases/sign_out_use_case.dart';
 import '../../domain/usecases/watch_auth_state_use_case.dart';
 
@@ -19,19 +19,19 @@ part 'auth_state.dart';
 @injectable
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   AuthBloc(
-    this._signInWithGoogle,
+    this._signInWithEmail,
     this._signOut,
     this._watchAuthState,
   ) : super(const AuthInitial()) {
     on<AuthStateChanged>(_onAuthStateChanged);
-    on<AuthGoogleSignInRequested>(_onSignInRequested);
+    on<AuthEmailSignInRequested>(_onSignInRequested);
     on<AuthSignOutRequested>(_onSignOutRequested);
 
     _authSub = _watchAuthState(const NoParams())
         .listen((user) => add(AuthStateChanged(user)));
   }
 
-  final SignInWithGoogleUseCase _signInWithGoogle;
+  final SignInWithEmailUseCase _signInWithEmail;
   final SignOutUseCase _signOut;
   final WatchAuthStateUseCase _watchAuthState;
 
@@ -48,20 +48,21 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   static const _signInTimeout = Duration(seconds: 30);
 
   Future<void> _onSignInRequested(
-    AuthGoogleSignInRequested event,
+    AuthEmailSignInRequested event,
     Emitter<AuthState> emit,
   ) async {
     emit(const AuthLoading());
     try {
-      final result =
-          await _signInWithGoogle(const NoParams()).timeout(_signInTimeout);
+      final result = await _signInWithEmail(
+        SignInWithEmailParams(email: event.email, password: event.password),
+      ).timeout(_signInTimeout);
       // Sucesso emite via stream (AuthStateChanged); aqui só tratamos erro.
       result.match(
         (failure) => emit(AuthError(_mapFailure(failure))),
         (_) {},
       );
     } on TimeoutException {
-      emit(AuthError(_mapFailure(const AuthFailure())));
+      emit(AuthError(_mapFailure(const ServerFailure())));
     }
   }
 
@@ -77,7 +78,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   }
 
   String _mapFailure(Failure failure) => switch (failure) {
-        SignInCancelledFailure() => 'Login cancelado.',
+        EmptyCredentialsFailure() => 'Preencha o e-mail e a senha.',
+        AuthFailure() => 'E-mail ou senha incorretos.',
         NetworkFailure() => 'Sem conexão. Verifique a internet.',
         _ => 'Não foi possível entrar. Tente novamente.',
       };

@@ -15,12 +15,12 @@ class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDataSource _dataSource;
 
   @override
-  Future<Either<Failure, Unit>> signInWithGoogle() async {
+  Future<Either<Failure, Unit>> signInWithEmail(String email, String password) async {
     try {
-      await _dataSource.signInWithGoogle();
+      await _dataSource.signInWithEmail(email, password);
       return const Right(unit);
     } on AppException catch (e, s) {
-      AppLogger.logError('signInWithGoogle falhou', error: e, stackTrace: s);
+      AppLogger.logError('signInWithEmail falhou', error: e, stackTrace: s);
       return Left(e.toFailure());
     }
   }

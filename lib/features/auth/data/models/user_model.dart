@@ -1,9 +1,10 @@
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:pocketbase/pocketbase.dart';
 
+import '../../../../core/constants/pb_schema.dart';
 import '../../domain/entities/user_entity.dart';
 
-/// Ponte entre o `User` do Firebase e a [UserEntity] do domínio.
-/// Não estende Entity.
+/// Bridge between the PocketBase `users` record and the domain [UserEntity].
+/// Does not extend Entity.
 class UserModel {
   const UserModel({
     required this.uid,
@@ -17,12 +18,16 @@ class UserModel {
   final String? displayName;
   final String? photoUrl;
 
-  factory UserModel.fromFirebaseUser(User user) => UserModel(
-        uid: user.uid,
-        email: user.email ?? '',
-        displayName: user.displayName,
-        photoUrl: user.photoURL,
-      );
+  /// `photoUrl` stays null: the PocketBase `avatar` is a file and the app
+  /// shows no photo.
+  factory UserModel.fromRecord(RecordModel record) {
+    final name = record.getStringValue(PbFields.name);
+    return UserModel(
+      uid: record.id,
+      email: record.getStringValue(PbFields.email),
+      displayName: name.isEmpty ? null : name,
+    );
+  }
 
   UserEntity toEntity() => UserEntity(
         uid: uid,

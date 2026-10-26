@@ -48,8 +48,8 @@ import 'package:meu_tempo/features/auth/data/repositories/auth_repository_impl.d
     as _i534;
 import 'package:meu_tempo/features/auth/domain/repositories/auth_repository.dart'
     as _i224;
-import 'package:meu_tempo/features/auth/domain/usecases/sign_in_with_google_use_case.dart'
-    as _i98;
+import 'package:meu_tempo/features/auth/domain/usecases/sign_in_with_email_use_case.dart'
+    as _i850;
 import 'package:meu_tempo/features/auth/domain/usecases/sign_out_use_case.dart'
     as _i846;
 import 'package:meu_tempo/features/auth/domain/usecases/watch_auth_state_use_case.dart'
@@ -325,6 +325,12 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i864.PocketBaseSession>(
       () => _i864.PocketBaseSession(gh<_i169.PocketBase>()),
     );
+    gh.lazySingleton<_i788.AuthRemoteDataSource>(
+      () => _i788.AuthRemoteDataSourceImpl(gh<_i864.PocketBaseSession>()),
+    );
+    gh.lazySingleton<_i224.AuthRepository>(
+      () => _i534.AuthRepositoryImpl(gh<_i788.AuthRemoteDataSource>()),
+    );
     gh.lazySingleton<_i813.TaskListRemoteDataSource>(
       () => _i813.TaskListRemoteDataSourceImpl(
         gh<_i974.FirebaseFirestore>(),
@@ -333,9 +339,6 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i843.GetTaskEditContextUseCase>(
       () => _i843.GetTaskEditContextUseCase(gh<_i27.BuildTaskTreeUseCase>()),
-    );
-    gh.lazySingleton<_i788.AuthRemoteDataSource>(
-      () => _i788.AuthRemoteDataSourceImpl(gh<_i59.FirebaseAuth>()),
     );
     gh.lazySingleton<_i621.AppointmentRemoteDataSource>(
       () => _i621.AppointmentRemoteDataSourceImpl(
@@ -421,6 +424,15 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i208.RealtimeSubscriber>(
       () => _i208.PocketBaseRealtimeSubscriber(gh<_i864.PocketBaseSession>()),
     );
+    gh.lazySingleton<_i850.SignInWithEmailUseCase>(
+      () => _i850.SignInWithEmailUseCase(gh<_i224.AuthRepository>()),
+    );
+    gh.lazySingleton<_i846.SignOutUseCase>(
+      () => _i846.SignOutUseCase(gh<_i224.AuthRepository>()),
+    );
+    gh.lazySingleton<_i1046.WatchAuthStateUseCase>(
+      () => _i1046.WatchAuthStateUseCase(gh<_i224.AuthRepository>()),
+    );
     gh.lazySingleton<_i641.RecurringTaskRepository>(
       () => _i133.RecurringTaskRepositoryImpl(
         gh<_i696.RecurringTaskRemoteDataSource>(),
@@ -469,8 +481,12 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i259.AppointmentRepository>(),
       ),
     );
-    gh.lazySingleton<_i224.AuthRepository>(
-      () => _i534.AuthRepositoryImpl(gh<_i788.AuthRemoteDataSource>()),
+    gh.factory<_i708.AuthBloc>(
+      () => _i708.AuthBloc(
+        gh<_i850.SignInWithEmailUseCase>(),
+        gh<_i846.SignOutUseCase>(),
+        gh<_i1046.WatchAuthStateUseCase>(),
+      ),
     );
     gh.lazySingleton<_i330.ConfigRepository>(
       () => _i62.ConfigRepositoryImpl(gh<_i584.ConfigRemoteDataSource>()),
@@ -554,15 +570,6 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i86.WatchOverrunAlertPlanUseCase>(),
         gh<_i941.SyncOverrunAlertScheduleUseCase>(),
       ),
-    );
-    gh.lazySingleton<_i98.SignInWithGoogleUseCase>(
-      () => _i98.SignInWithGoogleUseCase(gh<_i224.AuthRepository>()),
-    );
-    gh.lazySingleton<_i846.SignOutUseCase>(
-      () => _i846.SignOutUseCase(gh<_i224.AuthRepository>()),
-    );
-    gh.lazySingleton<_i1046.WatchAuthStateUseCase>(
-      () => _i1046.WatchAuthStateUseCase(gh<_i224.AuthRepository>()),
     );
     gh.factory<_i427.ListManagerBloc>(
       () => _i427.ListManagerBloc(
@@ -696,13 +703,6 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i689.WatchListsUseCase>(),
         gh<_i892.WatchTimeEntriesUseCase>(),
         gh<_i67.GetListReportUseCase>(),
-      ),
-    );
-    gh.factory<_i708.AuthBloc>(
-      () => _i708.AuthBloc(
-        gh<_i98.SignInWithGoogleUseCase>(),
-        gh<_i846.SignOutUseCase>(),
-        gh<_i1046.WatchAuthStateUseCase>(),
       ),
     );
     gh.factory<_i821.TimeEntryBloc>(

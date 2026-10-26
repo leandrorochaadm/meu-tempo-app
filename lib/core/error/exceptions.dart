@@ -1,4 +1,4 @@
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 
 import 'auth_failures.dart';
 import 'failures.dart';
@@ -55,12 +55,6 @@ class AuthException extends AppException {
   Failure toFailure() => const AuthFailure();
 }
 
-class SignInCancelledException extends AppException {
-  const SignInCancelledException();
-  @override
-  Failure toFailure() => const SignInCancelledFailure();
-}
-
 /// Mapeia o `code` de uma [FirebaseException] do Firestore para [AppException].
 AppException mapFirestoreException(FirebaseException e) => switch (e.code) {
   'permission-denied' => const PermissionException(),
@@ -69,19 +63,3 @@ AppException mapFirestoreException(FirebaseException e) => switch (e.code) {
   'unauthenticated' => const UnauthenticatedException(),
   _ => const ServerException(),
 };
-
-/// Mapeia o `code` de uma [FirebaseAuthException] para [AppException].
-AppException mapFirebaseAuthException(FirebaseAuthException e) =>
-    switch (e.code) {
-      'popup-closed-by-user' ||
-      'cancelled-popup-request' ||
-      'popup-blocked' ||
-      'user-cancelled' ||
-      // Nativo: usuário fechou a aba do Google (Android | iOS).
-      'web-context-canceled' ||
-      'web-context-cancelled' => const SignInCancelledException(),
-      'network-request-failed' ||
-      // iOS: sem rede dentro da tela do Google.
-      'web-network-request-failed' => const NetworkException(),
-      _ => const AuthException(),
-    };
