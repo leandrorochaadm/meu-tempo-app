@@ -16,9 +16,14 @@ class AuthStateChanged extends AuthEvent {
   List<Object?> get props => [user];
 }
 
-/// Usuário tocou em "Entrar com Google".
-class AuthGoogleSignInRequested extends AuthEvent {
-  const AuthGoogleSignInRequested();
+/// Usuário tocou em "Entrar".
+class AuthEmailSignInRequested extends AuthEvent {
+  const AuthEmailSignInRequested({required this.email, required this.password});
+  final String email;
+  final String password;
+
+  @override
+  List<Object?> get props => [email, password];
 }
 
 /// Usuário pediu para sair.

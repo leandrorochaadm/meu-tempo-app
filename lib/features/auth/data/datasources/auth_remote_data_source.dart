@@ -1,21 +1,20 @@
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:injectable/injectable.dart';
+import 'dart:async';
 
+import 'package:injectable/injectable.dart';
+import 'package:pocketbase/pocketbase.dart';
+
+import '../../../../core/constants/pb_schema.dart';
+import '../../../../core/data/pocketbase/pocketbase_session.dart';
 import '../../../../core/error/exceptions.dart';
+import '../../../../core/error/pocketbase_error_mapper.dart';
 import '../models/user_model.dart';
 
-/// Acesso ao Firebase Auth. Lança [AppException] em caso de erro.
+const int _statusBadRequest = 400;
+
+/// PocketBase auth access. Throws [AppException] on error.
 abstract class AuthRemoteDataSource {
-  /// Inicia o login SSO Google.
-  ///
-  /// - **Nativo (Android/iOS):** `signInWithProvider`, que abre o Google numa
-  ///   aba do sistema e volta ao app.
-  /// - **Web:** **redirect** quando o app é servido no mesmo domínio do
-  ///   `authDomain` (produção) e **popup** caso contrário (dev em localhost).
-  ///
-  /// Em qualquer caso o usuário chega pelo [authState].
-  Future<void> signInWithGoogle();
+  /// Signs in with e-mail and password. The user arrives through [authState].
+  Future<void> signInWithEmail(String email, String password);
   Future<void> signOut();
   Stream<UserModel?> authState();
   UserModel? currentUser();
@@ -23,59 +22,47 @@ abstract class AuthRemoteDataSource {
 
 @LazySingleton(as: AuthRemoteDataSource)
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
-  AuthRemoteDataSourceImpl(this._auth, {@ignoreParam bool isWeb = kIsWeb})
-      : _isWeb = isWeb;
+  AuthRemoteDataSourceImpl(this._session);
 
-  final FirebaseAuth _auth;
-
-  /// Plataforma em que o app roda. Parâmetro só para teste: na VM dos testes
-  /// `kIsWeb` é sempre `false`, e o fluxo web precisa ser exercitado também.
-  final bool _isWeb;
-
-  /// O `signInWithRedirect` só sobrevive ao retorno do Google quando o handler
-  /// (`https://<authDomain>/__/auth/handler`) está na **mesma origem** da
-  /// página: com o particionamento de storage do Chrome/Safari, o estado do
-  /// redirect é descartado entre origens diferentes e o usuário volta
-  /// deslogado. Em produção o PWA é servido no próprio `authDomain`, então o
-  /// redirect vale — é o único fluxo confiável no PWA instalado (no iOS o
-  /// popup abre fora do app e não retorna). Em dev (localhost) as origens
-  /// diferem, e aí o popup é o que funciona.
-  bool get _sameOriginAsAuthDomain =>
-      _auth.app.options.authDomain == Uri.base.host;
+  final PocketBaseSession _session;
 
   @override
-  Future<void> signInWithGoogle() async {
+  Future<void> signInWithEmail(String email, String password) async {
     try {
-      final provider = GoogleAuthProvider();
-      if (!_isWeb) {
-        await _auth.signInWithProvider(provider);
-      } else if (_sameOriginAsAuthDomain) {
-        await _auth.signInWithRedirect(provider);
-      } else {
-        await _auth.signInWithPopup(provider);
-      }
-    } on FirebaseAuthException catch (e) {
-      throw mapFirebaseAuthException(e);
+      await _session.client
+          .collection(PbCollections.users)
+          .authWithPassword(email, password);
+    } on ClientException catch (e) {
+      // 400 = wrong credentials or unknown account.
+      if (e.statusCode == _statusBadRequest) throw const AuthException();
+      throw mapPocketBaseError(e);
     }
   }
 
   @override
   Future<void> signOut() async {
-    try {
-      await _auth.signOut();
-    } on FirebaseAuthException catch (e) {
-      throw mapFirebaseAuthException(e);
-    }
+    _session.client.authStore.clear();
   }
 
   @override
-  Stream<UserModel?> authState() => _auth.authStateChanges().map(
-        (user) => user == null ? null : UserModel.fromFirebaseUser(user),
-      );
+  Stream<UserModel?> authState() {
+    late final StreamController<UserModel?> controller;
+    StreamSubscription<AuthStoreEvent>? sub;
+    controller = StreamController<UserModel?>(
+      onListen: () {
+        controller.add(currentUser());
+        sub = _session.client.authStore.onChange.listen(
+          (_) => controller.add(currentUser()),
+        );
+      },
+      onCancel: () => sub?.cancel(),
+    );
+    return controller.stream;
+  }
 
   @override
   UserModel? currentUser() {
-    final user = _auth.currentUser;
-    return user == null ? null : UserModel.fromFirebaseUser(user);
+    if (!_session.isSignedIn) return null;
+    return UserModel.fromRecord(_session.client.authStore.record!);
   }
 }

@@ -5,12 +5,12 @@ class UnauthenticatedFailure extends Failure {
   const UnauthenticatedFailure();
 }
 
-/// Falha genérica no fluxo de autenticação.
+/// Wrong e-mail or password (or unknown account).
 class AuthFailure extends Failure {
   const AuthFailure();
 }
 
-/// O usuário fechou/cancelou o popup do Google.
-class SignInCancelledFailure extends Failure {
-  const SignInCancelledFailure();
+/// E-mail or password left blank on sign-in.
+class EmptyCredentialsFailure extends Failure {
+  const EmptyCredentialsFailure();
 }
