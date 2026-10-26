@@ -55,3 +55,7 @@ temp/
 
 # Configuração local por máquina
 .env
+
+# PocketBase local (binário e banco descartável)
+tool/.bin/
+.pb/
