@@ -21,7 +21,7 @@ class NetworkFailure extends Failure {
   const NetworkFailure();
 }
 
-/// Permissão negada pelo backend (regras do Firestore).
+/// Permissão negada pelo backend (regras de acesso do servidor).
 class PermissionDeniedFailure extends Failure {
   const PermissionDeniedFailure();
 }

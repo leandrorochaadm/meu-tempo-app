@@ -10,8 +10,6 @@
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 
-import 'package:cloud_firestore/cloud_firestore.dart' as _i974;
-import 'package:firebase_auth/firebase_auth.dart' as _i59;
 import 'package:get_it/get_it.dart' as _i174;
 import 'package:injectable/injectable.dart' as _i526;
 import 'package:meu_tempo/core/data/pocketbase/pocketbase_session.dart'
@@ -266,7 +264,6 @@ extension GetItInjectableX on _i174.GetIt {
     final gh = _i526.GetItHelper(this, environment, environmentFilter);
     final preferencesModule = _$PreferencesModule();
     final pocketBaseModule = _$PocketBaseModule();
-    final firebaseModule = _$FirebaseModule();
     final lockScreenGatewayModule = _$LockScreenGatewayModule();
     final overrunAlertSchedulerModule = _$OverrunAlertSchedulerModule();
     await gh.factoryAsync<_i460.SharedPreferences>(
@@ -277,8 +274,6 @@ extension GetItInjectableX on _i174.GetIt {
       () => pocketBaseModule.pocketBase,
       preResolve: true,
     );
-    gh.lazySingleton<_i59.FirebaseAuth>(() => firebaseModule.firebaseAuth);
-    gh.lazySingleton<_i974.FirebaseFirestore>(() => firebaseModule.firestore);
     gh.lazySingleton<_i483.CheckFitsInDayUseCase>(
       () => const _i483.CheckFitsInDayUseCase(),
     );
@@ -838,8 +833,6 @@ extension GetItInjectableX on _i174.GetIt {
 class _$PreferencesModule extends _i767.PreferencesModule {}
 
 class _$PocketBaseModule extends _i767.PocketBaseModule {}
-
-class _$FirebaseModule extends _i767.FirebaseModule {}
 
 class _$LockScreenGatewayModule extends _i752.LockScreenGatewayModule {}
 

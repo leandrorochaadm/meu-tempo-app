@@ -2,7 +2,7 @@ import 'package:json_annotation/json_annotation.dart';
 
 /// Active timer target type: leaf task or appointment.
 ///
-/// The outside spelling (Firestore, route query param, native payload) is the
+/// The outside spelling (backend, route query param, native payload) is the
 /// [apiValue] — never `.name` nor the index. `json_serializable` uses the same
 /// field (`valueField`), so what is already stored does not change.
 @JsonEnum(valueField: 'apiValue')
