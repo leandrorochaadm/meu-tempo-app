@@ -15,7 +15,7 @@ final class LockScreenTapStreamHandler: NSObject, FlutterStreamHandler {
     private var pending: [String: String]?
 
     /// Returns false for URLs of other schemes (they go on to the plugins,
-    /// e.g. Google sign-in). Our own URL is always consumed.
+    /// e.g. other plugins' URLs). Our own URL is always consumed.
     @discardableResult
     func offer(_ url: URL) -> Bool {
         guard url.scheme == LockScreenContract.tapScheme else { return false }

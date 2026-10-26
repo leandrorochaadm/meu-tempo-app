@@ -1,5 +1,5 @@
 # Atalhos de desenvolvimento — Meu Tempo
-.PHONY: gen watch test run run-ios run-ios-debug run-ios-release run-android run-android-debug run-android-release analyze build deploy ship
+.PHONY: gen watch test run run-ios run-ios-debug run-ios-release run-android run-android-debug run-android-release analyze build ship
 
 # Gera código (json_serializable + injectable)
 gen:
@@ -13,12 +13,11 @@ watch:
 test:
 	flutter test --coverage
 
-# Mantém a sessão do Firebase Auth entre execuções em dev. São DUAS condições
-# necessárias (uma só não basta):
-#   1. Perfil fixo do Chrome  → o IndexedDB (onde vive a sessão) não é descartado.
-#   2. Porta fixa             → o IndexedDB é isolado por origem (host:porta);
-#                               porta aleatória a cada run = outra origem = login perdido.
-# Diretório de perfil ignorado pelo git.
+# Keeps the login session between dev runs. Both conditions are required:
+#   1. Fixed Chrome profile -> browser storage (where the session lives) is kept.
+#   2. Fixed port           -> storage is isolated per origin (host:port);
+#                              a random port each run = new origin = login lost.
+# Profile directory ignored by git.
 CHROME_PROFILE := $(CURDIR)/.dev-chrome
 WEB_PORT       := 5555
 
@@ -74,13 +73,6 @@ analyze:
 build:
 	flutter build web --release --pwa-strategy=none $(call config_flag,$(PROD_CONFIG))
 
-# Build + deploy completo no Firebase num único comando.
-# Depende de `build`: o Make roda o build antes e só então publica.
-# Publica a página (Hosting), as regras e os índices do Firestore.
-deploy: build
-	firebase deploy --only hosting,firestore:rules,firestore:indexes
-
-# Pipeline completa "tudo de uma vez": analisa, testa e faz build + deploy.
-# Cada etapa é pré-requisito da próxima e o Make PARA na primeira que falhar —
-# se o analyze acusar issue ou um teste quebrar, o deploy não acontece.
-ship: analyze test deploy
+# Full local pipeline: static analysis, then tests.
+# Make stops at the first failing step. Publishing is done by the PWA workflow.
+ship: analyze test

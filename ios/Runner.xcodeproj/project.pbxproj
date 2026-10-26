@@ -37,7 +37,6 @@
 		B10000000000000000000014 /* TimerActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000014 /* TimerActivityAttributes.swift */; };
 		B471B4702F4EA02639EECAE5 /* LockScreenIntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E46F4B29A507ABF91AE2B14 /* LockScreenIntentHandler.swift */; };
 		C6155671F90F5AD0330A5E71 /* LockScreenStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BFF7B41D5244729C86C00B3 /* LockScreenStyle.swift */; };
-		C9F0AF9C398BB29EA62B88A8 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 38786C470AE46C551E30CFE9 /* GoogleService-Info.plist */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -89,7 +88,6 @@
 		250AA2479A1D0610E9FD937D /* LiveActivity.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = LiveActivity.xcconfig; sourceTree = "<group>"; };
 		331C807B294A618700263BE5 /* RunnerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunnerTests.swift; sourceTree = "<group>"; };
 		331C8081294A63A400263BE5 /* RunnerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RunnerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		38786C470AE46C551E30CFE9 /* GoogleService-Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; name = "GoogleService-Info.plist"; path = "Runner/GoogleService-Info.plist"; sourceTree = "<group>"; };
 		3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = AppFrameworkInfo.plist; path = Flutter/AppFrameworkInfo.plist; sourceTree = "<group>"; };
 		66B37D4DCC77DAE515CDF254 /* MeuTempoLiveActivityBundle.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MeuTempoLiveActivityBundle.swift; sourceTree = "<group>"; };
 		702236A2D57D2674B13BD704 /* TimerLiveActivityWidget.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TimerLiveActivityWidget.swift; sourceTree = "<group>"; };
@@ -167,7 +165,6 @@
 				97C146F01CF9000F007C117D /* Runner */,
 				97C146EF1CF9000F007C117D /* Products */,
 				331C8082294A63A400263BE5 /* RunnerTests */,
-				38786C470AE46C551E30CFE9 /* GoogleService-Info.plist */,
 				BECDF00C0578050DC3D6E772 /* MeuTempoLiveActivity */,
 			);
 			sourceTree = "<group>";
@@ -356,7 +353,6 @@
 				3B3967161E833CAA004F5970 /* AppFrameworkInfo.plist in Resources */,
 				97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */,
 				97C146FC1CF9000F007C117D /* Main.storyboard in Resources */,
-				C9F0AF9C398BB29EA62B88A8 /* GoogleService-Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
