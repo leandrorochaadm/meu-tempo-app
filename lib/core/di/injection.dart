@@ -2,8 +2,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get_it/get_it.dart';
 import 'package:injectable/injectable.dart';
+import 'package:pocketbase/pocketbase.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../config/app_config.dart';
+import '../data/pocketbase/pocketbase_client_factory.dart';
 import 'injection.config.dart';
 
 final GetIt getIt = GetIt.instance;
@@ -31,4 +34,15 @@ abstract class FirebaseModule {
 abstract class PreferencesModule {
   @preResolve
   Future<SharedPreferences> get prefs => SharedPreferences.getInstance();
+}
+
+/// Registra o cliente único do PocketBase (com a sessão salva). Nunca criar
+/// `PocketBase(...)` nos DataSources. `@preResolve` resolve o `Future` na
+/// inicialização do container.
+@module
+abstract class PocketBaseModule {
+  @preResolve
+  @singleton
+  Future<PocketBase> get pocketBase =>
+      PocketBaseClientFactory.create(baseUrl: AppConfig.pocketBaseUrl);
 }
