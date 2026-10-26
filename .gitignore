@@ -59,3 +59,12 @@ temp/
 # PocketBase local (binário e banco descartável)
 tool/.bin/
 .pb/
+
+# PocketBase: only migrations are versioned
+pocketbase/*
+!pocketbase/pb_migrations/
+# Build-time config: only the examples are versioned
+config/*.json
+!config/*.json.example
+# wrangler cache
+.wrangler/

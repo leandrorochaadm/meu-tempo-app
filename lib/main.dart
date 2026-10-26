@@ -5,11 +5,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 import 'core/bootstrap/app_services_bootstrap.dart';
+import 'core/config/app_config.dart';
 import 'core/di/injection.dart';
 import 'core/logging/app_logger.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'core/ui/app_error_screen.dart';
+import 'core/ui/app_not_configured_screen.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'features/lock_screen/data/background/lock_screen_action_entrypoint.dart';
 import 'features/lock_screen/presentation/bloc/lock_screen_permission_bloc.dart';
@@ -40,6 +42,14 @@ Future<void> main() async {
   await runZonedGuarded(
     () async {
       WidgetsFlutterBinding.ensureInitialized();
+
+      // Build without config: show the notice and skip services (DI, Firebase).
+      final missingKeys = AppConfig.missingKeys;
+      if (missingKeys.isNotEmpty) {
+        AppLogger.logError('App config missing: ${missingKeys.join(', ')}');
+        runApp(const AppNotConfiguredApp());
+        return;
+      }
 
       await initializeAppServices();
       await initializeDateFormatting('pt_BR');

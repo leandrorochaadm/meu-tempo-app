@@ -22,11 +22,18 @@ test:
 CHROME_PROFILE := $(CURDIR)/.dev-chrome
 WEB_PORT       := 5555
 
+# Per-environment build config. A missing file compiles without config (the app
+# shows the "not configured" screen), so `make build` works before prod.json exists.
+DEV_CONFIG  := config/dev.json
+PROD_CONFIG := config/prod.json
+config_flag = $(if $(wildcard $(1)),--dart-define-from-file=$(1),)
+
 # Roda o app no Chrome (PWA) com perfil e porta fixos
 run:
 	flutter run -d chrome \
 		--web-port=$(WEB_PORT) \
-		--web-browser-flag="--user-data-dir=$(CHROME_PROFILE)"
+		--web-browser-flag="--user-data-dir=$(CHROME_PROFILE)" \
+		$(call config_flag,$(DEV_CONFIG))
 
 # Configuração local por máquina (fora do git). Modelo em .env.example.
 -include .env
@@ -37,14 +44,14 @@ run-ios: run-ios-debug
 
 run-ios-debug:
 	@test -n "$(IOS_DEVICE)" || { echo "Defina IOS_DEVICE no .env (veja .env.example)"; exit 1; }
-	fvm flutter run --debug -d $(IOS_DEVICE)
+	fvm flutter run --debug -d $(IOS_DEVICE) $(call config_flag,$(PROD_CONFIG))
 
 # Release no iPhone: necessário para testar com o app fechado (botões da tela
 # bloqueada). Em debug, o iOS não deixa o Dart rodar sem o Xcode/flutter
 # conectado, então o app reaberto em segundo plano não executa nada.
 run-ios-release:
 	@test -n "$(IOS_DEVICE)" || { echo "Defina IOS_DEVICE no .env (veja .env.example)"; exit 1; }
-	fvm flutter run --release -d $(IOS_DEVICE)
+	fvm flutter run --release -d $(IOS_DEVICE) $(call config_flag,$(PROD_CONFIG))
 
 # Roda o app nativo no Android de dev (via fvm). ID vem de ANDROID_DEVICE no .env.
 # `run-android` é atalho para o modo debug.
@@ -52,12 +59,12 @@ run-android: run-android-debug
 
 run-android-debug:
 	@test -n "$(ANDROID_DEVICE)" || { echo "Defina ANDROID_DEVICE no .env (veja .env.example)"; exit 1; }
-	fvm flutter run --debug -d $(ANDROID_DEVICE)
+	fvm flutter run --debug -d $(ANDROID_DEVICE) $(call config_flag,$(PROD_CONFIG))
 
 # Release no Android: comportamento real com o app fechado/em segundo plano.
 run-android-release:
 	@test -n "$(ANDROID_DEVICE)" || { echo "Defina ANDROID_DEVICE no .env (veja .env.example)"; exit 1; }
-	fvm flutter run --release -d $(ANDROID_DEVICE)
+	fvm flutter run --release -d $(ANDROID_DEVICE) $(call config_flag,$(PROD_CONFIG))
 
 # Análise estática (manter zero issues)
 analyze:
@@ -65,7 +72,7 @@ analyze:
 
 # Build de produção do PWA — sem cache (sempre online)
 build:
-	flutter build web --release --pwa-strategy=none
+	flutter build web --release --pwa-strategy=none $(call config_flag,$(PROD_CONFIG))
 
 # Build + deploy completo no Firebase num único comando.
 # Depende de `build`: o Make roda o build antes e só então publica.
