@@ -6,7 +6,7 @@ import '../entities/time_entry_entity.dart';
 /// Contrato dos registros de tempo datados (`users/{uid}/timeEntries`).
 abstract class TimeEntryRepository {
   /// Persiste um novo registro de tempo. O `id` da entity é ignorado na escrita
-  /// (o Firestore gera o doc.id).
+  /// (o servidor gera o id).
   Future<Either<Failure, Unit>> add(TimeEntryEntity entry);
 
   /// Fluxo dos registros com `occurredAt` no intervalo `[start, end)`.

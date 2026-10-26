@@ -1,5 +1,3 @@
-import 'package:firebase_core/firebase_core.dart';
-
 import 'auth_failures.dart';
 import 'failures.dart';
 
@@ -54,12 +52,3 @@ class AuthException extends AppException {
   @override
   Failure toFailure() => const AuthFailure();
 }
-
-/// Mapeia o `code` de uma [FirebaseException] do Firestore para [AppException].
-AppException mapFirestoreException(FirebaseException e) => switch (e.code) {
-  'permission-denied' => const PermissionException(),
-  'unavailable' => const NetworkException(),
-  'not-found' => const NotFoundException(),
-  'unauthenticated' => const UnauthenticatedException(),
-  _ => const ServerException(),
-};

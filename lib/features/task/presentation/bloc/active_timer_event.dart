@@ -42,7 +42,7 @@ class ActiveTimerEditSubmitted extends ActiveTimerEvent {
   List<Object?> get props => [taskId, result];
 }
 
-/// Interno: o cronômetro ativo mudou (stream do Firestore).
+/// Interno: o cronômetro ativo mudou (stream em tempo real do backend).
 class _ActiveTimerChanged extends ActiveTimerEvent {
   const _ActiveTimerChanged(this.timer);
   final ActiveTimerEntity? timer;

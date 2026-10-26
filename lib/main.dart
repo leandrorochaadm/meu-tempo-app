@@ -23,7 +23,7 @@ import 'features/task/presentation/bloc/active_timer_bloc.dart';
 
 Future<void> main() async {
   // Rede de segurança: qualquer exceção não capturada (inclusive assíncrona,
-  // como erro de stream do Firestore/Auth) é logada em vez de morrer em silêncio
+  // como erro de stream do tempo real ou da sessão) é logada em vez de morrer em silêncio
   // deixando a tela branca. Em release o `dart2js` remove as mensagens de erro,
   // então logar aqui é a única forma de ver a causa real.
   FlutterError.onError = (details) {
@@ -43,7 +43,7 @@ Future<void> main() async {
     () async {
       WidgetsFlutterBinding.ensureInitialized();
 
-      // Build without config: show the notice and skip services (DI, Firebase).
+      // Build without config: show the notice and skip services (DI, PocketBase).
       final missingKeys = AppConfig.missingKeys;
       if (missingKeys.isNotEmpty) {
         AppLogger.logError('App config missing: ${missingKeys.join(', ')}');

@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
 
-/// Usuário autenticado. Imutável e pura (sem Firebase, sem `copyWith`).
+/// Usuário autenticado. Imutável e pura (sem pacote externo, sem `copyWith`).
 class UserEntity extends Equatable {
   const UserEntity({
     required this.uid,

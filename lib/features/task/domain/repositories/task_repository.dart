@@ -11,7 +11,7 @@ abstract class TaskRepository {
     required bool includeDone,
   });
 
-  /// Cria uma tarefa (o `id` é gerado pelo Firestore) e devolve com o `id`.
+  /// Cria uma tarefa (o `id` é gerado pelo servidor) e devolve com o `id`.
   Future<Either<Failure, TaskEntity>> create(TaskEntity task);
 
   /// Cria uma subtarefa marcando o pai como não-folha **atomicamente**: ou as

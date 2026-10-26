@@ -9,7 +9,7 @@ import '../../logging/app_logger.dart';
 import 'realtime_subscriber.dart';
 
 /// Turns the PocketBase realtime into a [Stream] with the same contract as
-/// Firestore `snapshots()`: emits the current state on listen and again after
+/// a snapshot stream: emits the current state on listen and again after
 /// every change.
 ///
 /// [watch] runs the full query ([load], with the server filter and order) and

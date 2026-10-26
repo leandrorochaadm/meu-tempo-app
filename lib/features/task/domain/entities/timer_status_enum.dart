@@ -6,10 +6,10 @@ enum TimerStatusEnum {
 
   const TimerStatusEnum(this.apiValue);
 
-  /// Grafia gravada no Firestore (campo `status` do doc do cronômetro ativo).
+  /// Grafia gravada no backend (campo `status` do registro do cronômetro ativo).
   final String apiValue;
 
-  /// Converte o valor cru do Firestore. Ausente (doc gravado antes do estado
+  /// Converte o valor cru do backend. Ausente (registro gravado antes do estado
   /// pausado existir) ou desconhecido → [running], que era o único estado.
   static TimerStatusEnum fromApi(String? raw) {
     for (final status in values) {

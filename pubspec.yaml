@@ -44,11 +44,6 @@ dependencies:
   get_it: ^9.2.1
   injectable: ^3.0.0
 
-  # Backend — Firebase (Auth + Cloud Firestore)
-  firebase_core: ^4.12.1
-  firebase_auth: ^6.5.6
-  cloud_firestore: ^6.7.1
-
   # Backend — PocketBase (dados + login) e token da sessão no armazenamento seguro
   pocketbase: ^0.25.2
   flutter_secure_storage: ^11.2.0
@@ -82,8 +77,6 @@ dev_dependencies:
   # Testes
   bloc_test: ^10.0.0
   mocktail: ^1.0.5
-  fake_cloud_firestore: ^4.2.0
-
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
   # activated in the `analysis_options.yaml` file located at the root of your

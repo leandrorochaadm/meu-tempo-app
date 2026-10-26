@@ -3,7 +3,7 @@ enum LockScreenChannelMethodEnum {
   /// Dart → native: the handler is registered; the native side may send taps.
   backgroundReady('backgroundReady'),
 
-  /// Dart → native: Firebase/DI failed to start; the native side goes back to
+  /// Dart → native: services/DI failed to start or there is no session; the native side goes back to
   /// the previous drawing and stops the engine.
   backgroundFailed('backgroundFailed'),
 
