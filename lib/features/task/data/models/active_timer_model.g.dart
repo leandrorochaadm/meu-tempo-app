@@ -8,28 +8,20 @@ part of 'active_timer_model.dart';
 
 ActiveTimerModel _$ActiveTimerModelFromJson(Map<String, dynamic> json) =>
     ActiveTimerModel(
-      targetId: json['targetId'] as String,
-      startedAt: const TimestampConverter().fromJson(
-        json['startedAt'] as Timestamp?,
+      targetId: json['target_id'] as String,
+      startedAt: const InstantConverter().fromJson(
+        json['started_at'] as String?,
       ),
-      targetType: $enumDecodeNullable(
-        _$TimerTargetTypeEnumEnumMap,
-        json['targetType'],
-      ),
-      listId: json['listId'] as String?,
+      targetType: json['target_type'] as String?,
+      listId: json['list_id'] as String?,
       status: json['status'] as String?,
     );
 
 Map<String, dynamic> _$ActiveTimerModelToJson(ActiveTimerModel instance) =>
     <String, dynamic>{
-      'targetId': instance.targetId,
-      'startedAt': ?const TimestampConverter().toJson(instance.startedAt),
-      'targetType': ?_$TimerTargetTypeEnumEnumMap[instance.targetType],
-      'listId': ?instance.listId,
-      'status': ?instance.status,
+      'target_id': instance.targetId,
+      'started_at': const InstantConverter().toJson(instance.startedAt),
+      'target_type': instance.targetType,
+      'list_id': instance.listId,
+      'status': instance.status,
     };
-
-const _$TimerTargetTypeEnumEnumMap = {
-  TimerTargetTypeEnum.task: 'task',
-  TimerTargetTypeEnum.appointment: 'appointment',
-};

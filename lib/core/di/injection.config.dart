@@ -357,22 +357,10 @@ extension GetItInjectableX on _i174.GetIt {
       () =>
           _i482.WatchLockScreenTapsUseCase(gh<_i684.LockScreenTimerGateway>()),
     );
-    gh.lazySingleton<_i588.TimerRemoteDataSource>(
-      () => _i588.TimerRemoteDataSourceImpl(
-        gh<_i974.FirebaseFirestore>(),
-        gh<_i59.FirebaseAuth>(),
-      ),
-    );
-    gh.lazySingleton<_i381.TimerRepository>(
-      () => _i825.TimerRepositoryImpl(gh<_i588.TimerRemoteDataSource>()),
-    );
     gh.lazySingleton<_i74.TaskListFilterRepository>(
       () => _i372.TaskListFilterRepositoryImpl(
         gh<_i820.TaskListFilterLocalDataSource>(),
       ),
-    );
-    gh.lazySingleton<_i73.ResumeTimerUseCase>(
-      () => _i73.ResumeTimerUseCase(gh<_i381.TimerRepository>()),
     );
     gh.factory<_i397.LockScreenTapBloc>(
       () => _i397.LockScreenTapBloc(gh<_i482.WatchLockScreenTapsUseCase>()),
@@ -388,9 +376,6 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i1046.WatchAuthStateUseCase>(
       () => _i1046.WatchAuthStateUseCase(gh<_i224.AuthRepository>()),
-    );
-    gh.lazySingleton<_i397.WatchActiveTimerUseCase>(
-      () => _i397.WatchActiveTimerUseCase(gh<_i381.TimerRepository>()),
     );
     gh.factory<_i708.AuthBloc>(
       () => _i708.AuthBloc(
@@ -410,6 +395,12 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i813.TaskListRemoteDataSource>(
       () => _i813.TaskListRemoteDataSourceImpl(
+        gh<_i864.PocketBaseSession>(),
+        gh<_i811.RecordWatcher>(),
+      ),
+    );
+    gh.lazySingleton<_i588.TimerRemoteDataSource>(
+      () => _i588.TimerRemoteDataSourceImpl(
         gh<_i864.PocketBaseSession>(),
         gh<_i811.RecordWatcher>(),
       ),
@@ -452,6 +443,9 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i621.AppointmentRemoteDataSource>(),
       ),
     );
+    gh.lazySingleton<_i381.TimerRepository>(
+      () => _i825.TimerRepositoryImpl(gh<_i588.TimerRemoteDataSource>()),
+    );
     gh.lazySingleton<_i219.TaskListRepository>(
       () => _i924.TaskListRepositoryImpl(gh<_i813.TaskListRemoteDataSource>()),
     );
@@ -468,10 +462,16 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i941.SyncOverrunAlertScheduleUseCase>(),
       ),
     );
+    gh.lazySingleton<_i73.ResumeTimerUseCase>(
+      () => _i73.ResumeTimerUseCase(gh<_i381.TimerRepository>()),
+    );
     gh.lazySingleton<_i641.RecurringTaskRepository>(
       () => _i133.RecurringTaskRepositoryImpl(
         gh<_i696.RecurringTaskRemoteDataSource>(),
       ),
+    );
+    gh.lazySingleton<_i397.WatchActiveTimerUseCase>(
+      () => _i397.WatchActiveTimerUseCase(gh<_i381.TimerRepository>()),
     );
     gh.lazySingleton<_i1051.CreateRecurringTaskUseCase>(
       () => _i1051.CreateRecurringTaskUseCase(
