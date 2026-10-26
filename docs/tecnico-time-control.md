@@ -1,6 +1,7 @@
 # Questionário técnico — Meu Tempo (time_control)
 
 Versão: 1.0 | Data: 07/10/2026
+Atualizado em 24/10/2026: backend trocado para PocketBase (decisões 11 a 13).
 Respondido por: Leandro — eu mesmo (dono e único dev)
 Status: [x] Em coleta  [ ] Respondido  [ ] Congelado para desenvolvimento
 
@@ -16,23 +17,23 @@ continua.
 
 | # | Pergunta | Resposta |
 |---|---|---|
-| 1.1 💰 ⛔ | O backend já existe ou vai ser construído? Por quem? | Já existe: Firebase (Auth + Cloud Firestore) |
-| 1.2 💰 | Qual a stack do backend? | Firebase; sem backend próprio |
-| 1.3 ⛔ | Tem documentação de API? | Não se aplica (acesso via SDK do Firestore) |
+| 1.1 💰 ⛔ | O backend já existe ou vai ser construído? Por quem? | Já existe: PocketBase 0.40.5 na VPS da Hostinger (desde 24/10/2026) |
+| 1.2 💰 | Qual a stack do backend? | PocketBase (um serviço por projeto na VPS, atrás do Caddy com HTTPS); sem backend próprio além dele |
+| 1.3 ⛔ | Tem documentação de API? | API REST do PocketBase pelo SDK `pocketbase` (Dart); schema e regras em `pocketbase/pb_migrations/` |
 | 1.4 | O contrato da API está estável? | Não se aplica |
-| 1.5 ⛔ | Ambiente de homologação separado? | Não: um projeto Firebase só |
-| 1.6 ⛔ | Como o app obtém credenciais? | Configuração do Firebase por plataforma (a gerar para Android/iOS) |
+| 1.5 ⛔ | Ambiente de homologação separado? | Não: um PocketBase de produção; o `tool/pb.sh` sobe um descartável só para testes automáticos |
+| 1.6 ⛔ | Como o app obtém credenciais? | URL da API por `--dart-define-from-file` (`config/dev.json`, `config/prod.json`; `AppConfig`) |
 | 1.7 💰 | Integra com terceiros? | Não |
-| 1.8 | Formato de erro padronizado da API? | Não se aplica (exceções do SDK → `Failure`) |
+| 1.8 | Formato de erro padronizado da API? | `ClientException` do SDK → `mapPocketBaseError` → `AppException` → `Failure` |
 | 1.9 | Paginação | Não se aplica |
-| 1.10 | Rate limit | Não se aplica |
-| 1.11 | Tempo real | Streams do Firestore |
+| 1.10 | Rate limit | `rateLimits` do PocketBase (`pocketbase/pb_migrations/1792900100_settings.js`) |
+| 1.11 | Tempo real | `subscribe` do PocketBase (`RecordWatcher`) |
 
 **Pendências de acesso:**
 
 | Item | Responsável | Prazo |
 |---|---|---|
-| Registrar apps Android e iOS no projeto Firebase | Leandro | Antes do início |
+| Criar as contas de usuário no painel do PocketBase | Leandro | Na virada |
 
 ---
 
@@ -40,15 +41,15 @@ continua.
 
 | # | Pergunta | Resposta |
 |---|---|---|
-| 2.1 💰 ⛔ | Tipo de autenticação | Firebase Auth |
-| 2.2 | Login social? Quais provedores? | **Google**. Hoje: `signInWithPopup`/`signInWithRedirect` (só web). No nativo: `signInWithProvider(GoogleAuthProvider())` ou `google_sign_in`; exige SHA-1 do app no Firebase (Android) e URL scheme com o reversed client id (iOS) |
-| 2.3 | Token | Gerenciado pelo Firebase Auth |
-| 2.4 | Onde o token é guardado | Gerenciado pelo Firebase Auth |
-| 2.5 | Token expira com app aberto | Renovação automática do Firebase Auth |
-| 2.6 💰 | Perfis de usuário | Um perfil; vários usuários, sem número fixo; **cadastro aberto** a qualquer conta Google; dados isolados por `uid` |
+| 2.1 💰 ⛔ | Tipo de autenticação | E-mail e senha (`authWithPassword` na coleção `users` do PocketBase) |
+| 2.2 | Login social? Quais provedores? | Não: só e-mail e senha (decisão 12) |
+| 2.3 | Token | Token do PocketBase, válido por 30 dias |
+| 2.4 | Onde o token é guardado | `flutter_secure_storage` (`AsyncAuthStore`); no iOS, chaveiro com `first_unlock` para o 2º engine ler com o celular bloqueado |
+| 2.5 | Token expira com app aberto | Renovado (`authRefresh`) a cada abertura do app; sessão inválida volta ao login |
+| 2.6 💰 | Perfis de usuário | Um perfil; vários usuários, sem número fixo; **cadastro fechado** (quem cuida do app cria as contas no servidor); dados isolados pelo campo `user` com API Rules de dono |
 | 2.7 | Logout remoto | Não |
 | 2.8 💰 | Biometria | Não |
-| 2.9 | Múltiplos dispositivos simultâneos | Permitido, sem regra extra; os dados sincronizam pelo Firestore. A tela bloqueada não sincroniza entre os aparelhos; ao abrir o app, cada aparelho reconcilia a própria notificação/Live Activity com o estado do Firestore (sem push remoto) |
+| 2.9 | Múltiplos dispositivos simultâneos | Permitido, sem regra extra; os dados sincronizam pelo tempo real do PocketBase. A tela bloqueada não sincroniza entre os aparelhos; ao abrir o app, cada aparelho reconcilia a própria notificação/Live Activity com o estado do servidor (sem push remoto) |
 
 ---
 
@@ -61,8 +62,8 @@ continua.
 | 3.3 | Gerência de estado | BLoC event → state (`flutter_bloc`), não Riverpod |
 | 3.4 | Navegação | `go_router` |
 | 3.5 | Injeção de dependência | `get_it` + `injectable` |
-| 3.6 | Cliente HTTP | Não se aplica (SDK do Firebase) |
-| 3.7 | Modelagem | `json_serializable` + `TimestampConverter` |
+| 3.6 | Cliente HTTP | SDK `pocketbase` (usa o pacote `http`) |
+| 3.7 | Modelagem | `json_serializable` + `InstantConverter`/`CalendarDateConverter` |
 | 3.8 ⛔ | Versão do Flutter e do Dart | Dart `^3.11.5` · Flutter: _a registrar_ (`flutter --version` no início da implementação) |
 | 3.9 | Flavors | Não |
 | 3.10 | Design system | Próprio, tema escuro único (`.claude/rules/design.md`) |
@@ -78,12 +79,12 @@ continua.
 | # | Pergunta | Resposta |
 |---|---|---|
 | 4.1 💰 | Funciona offline? | Não: sempre online (decisão da v1) |
-| 4.2 | Persistência local | Nenhuma própria |
-| 4.3 | Cache de rede | Só o cache padrão do Firestore |
+| 4.2 | Persistência local | Só o token da sessão, no armazenamento seguro |
+| 4.3 | Cache de rede | Nenhum: sempre online |
 | 4.4 💰 | Escrita offline com fila | Não |
 | 4.5 💰 | Resolução de conflito | Não se aplica |
 | 4.6 | Volume local | Não se aplica |
-| 4.7 | Dados locais no logout | Não se aplica |
+| 4.7 | Dados locais no logout | O token salvo é apagado no logout |
 | 4.8 | Migração de schema local | Não se aplica |
 
 ---
@@ -97,7 +98,7 @@ continua.
 | 5.3 💰 | Push notification | Sem push remoto. Aviso de estouro (desejável, a cada 1 h): **notificação local** no nativo; no **web**, só aviso dentro do app quando aberto |
 | 5.4 | Deep link | Sim: tocar na notificação/Live Activity (fora dos botões) abre o app na tarefa ou compromisso que está rodando, via rota do `go_router` |
 | 5.5 | Analytics | Não |
-| 5.6 | Crash reporting | Firebase Crashlytics (`firebase_crashlytics`), no mesmo projeto Firebase, só no **nativo** (Android e iOS). Captura via `FlutterError.onError` e `PlatformDispatcher.instance.onError`; o `logError` do `AppLogger` envia o erro como não fatal. Sem dado do usuário nos relatos (título de tarefa, humor/energia), só o `uid` como identificador. Símbolos: script de upload do dSYM no Xcode (iOS) e plugin Gradle do Crashlytics (Android). O Crashlytics não tem versão web: no **PWA** a chamada fica atrás da abstração com implementação vazia (`kIsWeb`) e o erro vai só para o console do navegador (risco 9) |
+| 5.6 | Crash reporting | Nenhum por enquanto (decisão 7 em aberto desde 24/10/2026: a ferramenta escolhida dependia do backend anterior e não chegou a entrar no app). Erros só no log (`AppLogger`) |
 | 5.7 | Remote config | Não |
 | 5.8 💰 | Mapa | Não se aplica |
 | 5.9 💰 | Upload de arquivo | Não se aplica |
@@ -110,7 +111,7 @@ continua.
 |---|---|---|
 | 6.1 💰 ⛔ | Contas das lojas | Sem conta da Play Store; Apple ID **gratuito** |
 | 6.2 ⛔ | Quem publica nas lojas | Sem publicação: instalação direta |
-| 6.3 ⛔ | Keystore Android e certificados iOS | Keystore: `.jks` fora do repositório, senhas no gerenciador de senhas, `key.properties` no `.gitignore` (o SHA-1 dela vai para o Firebase). iOS: assinatura automática do Xcode (personal team) |
+| 6.3 ⛔ | Keystore Android e certificados iOS | Keystore: `.jks` fora do repositório, senhas no gerenciador de senhas, `key.properties` no `.gitignore`. iOS: assinatura automática do Xcode (personal team) |
 | 6.4 | Bundle id / application id | `br.com.tekton.meutempo` (iOS e Android) |
 | 6.5 | CI/CD | Não |
 | 6.6 | Distribuição de build de teste | Android: APK direto. iOS: Xcode no aparelho |
@@ -141,7 +142,7 @@ continua.
 | 8.2 | Stack de teste | `flutter_test` + `bloc_test` + `mocktail` |
 | 8.3 💰 | QA do cliente | Não: o próprio Leandro homologa |
 | 8.4 | Critério de aceite | "Pronto quando" de `docs/entrevista-tela-bloqueio.md` |
-| 8.5 | Ambiente de teste | Projeto Firebase único + aparelhos pessoais |
+| 8.5 | Ambiente de teste | PocketBase de produção na VPS + aparelhos pessoais; testes automáticos num PocketBase descartável (`tool/pb.sh`) |
 | 8.6 | Code review | Não se aplica (dev único) |
 
 ---
@@ -151,15 +152,15 @@ continua.
 | # | Pergunta | Resposta |
 |---|---|---|
 | 9.1 💰 | Dado pessoal sensível | Possivelmente: humor/energia pode contar como dado de saúde (LGPD art. 5º, II). Decisão adiada (risco 8) |
-| 9.2 | Política de privacidade | Adiada (risco 8); obrigatória pela LGPD com cadastro aberto, mesmo sem loja |
+| 9.2 | Política de privacidade | Adiada (risco 8); obrigatória pela LGPD com dados de outras pessoas, mesmo sem loja e com cadastro fechado |
 | 9.3 | Consentimento | Só a permissão de notificação do sistema (Android 13+: `POST_NOTIFICATIONS`; iOS: notificações + Live Activities). Negada → faixa no app a cada start com atalho para os Ajustes do sistema |
 | 9.4 | Exclusão de conta | Adiada (risco 8); direito do titular pela LGPD |
-| 9.5 | Criptografia | Padrão do Firebase |
+| 9.5 | Criptografia | HTTPS (Caddy) no trânsito; token no armazenamento seguro do aparelho |
 | 9.6 | Pinning / ofuscação | Não |
 | 9.7 | Retenção de log | Não se aplica |
 | 9.8 | Compliance | Não se aplica |
 
-Regras do Firestore isolam os dados por `uid` (`firestore.rules`).
+API Rules de dono do PocketBase (`pocketbase/pb_migrations/1792900000_init_schema.js`) isolam os dados pelo campo `user`; provadas por `tool/pb_permissions_test.py`.
 
 ---
 
@@ -184,12 +185,12 @@ Regras do Firestore isolam os dados por `uid` (`firestore.rules`).
 | 1 | Apple ID gratuito: app expira a cada 7 dias; a extensão de widget (Live Activity) pode não ser aceita | Alto no iOS | Validar com um protótipo mínimo antes de implementar; se falhar, avaliar a conta paga | Leandro |
 | 2 | Live Activity não abre diálogo: "parar com confirmação" não cabe direto na tela bloqueada | Médio | Decidido: 2 toques nas duas plataformas — "parar" vira "confirmar" por 5 s e volta sozinho (estado na notificação/Live Activity) | Leandro |
 | 3 | Android: a economia de bateria da fabricante pode encerrar o serviço em primeiro plano | Médio | Foreground service com tipo declarado; testar no aparelho real | Leandro |
-| 4 | Login web → nativo pode exigir reconfigurar o provedor (SHA-1, URL scheme) | Médio | Configurar SHA-1 (da keystore de 6.3) e URL scheme ao criar os alvos nativos | Leandro |
-| 5 | Botões pausar/parar com o app encerrado precisam gravar no Firestore sem o Flutter rodando | Alto | SDK nativo do Firebase no código da plataforma ou isolate Dart em segundo plano; decidir no protótipo da pendência 4 | Leandro |
-| 6 | Ação na tela bloqueada sem internet (app "sempre online") | Baixo | O SDK do Firestore enfileira a escrita e envia ao reconectar; aceitar | Leandro |
-| 7 | Limite de 8 h da Live Activity (iOS) não cobre o caso real | 9 | PWA sem crash reporting (Crashlytics não tem versão web) | Baixo | Aceito: o uso principal é o nativo; no web, erro só no console do navegador | Leandro |
+| 4 | Login web → nativo pode exigir reconfigurar o provedor (SHA-1, URL scheme) | Médio | Encerrado: o login por e-mail e senha não depende de provedor | Leandro |
+| 5 | Botões pausar/parar com o app encerrado precisam gravar no servidor sem o Flutter rodando | Alto | Resolvido: o 2º engine Dart em segundo plano grava no servidor com a sessão salva no armazenamento seguro | Leandro |
+| 6 | Ação na tela bloqueada sem internet (app "sempre online") | Baixo | O PocketBase não enfileira escrita: sem internet a ação falha e o nativo é avisado (`backgroundFailed`); aceito (app sempre online) | Leandro |
+| 7 | Limite de 8 h da Live Activity (iOS) não cobre o caso real | 9 | PWA sem crash reporting (ferramenta ainda em aberto) | Baixo | Aceito: o uso principal é o nativo; no web, erro só no console do navegador | Leandro |
 de 24 h | Médio | Aceito. O aviso de estouro (desejável) só cobre tarefa com estimado; sem estimado e compromisso ficam sem rede após 8 h — também aceito | Leandro |
-| 8 | Cadastro aberto + dados de terceiros (inclusive humor/energia) sem política de privacidade, exclusão de conta nem consentimento — LGPD | Alto se o app for divulgado | Decidir antes de divulgar o app a outras pessoas | Leandro |
+| 8 | Vários usuários + dados de terceiros (inclusive humor/energia) sem política de privacidade, exclusão de conta nem consentimento — LGPD | Alto se o app for divulgado | Decidir antes de divulgar o app a outras pessoas | Leandro |
 
 ---
 
@@ -203,11 +204,14 @@ de 24 h | Médio | Aceito. O aviso de estouro (desejável) só cobre tarefa com 
 | 4 | Mínimo iOS 17 e Android 13 (API 33) — Android revisto na decisão 8 | 07/10/2026 | Leandro |
 | 8 | Android mínimo baixado para 12 (API 31), para rodar no celular de teste (SM A125M) | 09/10/2026 | Leandro |
 | 5 | Bundle id `br.com.tekton.meutempo` | 07/10/2026 | Leandro |
-| 6 | Login Google mantido, adaptado ao nativo | 07/10/2026 | Leandro |
-| 7 | Crash reporting com Firebase Crashlytics, só no nativo (substitui o Sentry) | 07/10/2026 | Leandro |
+| 6 | Login Google mantido, adaptado ao nativo — substituída pela 12 | 07/10/2026 | Leandro |
+| 7 | Crash reporting só no nativo (substitui o Sentry); ferramenta em aberto desde 24/10/2026 | 07/10/2026 | Leandro |
 | 8 | Limite de 8 h da Live Activity aceito | 07/10/2026 | Leandro |
 | 9 | Dois aparelhos: reconciliar a tela bloqueada ao abrir o app | 07/10/2026 | Leandro |
-| 10 | Vários usuários, cadastro aberto a qualquer conta Google | 07/10/2026 | Leandro |
+| 10 | Vários usuários, cadastro aberto a qualquer conta Google — substituída pela 12 | 07/10/2026 | Leandro |
+| 11 | Backend trocado para PocketBase na VPS (Hostinger), com cópia dos dados existentes | 24/10/2026 | Leandro |
+| 12 | Login só por e-mail e senha; cadastro fechado (contas criadas no servidor) | 24/10/2026 | Leandro |
+| 13 | PWA em endereço novo no Cloudflare Pages (previsto: `meutempo.tektonsoftware.com.br`; API `meutempo-api.tektonsoftware.com.br`) | 24/10/2026 | Leandro |
 
 ---
 
@@ -215,7 +219,7 @@ de 24 h | Médio | Aceito. O aviso de estouro (desejável) só cobre tarefa com 
 
 | # | Pendência | Responsável | Prazo | Status |
 |---|---|---|---|---|
-| 1 | Método de login atual e configuração nativa | Leandro | Antes do início | Resolvida: Google (ver 2.2); falta só a configuração (SHA-1 e URL scheme) na implementação |
+| 1 | Método de login atual e configuração nativa | Leandro | Antes do início | Resolvida: login por e-mail e senha (decisão 12) |
 | 2 | Bundle id / application id | Leandro | Antes do início | Resolvida: `br.com.tekton.meutempo` |
 | 3 | Atualizar `CLAUDE.md` e `docs/requisitos-time-control.md` (passa a ser Web + Android + iOS) | Leandro | Primeiro passo da implementação | Resolvida em 07/10/2026 |
-| 4 | Validar os riscos 1 (Apple ID gratuito + extensão) e 5 (gravar no Firestore com o app encerrado) | Leandro | Antes do início | Aberta: protótipo mínimo com Live Activity instalado pelo Xcode no iPhone e botão que grava no Firestore com o app encerrado; se o risco 1 falhar, decidir sobre a conta paga |
+| 4 | Validar os riscos 1 (Apple ID gratuito + extensão) e 5 (gravar no servidor com o app encerrado) | Leandro | Antes do início | Aberta: protótipo mínimo com Live Activity instalado pelo Xcode no iPhone e botão que grava no servidor com o app encerrado; se o risco 1 falhar, decidir sobre a conta paga |

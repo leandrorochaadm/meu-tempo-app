@@ -184,7 +184,7 @@ _Ainda não conversado._
   **aplicativo instalado** no iPhone e no Android. A versão aberta pelo
   **navegador continua**, mas nela o cronômetro **não** aparece na tela
   bloqueada.
-  > 🟡 Parcial — plano 01; falta: `flutterfire configure` e SHA/URL scheme (passos manuais), notificação e Live Activity (planos 10, 11)
+  > 🟡 Parcial — plano 01; falta: notificação e Live Activity (planos 10, 11). A configuração nativa do login saiu com o login por e-mail e senha.
 
 ## Pontos em aberto
 
