@@ -3,52 +3,71 @@ paths:
   - "lib/features/*/data/datasources/**"
 ---
 
-# DataSource Template (Cloud Firestore)
+# DataSource Template (PocketBase)
 
 ```dart
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:injectable/injectable.dart';
+import 'package:pocketbase/pocketbase.dart';
+
+import '../../../../core/constants/pb_schema.dart';
+import '../../../../core/data/pocketbase/pocketbase_session.dart';
+import '../../../../core/data/pocketbase/record_watcher.dart';
 import '../../../../core/error/exceptions.dart';
+import '../../../../core/error/pocketbase_error_mapper.dart';
 import '../models/task_model.dart';
 
 abstract interface class TaskRemoteDataSource {
-  Future<List<TaskModel>> getTasks(String uid);
-  Future<String> createTask(String uid, TaskModel task);
-  Future<void> deleteTask(String uid, String taskId);
+  Stream<List<TaskModel>> watchTasks();
+  Future<TaskModel> create(TaskModel task);
+  Future<void> delete(String id);
 }
 
+@LazySingleton(as: TaskRemoteDataSource)
 class TaskRemoteDataSourceImpl implements TaskRemoteDataSource {
-  final FirebaseFirestore _firestore;
-  TaskRemoteDataSourceImpl(this._firestore);
+  TaskRemoteDataSourceImpl(this._session, this._watcher);
 
-  CollectionReference<Map<String, dynamic>> _tasks(String uid) =>
-      _firestore.collection('users').doc(uid).collection('tasks');
+  final PocketBaseSession _session;
+  final RecordWatcher _watcher;
 
-  @override
-  Future<List<TaskModel>> getTasks(String uid) async {
+  RecordService get _records => _session.client.collection(PbCollections.tasks);
+
+  Future<List<TaskModel>> _fetch() async {
     try {
-      final snap = await _tasks(uid).get();
-      return snap.docs.map((d) => TaskModel.fromDoc(d.id, d.data())).toList();
-    } on FirebaseException catch (e) {
-      throw mapFirebaseException(e); // -> AppException (core/error/exceptions.dart)
+      final records = await _records.getFullList(sort: '-${PbFields.createdAt}');
+      return records.map(TaskModel.fromRecord).toList();
+    } on ClientException catch (e) {
+      throw mapPocketBaseError(e); // -> AppException (core/error/exceptions.dart)
     }
   }
 
   @override
-  Future<String> createTask(String uid, TaskModel task) async {
+  Stream<List<TaskModel>> watchTasks() {
+    _session.userId;
+    return _watcher.watch(collection: PbCollections.tasks, load: _fetch);
+  }
+
+  @override
+  Future<TaskModel> create(TaskModel task) async {
+    final userId = _session.userId;
     try {
-      final ref = await _tasks(uid).add(task.toJson());
-      return ref.id;
-    } on FirebaseException catch (e) {
-      throw mapFirebaseException(e);
+      final record = await _records.create(
+        body: {...task.toJson(), PbFields.user: userId},
+      );
+      return TaskModel.fromRecord(record);
+    } on ClientException catch (e) {
+      throw mapPocketBaseError(e);
     }
   }
 
   @override
-  Future<void> deleteTask(String uid, String taskId) async {
+  Future<void> delete(String id) async {
+    _session.userId;
     try {
-      await _tasks(uid).doc(taskId).delete();
-    } on FirebaseException catch (e) {
-      throw mapFirebaseException(e);
+      await _records.delete(id);
+    } on ClientException catch (e) {
+      final error = mapPocketBaseError(e);
+      if (error is NotFoundException) return; // já apagado
+      throw error;
     }
   }
 }
@@ -56,7 +75,9 @@ class TaskRemoteDataSourceImpl implements TaskRemoteDataSource {
 
 ## Rules
 - Retorna Model (nunca `Map`).
-- Recebe `FirebaseFirestore` por injeção (nunca `.instance` direto).
-- Todo acesso sob `users/{uid}/...` (isolamento por usuário — ver `firebase.md`).
+- Recebe `PocketBaseSession`/`RecordWatcher` por injeção (nunca cria o cliente).
+- `userId` lido de `_session.userId` antes de todo pedido; `create` envia `PbFields.user`,
+  `update` nunca envia `user`.
+- Coleções e campos por `PbCollections`/`PbFields`; isolamento garantido pelas API Rules
+  (ver `pocketbase.md`).
 - try/catch em toda chamada; relançar `AppException` (o RepositoryImpl vira Failure).
-- Centralizar caminhos de coleção (evitar strings soltas).

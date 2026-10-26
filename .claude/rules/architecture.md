@@ -45,7 +45,7 @@ Domain       → NÃO DEPENDE DE NADA
 ```
 
 - `domain/` NUNCA importa nada de `data/` ou `presentation/`.
-- `domain/` NUNCA importa pacote externo (firebase, json, etc.) — **Dart puro**.
+- `domain/` NUNCA importa pacote externo (pocketbase, json, etc.) — **Dart puro**.
   Exceções permitidas: `equatable` e `fpdart` (tipos de apoio, não infraestrutura).
 
 ## Data Flow
@@ -60,8 +60,8 @@ UseCase (Params)
 RepositoryImpl (Data)
     ↓ chama DataSource com Model
 DataSource
-    ↓ lê/escreve no Firestore (Map <-> Model)
-Firebase
+    ↓ lê/escreve no PocketBase (RecordModel ↔ Model)
+PocketBase (servidor)
 ```
 
 ## Layer Type Rules
@@ -71,7 +71,7 @@ Firebase
 | Presentation | Entity | Entity | Entity | Domain |
 | Domain | Entity | Entity | Entity | Nada (+ equatable/fpdart) |
 | Repository | Ambos* | Model | Entity | Domain |
-| DataSource | Model | Map (Firestore) | Model | Nada |
+| DataSource | Model | RecordModel (PocketBase) | Model | Nada |
 
 *RepositoryImpl recebe Model do DataSource e converte para Entity antes de retornar.
 
@@ -81,7 +81,7 @@ Firebase
 |--------|-------|------|
 | Entity | Regras intrínsecas | Getters booleanos/derivados |
 | UseCase | Regras de fluxo; transforma erro de infra em domínio | Retorna `Left(Failure)` |
-| Repository | Erros de I/O (Firestore, rede, parse) | try/catch → `Left(Failure)` |
+| Repository | Erros de I/O (PocketBase, rede, parse) | try/catch → `Left(Failure)` |
 | Bloc | Nenhuma regra. Traduz Failure → State | `fold` → estado de erro |
 | UI | Exibe estado | `switch` exaustivo |
 
@@ -90,12 +90,12 @@ Firebase
 | Anti-pattern | Por quê é errado |
 |---|---|
 | `class TarefaModel extends TarefaEntity` | Acopla Domain com Data |
-| Anotação de serialização na Entity | Entity não conhece Firestore/JSON |
+| Anotação de serialização na Entity | Entity não conhece PocketBase/JSON |
 | `copyWith()` na Entity | Entity é imutável — construir novo objeto |
 | `final List<X> items;` sem unmodifiable | `final` protege referência, não conteúdo |
 | Regra de negócio no Bloc | Pertence ao UseCase ou Entity |
 | `Either` no State | Either morre no Bloc — State recebe dado resolvido |
-| Bloc chamando DataSource/Firestore direto | Pula UseCase e Repository |
+| Bloc chamando DataSource/PocketBase direto | Pula UseCase e Repository |
 | Mensagem de texto na Failure | Failure carrega dados, não strings de UI |
 | Import cruzado entre features | Comunicar via `core/` ou contrato compartilhado |
 | Classe sem sufixo arquitetural | O sufixo torna o papel imediato |
@@ -106,7 +106,7 @@ Firebase
 1. **Domain** — Entity (`Entity`, sem `copyWith`, coleções unmodifiable), Failures
    (dados, não mensagens), contrato Repository, Params, UseCase (`call()`).
 2. **Data** — Model (`toEntity()`/`fromEntity()`, `json_serializable`
-   `fromJson`/`toJson` + `fromDoc`, nunca extends Entity), DataSource (Firestore),
+   `fromJson`/`toJson` + `fromRecord`, nunca extends Entity), DataSource (PocketBase),
    RepositoryImpl (try/catch → `Either`).
 3. **Presentation** — Event, State (sealed + Equatable), Bloc (`_mapFailure` no `catch`),
    Page (`BlocBuilder` + `switch`), widgets.
@@ -118,9 +118,9 @@ Firebase
 |---|---|
 | Validar se objeto está válido | Entity (getter bool) |
 | Calcular prioridade / tempo somado | Entity (getter) ou UseCase (se cruza dados) |
-| Ler/gravar no Firestore | DataSource → RepositoryImpl |
+| Ler/gravar no PocketBase | DataSource → RepositoryImpl |
 | Verificar se "cabe no dia" | UseCase |
 | Pausar cronômetro ativo ao iniciar outro | UseCase |
 | Converter Failure em mensagem | Bloc (`_mapFailure`) |
 | Formatar hora/duração | UI (formatter) |
-| Serializar para Firestore | Model (`json_serializable`: `toJson`/`fromJson`/`fromDoc`) |
+| Serializar para o PocketBase | Model (`json_serializable`: `toJson`/`fromJson`/`fromRecord`) |
