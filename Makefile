@@ -1,5 +1,5 @@
 # Atalhos de desenvolvimento — Meu Tempo
-.PHONY: pb pb-superuser pb-test pb-check gen watch test run run-ios run-ios-debug run-ios-release run-android run-android-debug run-android-release analyze build ship
+.PHONY: pb pb-superuser pb-test pb-check gen watch test run run-ios run-ios-debug run-ios-release run-android run-android-debug run-android-release analyze build appbundle ship
 
 # PocketBase local descartável em 127.0.0.1:8095
 pb:
@@ -77,9 +77,23 @@ run-android-debug:
 	@test -n "$(ANDROID_DEVICE)" || { echo "Defina ANDROID_DEVICE no .env (veja .env.example)"; exit 1; }
 	fvm flutter run --debug -d $(ANDROID_DEVICE) $(call config_flag,$(PROD_CONFIG))
 
+# Upload key password for release signing (android/app/build.gradle.kts). Asked
+# without echo only when key.properties exists and the variable is not set (CI sets it).
+# Exported inside the recipe shell only, never written to disk. stty because make
+# runs /bin/sh (dash), which has no `read -s`.
+UPLOAD_KEY_PASSWORD_ENV := MEUTEMPO_UPLOAD_KEY_PASSWORD
+define ask_upload_password
+if [ -f android/key.properties ] && [ -z "$${$(UPLOAD_KEY_PASSWORD_ENV):-}" ]; then \
+	printf 'Senha da chave de upload: '; \
+	trap 'stty echo' EXIT INT TERM; stty -echo; read -r pw; stty echo; echo; \
+	export $(UPLOAD_KEY_PASSWORD_ENV)="$$pw"; unset pw; \
+fi
+endef
+
 # Release no Android: comportamento real com o app fechado/em segundo plano.
 run-android-release:
 	@test -n "$(ANDROID_DEVICE)" || { echo "Defina ANDROID_DEVICE no .env (veja .env.example)"; exit 1; }
+	@set -eu; $(ask_upload_password); \
 	fvm flutter run --release -d $(ANDROID_DEVICE) $(call config_flag,$(PROD_CONFIG))
 
 # Análise estática (manter zero issues)
@@ -89,6 +103,17 @@ analyze:
 # Build de produção do PWA — sem cache (sempre online)
 build:
 	flutter build web --release --pwa-strategy=none $(call config_flag,$(PROD_CONFIG))
+
+# Play Store bundle signed with the upload key (temp/publicar-producao.md).
+# Refuses a bundle signed with the debug key.
+AAB := build/app/outputs/bundle/release/app-release.aab
+appbundle:
+	@test -f android/key.properties || { echo "Falta android/key.properties (veja temp/publicar-producao.md)"; exit 1; }
+	@set -eu; $(ask_upload_password); \
+	fvm flutter build appbundle --release $(call config_flag,$(PROD_CONFIG)); \
+	owner=$$(keytool -printcert -jarfile $(AAB) | grep -m1 'CN='); \
+	echo "Certificado: $$owner"; \
+	case "$$owner" in *"CN=Android Debug"*) echo "Assinado com a chave de debug. Não envie."; exit 1;; esac
 
 # Full local pipeline: static analysis, then tests.
 # Make stops at the first failing step. Publishing is done by the PWA workflow.
