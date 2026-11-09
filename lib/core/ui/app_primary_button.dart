@@ -10,6 +10,7 @@ class AppPrimaryButton extends StatelessWidget {
     required this.onPressed,
     this.icon,
     this.loading = false,
+    this.destructive = false,
   });
 
   final String label;
@@ -17,16 +18,20 @@ class AppPrimaryButton extends StatelessWidget {
   final IconData? icon;
   final bool loading;
 
+  /// Uses the danger color, for irreversible actions.
+  final bool destructive;
+
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final background = destructive ? colors.danger : colors.primary;
     return SizedBox(
       height: 52,
       width: double.infinity,
       child: FilledButton(
         onPressed: loading ? null : onPressed,
         style: FilledButton.styleFrom(
-          backgroundColor: colors.primary,
+          backgroundColor: background,
           foregroundColor: colors.onPrimary,
           shape: RoundedRectangleBorder(borderRadius: context.radius.mdRadius),
           textStyle: context.text.labelLarge,

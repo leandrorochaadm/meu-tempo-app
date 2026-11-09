@@ -16,6 +16,10 @@ abstract class AuthRemoteDataSource {
   /// Signs in with e-mail and password. The user arrives through [authState].
   Future<void> signInWithEmail(String email, String password);
   Future<void> signOut();
+
+  /// Deletes the signed-in user's record. The SDK clears the session on
+  /// success; an account already gone (404) also clears it, without error.
+  Future<void> deleteCurrentUser();
   Stream<UserModel?> authState();
   UserModel? currentUser();
 }
@@ -42,6 +46,21 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Future<void> signOut() async {
     _session.client.authStore.clear();
+  }
+
+  @override
+  Future<void> deleteCurrentUser() async {
+    final userId = _session.userId;
+    try {
+      await _session.client.collection(PbCollections.users).delete(userId);
+    } on ClientException catch (e) {
+      final error = mapPocketBaseError(e);
+      if (error is NotFoundException) {
+        _session.client.authStore.clear();
+        return;
+      }
+      throw error;
+    }
   }
 
   @override

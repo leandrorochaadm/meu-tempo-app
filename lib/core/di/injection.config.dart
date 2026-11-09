@@ -40,12 +40,22 @@ import 'package:meu_tempo/features/appointment/domain/usecases/watch_appointment
     as _i777;
 import 'package:meu_tempo/features/appointment/presentation/bloc/agenda_bloc.dart'
     as _i990;
+import 'package:meu_tempo/features/auth/data/datasources/account_data_remote_data_source.dart'
+    as _i657;
+import 'package:meu_tempo/features/auth/data/datasources/account_local_data_source.dart'
+    as _i214;
 import 'package:meu_tempo/features/auth/data/datasources/auth_remote_data_source.dart'
     as _i788;
+import 'package:meu_tempo/features/auth/data/repositories/account_data_repository_impl.dart'
+    as _i781;
 import 'package:meu_tempo/features/auth/data/repositories/auth_repository_impl.dart'
     as _i534;
+import 'package:meu_tempo/features/auth/domain/repositories/account_data_repository.dart'
+    as _i295;
 import 'package:meu_tempo/features/auth/domain/repositories/auth_repository.dart'
     as _i224;
+import 'package:meu_tempo/features/auth/domain/usecases/delete_account_use_case.dart'
+    as _i975;
 import 'package:meu_tempo/features/auth/domain/usecases/sign_in_with_email_use_case.dart'
     as _i850;
 import 'package:meu_tempo/features/auth/domain/usecases/sign_out_use_case.dart'
@@ -54,6 +64,8 @@ import 'package:meu_tempo/features/auth/domain/usecases/watch_auth_state_use_cas
     as _i1046;
 import 'package:meu_tempo/features/auth/presentation/bloc/auth_bloc.dart'
     as _i708;
+import 'package:meu_tempo/features/auth/presentation/bloc/delete_account_bloc.dart'
+    as _i721;
 import 'package:meu_tempo/features/config/data/datasources/config_remote_data_source.dart'
     as _i584;
 import 'package:meu_tempo/features/config/data/repositories/config_repository_impl.dart'
@@ -352,6 +364,13 @@ extension GetItInjectableX on _i174.GetIt {
       () =>
           _i482.WatchLockScreenTapsUseCase(gh<_i684.LockScreenTimerGateway>()),
     );
+    gh.lazySingleton<_i214.AccountLocalDataSource>(
+      () => _i214.AccountLocalDataSourceImpl(gh<_i460.SharedPreferences>()),
+    );
+    gh.lazySingleton<_i657.AccountDataRemoteDataSource>(
+      () =>
+          _i657.AccountDataRemoteDataSourceImpl(gh<_i864.PocketBaseSession>()),
+    );
     gh.lazySingleton<_i74.TaskListFilterRepository>(
       () => _i372.TaskListFilterRepositoryImpl(
         gh<_i820.TaskListFilterLocalDataSource>(),
@@ -372,11 +391,23 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i1046.WatchAuthStateUseCase>(
       () => _i1046.WatchAuthStateUseCase(gh<_i224.AuthRepository>()),
     );
+    gh.lazySingleton<_i295.AccountDataRepository>(
+      () => _i781.AccountDataRepositoryImpl(
+        gh<_i657.AccountDataRemoteDataSource>(),
+        gh<_i214.AccountLocalDataSource>(),
+      ),
+    );
     gh.factory<_i708.AuthBloc>(
       () => _i708.AuthBloc(
         gh<_i850.SignInWithEmailUseCase>(),
         gh<_i846.SignOutUseCase>(),
         gh<_i1046.WatchAuthStateUseCase>(),
+      ),
+    );
+    gh.lazySingleton<_i975.DeleteAccountUseCase>(
+      () => _i975.DeleteAccountUseCase(
+        gh<_i224.AuthRepository>(),
+        gh<_i295.AccountDataRepository>(),
       ),
     );
     gh.lazySingleton<_i811.RecordWatcher>(
@@ -387,6 +418,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i32.SaveTaskListFilterUseCase>(
       () => _i32.SaveTaskListFilterUseCase(gh<_i74.TaskListFilterRepository>()),
+    );
+    gh.factory<_i721.DeleteAccountBloc>(
+      () => _i721.DeleteAccountBloc(gh<_i975.DeleteAccountUseCase>()),
     );
     gh.lazySingleton<_i813.TaskListRemoteDataSource>(
       () => _i813.TaskListRemoteDataSourceImpl(

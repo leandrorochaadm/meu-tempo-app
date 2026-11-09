@@ -12,6 +12,9 @@ abstract class AuthRepository {
   /// Encerra a sessão.
   Future<Either<Failure, Unit>> signOut();
 
+  /// Deletes the signed-in user's account record. The session ends on success.
+  Future<Either<Failure, Unit>> deleteCurrentUser();
+
   /// Fluxo do estado de autenticação (`null` = deslogado).
   Stream<UserEntity?> authState();
 

@@ -157,4 +157,46 @@ void main() {
       expect(values.last, isNull);
     });
   });
+
+  group('deleteCurrentUser', () {
+    test('should delete own record and clear session', () async {
+      final ds = build((_) async => http.Response('', 204));
+      client.authStore.save(_jwt(_future), _record());
+
+      await ds.deleteCurrentUser();
+
+      expect(requests.single.method, 'DELETE');
+      expect(requests.single.url.path, '/api/collections/users/records/user-a');
+      expect(client.authStore.isValid, isFalse);
+    });
+
+    test('should clear auth store when user is already deleted', () async {
+      final ds = build((_) async => status(404));
+      client.authStore.save(_jwt(_future), _record());
+
+      await ds.deleteCurrentUser();
+
+      expect(client.authStore.isValid, isFalse);
+    });
+
+    test('should keep session and throw when server fails', () async {
+      final ds = build((_) async => status(500));
+      client.authStore.save(_jwt(_future), _record());
+
+      await expectLater(
+        ds.deleteCurrentUser(),
+        throwsA(isA<ServerException>()),
+      );
+      expect(client.authStore.isValid, isTrue);
+    });
+
+    test('should throw UnauthenticatedException without session', () async {
+      final ds = build((_) async => http.Response('', 204));
+      await expectLater(
+        ds.deleteCurrentUser(),
+        throwsA(isA<UnauthenticatedException>()),
+      );
+      expect(requests, isEmpty);
+    });
+  });
 }

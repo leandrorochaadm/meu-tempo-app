@@ -5,6 +5,7 @@ import '../../../../core/theme/theme_context_extensions.dart';
 import '../../../../core/ui/app_empty_state.dart';
 import '../../../../core/ui/app_list_skeleton.dart';
 import '../../../../core/utils/formatters/duration_formatter.dart';
+import '../../../auth/presentation/widgets/delete_account_section.dart';
 import '../bloc/settings_bloc.dart';
 
 /// Configurações do dia. Por ora: horas disponíveis para o "cabe no dia"
@@ -19,7 +20,17 @@ class SettingsPage extends StatefulWidget {
 class _SettingsPageState extends State<SettingsPage> {
   /// Presets de horas disponíveis por dia (2h a 12h), em minutos.
   static const List<int> _presetsMinutes = [
-    120, 180, 240, 300, 360, 420, 480, 540, 600, 660, 720,
+    120,
+    180,
+    240,
+    300,
+    360,
+    420,
+    480,
+    540,
+    600,
+    660,
+    720,
   ];
 
   @override
@@ -39,17 +50,17 @@ class _SettingsPageState extends State<SettingsPage> {
             return switch (state) {
               SettingsLoading() => const AppListSkeleton(),
               SettingsError() => const AppEmptyState(
-                  icon: Icons.settings_rounded,
-                  title: 'Não foi possível carregar',
-                  message: 'Tente novamente em instantes.',
-                ),
+                icon: Icons.settings_rounded,
+                title: 'Não foi possível carregar',
+                message: 'Tente novamente em instantes.',
+              ),
               SettingsLoaded(:final availableMinutesPerDay) => _SettingsBody(
-                  selectedMinutes: availableMinutesPerDay,
-                  presets: _presetsMinutes,
-                  onSelected: (m) => context
-                      .read<SettingsBloc>()
-                      .add(AvailableMinutesChanged(m)),
+                selectedMinutes: availableMinutesPerDay,
+                presets: _presetsMinutes,
+                onSelected: (m) => context.read<SettingsBloc>().add(
+                  AvailableMinutesChanged(m),
                 ),
+              ),
             };
           },
         ),
@@ -93,6 +104,8 @@ class _SettingsBody extends StatelessWidget {
               ),
           ],
         ),
+        SizedBox(height: context.space.xl),
+        const DeleteAccountSection(),
       ],
     );
   }

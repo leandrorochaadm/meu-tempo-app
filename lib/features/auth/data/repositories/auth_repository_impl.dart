@@ -15,7 +15,10 @@ class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDataSource _dataSource;
 
   @override
-  Future<Either<Failure, Unit>> signInWithEmail(String email, String password) async {
+  Future<Either<Failure, Unit>> signInWithEmail(
+    String email,
+    String password,
+  ) async {
     try {
       await _dataSource.signInWithEmail(email, password);
       return const Right(unit);
@@ -32,6 +35,17 @@ class AuthRepositoryImpl implements AuthRepository {
       return const Right(unit);
     } on AppException catch (e, s) {
       AppLogger.logError('signOut falhou', error: e, stackTrace: s);
+      return Left(e.toFailure());
+    }
+  }
+
+  @override
+  Future<Either<Failure, Unit>> deleteCurrentUser() async {
+    try {
+      await _dataSource.deleteCurrentUser();
+      return const Right(unit);
+    } on AppException catch (e, s) {
+      AppLogger.logError('deleteCurrentUser falhou', error: e, stackTrace: s);
       return Left(e.toFailure());
     }
   }
