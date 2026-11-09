@@ -181,6 +181,28 @@ def auth(collection: str, email: str, password: str) -> str:
     return r.json()["token"]
 
 
+def list_ids(admin: httpx.Client, collection: str, flt: str) -> list[dict]:
+    r = admin.get(f"/api/collections/{collection}/records", params={"filter": flt, "perPage": 500})
+    r.raise_for_status()
+    return r.json()["items"]
+
+
+def wipe_user_records(admin: httpx.Client, user_id: str) -> None:
+    owner = f'user="{user_id}"'
+    for collection in ["time_entries", "active_timers", "day_configs", "appointments", "recurring_task_claims"]:
+        for item in list_ids(admin, collection, owner):
+            admin.delete(f"/api/collections/{collection}/records/{item['id']}").raise_for_status()
+    # Tasks: delete leaves first, until no task is left (mother -> daughter -> granddaughter).
+    while tasks := list_ids(admin, "tasks", owner):
+        parents = {t["parent"] for t in tasks if t["parent"]}
+        for t in tasks:
+            if t["id"] not in parents:
+                admin.delete(f"/api/collections/tasks/records/{t['id']}").raise_for_status()
+    for collection in ["recurring_tasks", "task_lists"]:
+        for item in list_ids(admin, collection, owner):
+            admin.delete(f"/api/collections/{collection}/records/{item['id']}").raise_for_status()
+
+
 def main() -> None:
     su_email = "seed-tmp@localhost.local"
     su_pass = secrets.token_urlsafe(24)
@@ -192,9 +214,11 @@ def main() -> None:
         ssh(f"sudo runuser -u pocketbase -- {PB_BIN} superuser upsert {su_email} '{su_pass}' --dir={PB_DIR}")
         admin = httpx.Client(base_url=BASE, headers={"Authorization": auth("_superusers", su_email, su_pass)})
 
-        # Recreate the demo user (cascade removes its old records).
+        # Recreate the demo user. Non-cascade relations (tasks.list, tasks.parent,
+        # recurring_tasks.list) block deleting the user, so its records go first.
         found = admin.get("/api/collections/users/records", params={"filter": f'email="{DEMO_EMAIL}"'}).json()
         for item in found["items"]:
+            wipe_user_records(admin, item["id"])
             admin.delete(f"/api/collections/users/records/{item['id']}").raise_for_status()
 
         password = DEMO_PASSWORD
