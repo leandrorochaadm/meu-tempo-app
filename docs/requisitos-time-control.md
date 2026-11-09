@@ -1,7 +1,7 @@
 # Requisitos — Meu Tempo
 
 _Controle de tempo pessoal — Bullet Journal digital com cronômetro por tarefa._
-_Levantado em 2026-07-19 · Última atualização em 2026-10-07_
+_Levantado em 2026-07-19 · Última atualização em 2026-11-09_
 _Entrevistado: Leandro (usuário e dono da ideia)_
 
 ## Problema e objetivos
@@ -50,8 +50,8 @@ que o papel não faz — medir e relatar o tempo gasto em cada tarefa.
 | Usuários (várias pessoas) | Cada um usa o app para acompanhar o próprio dia; cada um tem seu **login** e seu **diário separado** | Sim — cada um é dono dos próprios dados |
 
 **Observação:** o app terá **vários usuários independentes** (ex.: Leandro e
-outras pessoas), sem número fixo. As contas são criadas por quem cuida do app
-(cadastro fechado, desde 24/10/2026). Cada um vê **apenas os seus dados** — não há
+outras pessoas), sem número fixo. Cada pessoa **cria a própria conta pelo app**
+(cadastro aberto, desde 09/11/2026 — ver req. 16). Cada um vê **apenas os seus dados** — não há
 compartilhamento entre eles.
 
 ## Requisitos
@@ -200,6 +200,24 @@ rituais e demais medições ficam em **Próximas versões**. A versão 1 também
     - **Sem retroativo:** dia em que o app não foi aberto não gera tarefa (R7).
     - **Excluir uma lista** leva os modelos dela junto: se o usuário escolhe **mover as tarefas**, os modelos vão para a mesma lista; se escolhe **excluir todas**, os modelos também são excluídos.
     - _Pronto quando:_ crio o modelo "Academia" para seg/qua/sex e, ao abrir o app na segunda, nasce uma tarefa "Academia" para hoje (e só uma, mesmo abrindo de novo); e crio "Reunião" sem dia fixo e toco em "Adicionar hoje" duas vezes no mesmo dia, criando duas tarefas.
+16. **Criar conta pelo app.**
+    - Na tela de entrada, qualquer pessoa cria a própria conta informando **nome**, **e-mail** e **senha**.
+    - **Nome:** de 2 a 50 caracteres, contados depois de tirar os espaços das pontas e do jeito que a pessoa vê (um emoji ou uma letra acentuada contam 1).
+    - **E-mail:** precisa estar bem escrito (ex.: "ana@", "ana.exemplo.com" e vazio são recusados com aviso). É guardado em minúsculas e sem espaços nas pontas.
+    - **Senha:** de 8 a 71 caracteres, valendo exatamente como digitada (espaços contam).
+    - **Política de privacidade:** a pessoa marca a caixa "Li e aceito a política de privacidade" (com link para a política); sem marcar, a conta não é criada.
+    - **Avisos todos de uma vez:** se vários campos estiverem errados, cada um mostra o seu aviso ao mesmo tempo.
+    - **Sem confirmação de e-mail:** criada a conta, a pessoa já entra no app e vê o primeiro acesso guiado (req. 13).
+    - E-mail que já tem conta não cria outra. Maiúsculas e minúsculas não diferenciam o e-mail ("Ana@Exemplo.com" é o mesmo que "ana@exemplo.com"), no cadastro e na entrada.
+    - **Esqueci a senha** não entra: quem esquecer fala com quem cuida do app, que redefine a senha.
+    - _Pronto quando:_ crio a conta "Ana" com o e-mail ana@exemplo.com e a senha "abcd1234", marco a caixa da política, e entro direto no app, com a lista "Entrada" e nenhum dado de outra pessoa.
+17. **Editar o perfil.**
+    - O usuário edita o próprio **nome**, **e-mail** e **senha**, com os mesmos limites do cadastro e avisos todos de uma vez.
+    - **Nome:** nome igual ao atual é recusado com aviso. Conta antiga sem nome mostra o campo vazio pedindo "Informe seu nome"; o nome fica vazio até a pessoa preencher.
+    - **Trocar o e-mail:** pede a senha atual e troca na hora, sem e-mail de confirmação. E-mail que já tem conta não é aceito, e o e-mail igual ao atual é recusado com aviso. Com a senha atual errada, o app não diz se o e-mail novo já tem conta.
+    - **Trocar a senha:** pede a senha atual e a nova. Senha nova igual à atual é recusada com aviso.
+    - Depois de trocar o e-mail ou a senha, os **outros aparelhos saem da conta na hora** (o aparelho aberto volta para a tela de entrada em segundos; o fechado, ao abrir); o aparelho onde a troca foi feita continua dentro.
+    - _Pronto quando:_ troco meu nome para "Ana Lima" e ele aparece no perfil; troco o e-mail informando a senha atual e passo a entrar com o novo; troco a senha no celular e o outro aparelho volta para a tela de entrada, enquanto o celular continua dentro.
 
 ### Próximas versões
 
@@ -627,3 +645,15 @@ Decisões que encerraram as pendências anteriores:
 - 2026-10-24 — **Troca do backend para PocketBase.** O login passa a ser por e-mail e
   senha, e as contas são criadas por quem cuida do app (cadastro fechado). O app ganha
   endereço novo. Nenhuma regra de negócio muda. Atualizado em "Pessoas envolvidas".
+- 2026-11-09 — **Cadastro aberto e edição do perfil** (req. 16 e 17). Cada pessoa cria a
+  própria conta pelo app (nome de 2 a 50 caracteres, e-mail, senha de 8+ e aceite
+  obrigatório da política de privacidade), sem confirmação de e-mail, e entra direto.
+  No perfil, edita nome, e-mail (com a senha atual, sem e-mail de confirmação) e senha
+  (com a senha atual); trocar e-mail ou senha tira os outros aparelhos da conta, e trocar
+  para o mesmo valor é recusado. E-mail não diferencia maiúsculas. "Esqueci a senha" fica
+  com quem cuida do app. Substitui o cadastro fechado de 24/10/2026. Atualizado em "Pessoas envolvidas".
+- 2026-11-09 (cont.) — **Revisão da spec do cadastro e do perfil.** Nome contado do jeito
+  que a pessoa vê; e-mail bem escrito, guardado em minúsculas; senha de 8 a 71 caracteres,
+  exatamente como digitada; avisos de todos os campos de uma vez; nome igual ao atual
+  recusado; conta antiga sem nome pede o nome no perfil; outros aparelhos saem na hora
+  após trocar e-mail ou senha. Atualizados req. 16 e 17.

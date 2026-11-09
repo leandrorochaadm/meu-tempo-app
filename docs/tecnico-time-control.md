@@ -33,7 +33,7 @@ continua.
 
 | Item | Responsável | Prazo |
 |---|---|---|
-| Criar as contas de usuário no painel do PocketBase | Leandro | Na virada |
+| Criar as contas de usuário no painel do PocketBase | Leandro | Na virada (só as contas antigas; desde a decisão 14 cada pessoa cria a própria) |
 
 ---
 
@@ -46,7 +46,7 @@ continua.
 | 2.3 | Token | Token do PocketBase, válido por 30 dias |
 | 2.4 | Onde o token é guardado | `flutter_secure_storage` (`AsyncAuthStore`); no iOS, chaveiro com `first_unlock` para o 2º engine ler com o celular bloqueado |
 | 2.5 | Token expira com app aberto | Renovado (`authRefresh`) a cada abertura do app; sessão inválida volta ao login |
-| 2.6 💰 | Perfis de usuário | Um perfil; vários usuários, sem número fixo; **cadastro fechado** (quem cuida do app cria as contas no servidor); dados isolados pelo campo `user` com API Rules de dono |
+| 2.6 💰 | Perfis de usuário | Um perfil; vários usuários, sem número fixo; **cadastro aberto pelo app** (decisão 14, req. 16), sem confirmação de e-mail e sem "esqueci a senha"; perfil com nome, e-mail e senha editáveis (req. 17); dados isolados pelo campo `user` com API Rules de dono. Trocar o e-mail sem link de confirmação exige rota própria no servidor que confere a senha atual (o PocketBase só deixa o próprio usuário trocar o e-mail por `requestEmailChange`). Trocar e-mail ou senha renova o `tokenKey` do usuário; para os outros aparelhos saírem na hora, o app assina (`subscribe`) o próprio registro de `users` e, ao receber a mudança, tenta o `authRefresh` e volta ao login se falhar. Contar o nome "do jeito que a pessoa vê" usa o pacote `characters` (do SDK do Flutter) no domínio, exceção a registrar em `.claude/rules/architecture.md` |
 | 2.7 | Logout remoto | Não |
 | 2.8 💰 | Biometria | Não |
 | 2.9 | Múltiplos dispositivos simultâneos | Permitido, sem regra extra; os dados sincronizam pelo tempo real do PocketBase. A tela bloqueada não sincroniza entre os aparelhos; ao abrir o app, cada aparelho reconcilia a própria notificação/Live Activity com o estado do servidor (sem push remoto) |
@@ -212,6 +212,7 @@ de 24 h | Médio | Aceito. O aviso de estouro (desejável) só cobre tarefa com 
 | 11 | Backend trocado para PocketBase na VPS (Hostinger), com cópia dos dados existentes | 24/10/2026 | Leandro |
 | 12 | Login só por e-mail e senha; cadastro fechado (contas criadas no servidor) | 24/10/2026 | Leandro |
 | 13 | PWA em endereço novo no Cloudflare Pages (previsto: `meutempo.tektonsoftware.com.br`; API `meutempo-api.tektonsoftware.com.br`) | 24/10/2026 | Leandro |
+| 14 | Cadastro aberto pelo app (substitui o "cadastro fechado" da 12; o login continua só por e-mail e senha), com aceite da política de privacidade; perfil editável (nome, e-mail, senha) | 09/11/2026 | Leandro |
 
 ---
 
