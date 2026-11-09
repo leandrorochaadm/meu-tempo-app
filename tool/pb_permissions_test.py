@@ -378,6 +378,7 @@ def check_permissions(su: Actor, a: Owner, b: Owner) -> list[str]:
                   str(r.status_code))
 
     check_users(res, su, a, b)
+    check_account_deletion(res, su)
     return res.failed
 
 
@@ -419,6 +420,51 @@ def check_users(res: Results, su: Actor, a: Owner, b: Owner) -> None:
         "email": f"short{secrets.token_hex(4)}@pb-test.local", "password": "1234567", "passwordConfirm": "1234567",
     })
     res.check("users:create:short-password", r.status_code == 400, str(r.status_code))
+
+
+def check_account_deletion(res: Results, su: Actor) -> None:
+    """Account deletion as the app does it: tasks and recurring tasks first, then the user."""
+    actors = []
+    for name in ("C", "D"):
+        pwd = secrets.token_urlsafe(24)
+        email = f"{name.lower()}{secrets.token_hex(4)}@pb-test.local"
+        create_user(su, email, pwd)
+        actors.append(login("users", email, pwd, name))
+    c, d = seed_owner(actors[0]), seed_owner(actors[1])
+    C, D = c.actor, d.actor
+
+    def counts(uid: str) -> dict[str, int]:
+        return {coll: su_count(su, coll, f'user = "{uid}"') for coll in COLLECTIONS}
+
+    c_before, d_before = counts(C.user_id), counts(D.user_id)
+    deletions = [
+        delete_req("tasks", c.seeds["child"]),
+        delete_req("tasks", c.seeds["tasks"]),
+        delete_req("recurring_tasks", c.seeds["recurring_tasks"]),
+    ]
+
+    r = request(C, "DELETE", rec("users", C.user_id))
+    res.check("account:delete:blocked",
+              r.status_code == 400 and su_get(su, "users", C.user_id).status_code == 200
+              and counts(C.user_id) == c_before, str(r.status_code))
+
+    r = batch(D, deletions)
+    res.check("account:delete:other-user", refused(r) and counts(C.user_id) == c_before, str(r.status_code))
+
+    r = batch(C, deletions)
+    steps_ok = r.status_code == 200
+    r_user = request(C, "DELETE", rec("users", C.user_id))
+    after = counts(C.user_id)
+    res.check("account:delete:two-steps",
+              steps_ok and r_user.status_code == 204 and su_get(su, "users", C.user_id).status_code == 404
+              and all(n == 0 for n in after.values()),
+              f"batch {r.status_code} user {r_user.status_code} left {after}")
+
+    res.check("account:delete:other-intact",
+              counts(D.user_id) == d_before and all(n > 0 for n in d_before.values()), str(counts(D.user_id)))
+
+    r = request(C, "POST", "/api/collections/users/auth-refresh")
+    res.check("account:token-after", r.status_code == 401, str(r.status_code))
 
 
 # ---------------------------------------------------------------- proofs
