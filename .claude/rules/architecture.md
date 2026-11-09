@@ -46,7 +46,10 @@ Domain       → NÃO DEPENDE DE NADA
 
 - `domain/` NUNCA importa nada de `data/` ou `presentation/`.
 - `domain/` NUNCA importa pacote externo (pocketbase, json, etc.) — **Dart puro**.
-  Exceções permitidas: `equatable` e `fpdart` (tipos de apoio, não infraestrutura).
+  Exceções permitidas: `equatable` e `fpdart` (tipos de apoio, não infraestrutura) e
+  `characters` (contar texto do jeito que a pessoa vê — emoji e acento combinado contam 1,
+  ex.: limite do nome, `specs/sign_up.md` REQ-002). `characters` é Dart puro e vem com o
+  SDK do Flutter, mas precisa estar em `dependencies` do `pubspec.yaml` para ser importado.
 
 ## Data Flow
 
@@ -69,7 +72,7 @@ PocketBase (servidor)
 | Camada | Usa | Recebe | Retorna | Pode importar |
 |--------|-----|--------|---------|---------------|
 | Presentation | Entity | Entity | Entity | Domain |
-| Domain | Entity | Entity | Entity | Nada (+ equatable/fpdart) |
+| Domain | Entity | Entity | Entity | Nada (+ equatable/fpdart/characters) |
 | Repository | Ambos* | Model | Entity | Domain |
 | DataSource | Model | RecordModel (PocketBase) | Model | Nada |
 

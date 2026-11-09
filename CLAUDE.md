@@ -25,8 +25,8 @@ implementar. Detalhes e anti-patterns em `.claude/rules/architecture.md`.
 Os documentos em `docs/` são a **fonte da verdade** do que o app faz. Leia antes de
 implementar qualquer funcionalidade e cite o requisito/critério de origem:
 
-- `docs/requisitos-time-control.md` — requisitos de negócio (15 essenciais da v1).
-- `docs/handoff-time-control.md` — histórias de usuário H1–H15 com critérios de aceite.
+- `docs/requisitos-time-control.md` — requisitos de negócio (17 essenciais da v1).
+- `docs/handoff-time-control.md` — histórias de usuário H1–H17 com critérios de aceite.
 - `docs/gerenciador_tarefas_v1_diagrams.md` — fluxogramas dos UseCases (CEN/CA, Failures).
 
 Nunca invente requisito. Se algo não está nos documentos, **pergunte** (ver skill
@@ -170,3 +170,36 @@ make build                       # build de produção do PWA (config/prod.json)
 flutter build web --release      # build de produção do PWA
 flutter build apk --release      # APK para instalação direta no Android (num Mac; a VPS gera só o PWA)
 ```
+
+## Regras para geração de código (specs/)
+
+1. Leia specs/glossary.md primeiro. Classes, métodos e campos do domínio
+   usam exatamente o nome em inglês da coluna "No código" do glossário.
+2. Código, nomes de arquivo, comentários e commits em inglês americano.
+   Texto de tela em português do Brasil, simples e sem termos técnicos.
+3. Implemente apenas requisitos marcados como [pronto].
+4. Um requisito por tarefa.
+5. Testes e código são gerados em sessões separadas: uma sessão escreve os
+   testes a partir dos cenários, usando os nomes do glossário; outra escreve o
+   código de domínio até eles passarem. Na sessão de testes, o erro por falta do
+   código é esperado. Ao terminar, rode dart format, flutter analyze e flutter test
+   só nos arquivos alterados, com fvm na frente quando houver .fvmrc.
+6. Na sessão de código, nunca altere um teste. Se achar que o teste está
+   errado, pare e pergunte com AskUserQuestion.
+7. Regras de negócio ficam só na camada de domínio, sem dependência
+   de banco, API ou interface.
+8. Autorização não é regra de negócio e fica no servidor, mesmo sem requisito:
+   nada sem login, e só o dono acessa os próprios registros. Toda coleção nova
+   nasce travada e vem com teste de permissão. Detalhes e sintaxe em
+   ~/.claude/rules/backend-record-ownership.md.
+9. Toda regra implementada referencia o ID do requisito em comentário.
+   Valores da regra viram constantes nomeadas.
+10. Conjunto fechado de valores (status, tipo, papel, chave de erro) vira enum,
+    com fromApi e apiValue quando houver texto de fora. Sem string solta no domínio.
+11. Valores monetários em centavos (inteiro) ou decimal, nunca double.
+12. Não implemente regra de negócio que não esteja em um requisito.
+13. Se a spec for ambígua ou contraditória e as respostas levarem a trabalhos
+    diferentes, pergunte com AskUserQuestion, em opções fechadas. Sem ninguém para
+    responder, encerre com `STATUS: FAIL`. Nunca invente regra ou valor de negócio.
+    Decisão técnica trivial: aplique o padrão do projeto e declare a escolha na resposta.
+14. Fora da `/spec`, nunca edite arquivos dentro de `specs/`.

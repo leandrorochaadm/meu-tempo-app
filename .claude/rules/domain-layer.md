@@ -6,7 +6,8 @@ paths:
 
 # Domain Layer Rules
 
-Camada de **Dart puro**. Só pode importar `equatable` e `fpdart` (tipos de apoio).
+Camada de **Dart puro**. Só pode importar `equatable` e `fpdart` (tipos de apoio) e
+`characters` (contagem de texto como a pessoa vê; ver `architecture.md`).
 NUNCA importa PocketBase, json, nem nada de `data/`/`presentation/`.
 
 ## Entities
