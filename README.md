@@ -48,8 +48,35 @@ make run                                           # rodar no Chrome mantendo o 
 flutter run -d chrome                              # rodar sem perfil fixo (pede login a cada run)
 flutter test                                       # testes
 flutter analyze                                    # análise estática (manter zero issues)
-flutter run -d <device>                            # rodar no celular (Android ou iPhone)
+flutter run -d <device> --dart-define-from-file=config/prod.json   # rodar no celular (Android ou iPhone)
 make build                                         # build de produção do PWA (usa config/prod.json se existir)
-flutter build apk --release                        # APK para instalação direta no Android
+flutter build apk --release --dart-define-from-file=config/prod.json   # APK para instalação direta no Android
 make ship                                          # analyze + testes
 ```
+
+## Instalar no celular Android
+
+O endereço do servidor (`POCKETBASE_URL`) entra no app **na compilação**, pelo
+`--dart-define-from-file`. Um APK compilado sem esse parâmetro abre a tela
+"O app não foi configurado."
+
+```bash
+flutter devices                                    # descobrir o ID do celular
+flutter build apk --debug --dart-define-from-file=config/prod.json
+flutter install --debug -d <id-do-celular>
+```
+
+Atalho: com `ANDROID_DEVICE=<id-do-celular>` no `.env`, o `make run-android` compila,
+instala e abre o app já com o `config/prod.json` (`make run-android-release` para o
+modo release). Os alvos do Makefile usam `fvm`; sem ele, rode os comandos acima com
+`flutter` direto.
+
+## Conta de demonstração (revisão da loja)
+
+Conta usada pelo revisor da Google Play (e para demonstrar o app), no servidor de produção:
+
+- **E-mail:** `demo@meutempo.com`
+- **Senha:** `demo1234`
+
+`uv run tool/seed_demo.py` apaga e recria a conta com dados de exemplo (precisa de acesso
+`ssh hostinger`). Se o revisor não conseguir entrar, rode o script de novo.
