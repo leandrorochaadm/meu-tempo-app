@@ -444,13 +444,16 @@ def check_users(res: Results, su: Actor, a: Owner, b: Owner) -> None:
     r = request(ANON, "POST", rec("users"), json={**dbody, "email": other})
     res.check("users:create:anon:email-other",
               r.status_code == 200 and su_count(su, "users", "") == count_one + 1, str(r.status_code))
-    # REQ-005: an old account saved with an uppercase e-mail signs in with the lowercase one.
+    # REQ-005: an account saved with an uppercase e-mail blocks a sign-up with the lowercase one
+    # (case-insensitive unique index). Legacy accounts are lowercased by the migration
+    # 1795000200_case_insensitive_email.js, which this harness cannot seed before it runs.
     up_local = f"Upper{secrets.token_hex(4)}@PB-TEST.LOCAL"
     up_pwd = secrets.token_urlsafe(24)
     create_user(su, up_local, up_pwd)
-    r = request(ANON, "POST", "/api/collections/users/auth-with-password",
-                json={"identity": up_local.lower(), "password": up_pwd})
-    res.check("users:sign-in:legacy-uppercase", r.status_code == 200, str(r.status_code))
+    count_up = su_count(su, "users", "")
+    r = request(ANON, "POST", rec("users"), json={**dbody, "email": up_local.lower()})
+    res.check("users:create:anon:email-in-use:stored-uppercase",
+              r.status_code == 400 and su_count(su, "users", "") == count_up, str(r.status_code))
     # REQ-001: new checks below sign up anonymously (open after the migration) and sign in.
     p = secrets.token_urlsafe(24)
     signup_email = f"anon{secrets.token_hex(4)}@pb-test.local"
