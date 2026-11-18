@@ -86,6 +86,52 @@ void main() {
     });
   });
 
+  group('isFieldNotUnique', () {
+    // REQ-005: 400 with validation_not_unique on the asked field: true
+    test('should be true when the asked field is not unique', () {
+      final e = _error(
+        400,
+        _body({
+          'email': {'code': 'validation_not_unique'},
+        }),
+      );
+      expect(isFieldNotUnique(e, 'email'), isTrue);
+    });
+
+    // REQ-005: 400 with validation_not_unique on another field: false
+    test('should be false when another field is not unique', () {
+      final e = _error(
+        400,
+        _body({
+          'id': {'code': 'validation_not_unique'},
+        }),
+      );
+      expect(isFieldNotUnique(e, 'email'), isFalse);
+    });
+
+    // REQ-005: 400 with another code on the asked field: false
+    test('should be false when the code is another one', () {
+      final e = _error(
+        400,
+        _body({
+          'email': {'code': 'validation_pk_invalid'},
+        }),
+      );
+      expect(isFieldNotUnique(e, 'email'), isFalse);
+    });
+
+    // REQ-005: status 500 even with not-unique body: false
+    test('should be false when the status is 500', () {
+      final e = _error(
+        500,
+        _body({
+          'email': {'code': 'validation_not_unique'},
+        }),
+      );
+      expect(isFieldNotUnique(e, 'email'), isFalse);
+    });
+  });
+
   group('batch', () {
     test('map: 404 inside is not found', () {
       final e = _error(

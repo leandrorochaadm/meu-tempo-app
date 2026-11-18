@@ -1075,4 +1075,35 @@ void main() {
 
     expect(accepted, isNot(notAccepted));
   });
+
+  // REQ-005: repository answers that "ana@exemplo.com" already has an account: refused with EmailAlreadyInUseFailure, 0 new accounts
+  test(
+    'should return EmailAlreadyInUseFailure when email already has an account',
+    () async {
+      when(
+        () => repo.signUp(
+          displayName: any(named: 'displayName'),
+          email: any(named: 'email'),
+          password: any(named: 'password'),
+        ),
+      ).thenAnswer((_) async => const Left(EmailAlreadyInUseFailure()));
+
+      final result = await useCase(
+        const SignUpParams(
+          displayName: 'Ana',
+          email: 'ana@exemplo.com',
+          password: 'Abcd1234',
+        ),
+      );
+
+      expect(result.getLeft().toNullable(), const EmailAlreadyInUseFailure());
+      verify(
+        () => repo.signUp(
+          displayName: 'Ana',
+          email: 'ana@exemplo.com',
+          password: 'Abcd1234',
+        ),
+      ).called(1);
+    },
+  );
 }

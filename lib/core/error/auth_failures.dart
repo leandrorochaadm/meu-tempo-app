@@ -16,6 +16,11 @@ class EmptyCredentialsFailure extends Failure {
   const EmptyCredentialsFailure();
 }
 
+/// The e-mail already has an account. // REQ-005
+class EmailAlreadyInUseFailure extends Failure {
+  const EmailAlreadyInUseFailure();
+}
+
 /// One or more account fields were refused; carries every reason at once.
 class InvalidAccountFieldsFailure extends Failure {
   InvalidAccountFieldsFailure(List<AccountFieldErrorEnum> errors)

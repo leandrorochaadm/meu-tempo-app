@@ -68,11 +68,13 @@ class _SignUpPageState extends State<SignUpPage> {
                     )
                 ? AccountFieldErrorEnum.displayNameLength.label
                 : null;
-            final emailError =
-                state is SignUpFieldsInvalid &&
-                    state.errors.contains(AccountFieldErrorEnum.invalidEmail)
-                ? AccountFieldErrorEnum.invalidEmail.label
-                : null;
+            final emailError = switch (state) {
+              SignUpEmailInUse(:final message) => message,
+              SignUpFieldsInvalid(:final errors)
+                  when errors.contains(AccountFieldErrorEnum.invalidEmail) =>
+                AccountFieldErrorEnum.invalidEmail.label,
+              _ => null,
+            };
             final passwordError =
                 state is SignUpFieldsInvalid &&
                     state.errors.contains(AccountFieldErrorEnum.passwordTooLong)

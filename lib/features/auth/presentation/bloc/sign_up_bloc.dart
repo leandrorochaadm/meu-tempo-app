@@ -50,6 +50,9 @@ class SignUpBloc extends Bloc<SignUpEvent, SignUpState> {
           InvalidAccountFieldsFailure(:final errors) => emit(
             SignUpFieldsInvalid(errors),
           ),
+          EmailAlreadyInUseFailure() => emit(
+            SignUpEmailInUse(_mapFailure(failure)),
+          ),
           _ => emit(SignUpFailed(_mapFailure(failure))),
         },
         (_) {},
@@ -61,6 +64,7 @@ class SignUpBloc extends Bloc<SignUpEvent, SignUpState> {
 
   String _mapFailure(Failure failure) => switch (failure) {
     NetworkFailure() => 'Sem internet. Tente de novo.',
+    EmailAlreadyInUseFailure() => 'Este e-mail já tem conta. Entre com ele.',
     _ => 'Não foi possível criar a conta. Tente de novo.',
   };
 }

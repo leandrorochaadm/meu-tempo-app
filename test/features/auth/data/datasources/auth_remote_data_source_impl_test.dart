@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:meu_tempo/core/data/pocketbase/pocketbase_session.dart';
+import 'package:meu_tempo/core/constants/pb_schema.dart';
 import 'package:meu_tempo/core/error/exceptions.dart';
 import 'package:meu_tempo/features/auth/data/datasources/auth_remote_data_source.dart';
 import 'package:pocketbase/pocketbase.dart';
@@ -293,6 +294,47 @@ void main() {
       );
       expect(requests.length, 1);
     });
+
+    // REQ-005: create answers pbNotUnique on email: EmailAlreadyInUseException, 1 request (no auth-with-password)
+    test(
+      'should throw EmailAlreadyInUseException when email is not unique',
+      () async {
+        final ds = build((_) async => pbNotUnique(PbFields.email));
+
+        await expectLater(
+          ds.signUp(
+            displayName: 'Ana',
+            email: 'ana@exemplo.com',
+            password: 'Abcd1234',
+          ),
+          throwsA(isA<EmailAlreadyInUseException>()),
+        );
+        expect(requests.length, 1);
+      },
+    );
+
+    // REQ-005: create answers not-unique on another field: ConflictException that is not EmailAlreadyInUseException
+    test(
+      'should keep ConflictException when another field is not unique',
+      () async {
+        final ds = build((_) async => pbNotUnique(PbFields.id));
+
+        await expectLater(
+          ds.signUp(
+            displayName: 'Ana',
+            email: 'ana@exemplo.com',
+            password: 'Abcd1234',
+          ),
+          throwsA(
+            isA<ConflictException>().having(
+              (e) => e is EmailAlreadyInUseException,
+              'is EmailAlreadyInUseException',
+              isFalse,
+            ),
+          ),
+        );
+      },
+    );
 
     // REQ-001: create succeeds but sign-in returns 400: mapped error (not AuthException), 2 requests, empty session
     test(

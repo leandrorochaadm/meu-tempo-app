@@ -423,6 +423,34 @@ def check_users(res: Results, su: Actor, a: Owner, b: Owner) -> None:
     # REQ-001: sign-up is open.
     res.check("users:create:anon", r.status_code == 200 and su_count(su, "users", "") == before + 1,
               str(r.status_code))
+    # REQ-005: an e-mail that already has an account does not create another one.
+    dup = f"dup{secrets.token_hex(4)}@pb-test.local"
+    dp = secrets.token_urlsafe(24)
+    dbody = {"email": dup, "password": dp, "passwordConfirm": dp, "name": "Dup"}
+    request(ANON, "POST", rec("users"), json=dbody)
+    count_one = su_count(su, "users", "")
+    r = request(ANON, "POST", rec("users"), json=dbody)
+    try:
+        code = r.json()["data"]["email"]["code"]
+    except (ValueError, KeyError, TypeError):
+        code = None
+    res.check("users:create:anon:email-in-use",
+              r.status_code == 400 and code == "validation_not_unique" and su_count(su, "users", "") == count_one,
+              f"{r.status_code} {code}")
+    r = request(ANON, "POST", rec("users"), json={**dbody, "email": dup.upper()})
+    res.check("users:create:anon:email-in-use:case",
+              r.status_code == 400 and su_count(su, "users", "") == count_one, str(r.status_code))
+    other = dup.replace("@", "1@")
+    r = request(ANON, "POST", rec("users"), json={**dbody, "email": other})
+    res.check("users:create:anon:email-other",
+              r.status_code == 200 and su_count(su, "users", "") == count_one + 1, str(r.status_code))
+    # REQ-005: an old account saved with an uppercase e-mail signs in with the lowercase one.
+    up_local = f"Upper{secrets.token_hex(4)}@PB-TEST.LOCAL"
+    up_pwd = secrets.token_urlsafe(24)
+    create_user(su, up_local, up_pwd)
+    r = request(ANON, "POST", "/api/collections/users/auth-with-password",
+                json={"identity": up_local.lower(), "password": up_pwd})
+    res.check("users:sign-in:legacy-uppercase", r.status_code == 200, str(r.status_code))
     # REQ-001: new checks below sign up anonymously (open after the migration) and sign in.
     p = secrets.token_urlsafe(24)
     signup_email = f"anon{secrets.token_hex(4)}@pb-test.local"

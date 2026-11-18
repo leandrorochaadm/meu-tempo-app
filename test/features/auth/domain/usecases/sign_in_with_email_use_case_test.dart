@@ -26,6 +26,33 @@ void main() {
     verify(() => repo.signInWithEmail('a@b.com', 'x')).called(1);
   });
 
+  // REQ-005: email "ANA@EXEMPLO.COM" and password "Abcd1234" on sign-in: repository receives "ana@exemplo.com" and "Abcd1234", 1 call
+  test(
+    'should normalize email to lowercase before calling repository',
+    () async {
+      await useCase(
+        const SignInWithEmailParams(
+          email: 'ANA@EXEMPLO.COM',
+          password: 'Abcd1234',
+        ),
+      );
+      verify(
+        () => repo.signInWithEmail('ana@exemplo.com', 'Abcd1234'),
+      ).called(1);
+    },
+  );
+
+  // REQ-005: sign in with " ANA@Exemplo.COM " (spaces and uppercase): repository receives "ana@exemplo.com"
+  test('should trim and lowercase email before calling repository', () async {
+    await useCase(
+      const SignInWithEmailParams(
+        email: ' ANA@Exemplo.COM ',
+        password: 'Abcd1234',
+      ),
+    );
+    verify(() => repo.signInWithEmail('ana@exemplo.com', 'Abcd1234')).called(1);
+  });
+
   test('should keep password unchanged', () async {
     await useCase(
       const SignInWithEmailParams(email: 'a@b.com', password: ' x '),

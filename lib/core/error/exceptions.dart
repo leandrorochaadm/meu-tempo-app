@@ -41,6 +41,13 @@ class ConflictException extends AppException {
   Failure toFailure() => const ServerFailure();
 }
 
+/// Sign-up refused because the e-mail already has an account. // REQ-005
+class EmailAlreadyInUseException extends ConflictException {
+  const EmailAlreadyInUseException();
+  @override
+  Failure toFailure() => const EmailAlreadyInUseFailure();
+}
+
 class UnauthenticatedException extends AppException {
   const UnauthenticatedException();
   @override

@@ -90,6 +90,22 @@ void main() {
     verify: (_) => verify(() => signUp(any())).called(1),
   );
 
+  // REQ-005: use case answers EmailAlreadyInUseFailure: emits SignUpEmailInUse with the warning
+  blocTest<SignUpBloc, SignUpState>(
+    'should emit SignUpEmailInUse when email already has an account',
+    build: () {
+      when(
+        () => signUp(any()),
+      ).thenAnswer((_) async => const Left(EmailAlreadyInUseFailure()));
+      return SignUpBloc(signUp);
+    },
+    act: (bloc) => bloc.add(submitted),
+    expect: () => [
+      const SignUpInProgress(),
+      const SignUpEmailInUse('Este e-mail já tem conta. Entre com ele.'),
+    ],
+  );
+
   // REQ-001: no internet shows the network message
   blocTest<SignUpBloc, SignUpState>(
     'should emit SignUpFailed with network message on NetworkFailure',

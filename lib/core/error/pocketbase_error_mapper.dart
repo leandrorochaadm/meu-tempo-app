@@ -36,6 +36,16 @@ AppException mapPocketBaseError(ClientException e) {
   return exception;
 }
 
+/// True when [e] is a 400 saying the value of [field] is already taken.
+bool isFieldNotUnique(ClientException e, String field) {
+  if (e.statusCode != _statusBadRequest) return false;
+  final data = _asMap(e.response[_keyData]);
+  final code = _asMap(data?[field])?[_keyCode];
+  return code is String &&
+      PocketBaseErrorCodeEnum.fromApi(code) ==
+          PocketBaseErrorCodeEnum.notUnique;
+}
+
 AppException _translate(
   int status,
   Map<String, dynamic>? data, {

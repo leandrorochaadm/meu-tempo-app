@@ -24,6 +24,15 @@ final class SignUpFailed extends SignUpState {
   List<Object?> get props => [message];
 }
 
+final class SignUpEmailInUse extends SignUpState {
+  const SignUpEmailInUse(this.message);
+
+  final String message;
+
+  @override
+  List<Object?> get props => [message];
+}
+
 final class SignUpFieldsInvalid extends SignUpState {
   SignUpFieldsInvalid(List<AccountFieldErrorEnum> errors)
     : errors = List.unmodifiable(errors);

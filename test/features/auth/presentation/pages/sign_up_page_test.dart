@@ -147,6 +147,20 @@ void main() {
     expect(find.text('Sem internet. Tente de novo.'), findsOneWidget);
   });
 
+  // REQ-005: state SignUpEmailInUse: warning once below E-mail, no SnackBar
+  testWidgets('should show email in use warning below E-mail', (tester) async {
+    when(() => bloc.state).thenReturn(
+      const SignUpEmailInUse('Este e-mail já tem conta. Entre com ele.'),
+    );
+    await pump(tester);
+
+    expect(
+      find.text('Este e-mail já tem conta. Entre com ele.'),
+      findsOneWidget,
+    );
+    expect(find.byType(SnackBar), findsNothing);
+  });
+
   // REQ-001: "Já tem conta? Entrar" goes back to the login screen
   testWidgets('should go back to login when tapping Entrar', (tester) async {
     useMobileViewport(tester);

@@ -112,4 +112,27 @@ void main() {
       const Left<Failure, Unit>(ServerFailure()),
     );
   });
+
+  // REQ-005: data source throws EmailAlreadyInUseException: Left(EmailAlreadyInUseFailure())
+  test(
+    'should return EmailAlreadyInUseFailure when data source throws EmailAlreadyInUseException',
+    () async {
+      when(
+        () => ds.signUp(
+          displayName: any(named: 'displayName'),
+          email: any(named: 'email'),
+          password: any(named: 'password'),
+        ),
+      ).thenThrow(const EmailAlreadyInUseException());
+
+      expect(
+        await repo.signUp(
+          displayName: 'Ana',
+          email: 'ana@exemplo.com',
+          password: 'Abcd1234',
+        ),
+        const Left<Failure, Unit>(EmailAlreadyInUseFailure()),
+      );
+    },
+  );
 }

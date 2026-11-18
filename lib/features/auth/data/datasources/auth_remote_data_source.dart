@@ -16,7 +16,8 @@ abstract class AuthRemoteDataSource {
   /// Signs in with e-mail and password. The user arrives through [authState].
   Future<void> signInWithEmail(String email, String password);
 
-  /// Creates the user record and signs in. Throws [AppException] on error.
+  /// Creates the user record and signs in. Throws [EmailAlreadyInUseException]
+  /// when the e-mail already has an account (REQ-005), else [AppException].
   Future<void> signUp({
     required String displayName,
     required String email,
@@ -56,8 +57,8 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     required String email,
     required String password,
   }) async {
+    final users = _session.client.collection(PbCollections.users);
     try {
-      final users = _session.client.collection(PbCollections.users);
       await users.create(
         body: {
           PbFields.email: email,
@@ -66,6 +67,14 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
           PbFields.name: displayName,
         },
       );
+    } on ClientException catch (e) {
+      final error = mapPocketBaseError(e);
+      if (error is ConflictException && isFieldNotUnique(e, PbFields.email)) {
+        throw const EmailAlreadyInUseException(); // REQ-005
+      }
+      throw error;
+    }
+    try {
       await users.authWithPassword(email, password);
     } on ClientException catch (e) {
       throw mapPocketBaseError(e);

@@ -6,6 +6,7 @@ import '../../../../core/error/auth_failures.dart';
 import '../../../../core/error/failures.dart';
 import '../../../../core/usecase/usecase.dart';
 import '../repositories/auth_repository.dart';
+import 'normalize_email.dart';
 
 /// Signs in with e-mail and password. Blank fields never reach the server.
 /// The user arrives through the auth stream.
@@ -17,7 +18,7 @@ class SignInWithEmailUseCase implements UseCase<Unit, SignInWithEmailParams> {
 
   @override
   Future<Either<Failure, Unit>> call(SignInWithEmailParams params) async {
-    final email = params.email.trim();
+    final email = normalizeEmail(params.email); // REQ-005
     // The password is kept as typed: spaces may be part of it.
     if (email.isEmpty || params.password.isEmpty) {
       return const Left(EmptyCredentialsFailure());
