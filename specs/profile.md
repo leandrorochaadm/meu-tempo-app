@@ -3,6 +3,9 @@
 O Perfil fica na tela de Configurações. Cenários marcados com "(servidor)" ou
 "(integração)" não se testam no domínio (ver `sign_up.md`).
 
+Telas: a parte de trocar senha e os textos dos avisos seguem
+`docs/wireframe-cadastro-e-perfil.md` (REQ-012 em `sign_up.md`).
+
 ## REQ-006 Editar nome [pronto]
 
 Fonte: requisitos-time-control.md, Requisitos, Essencial, req. 17 ("Nome: nome igual ao atual é recusado com aviso. Conta antiga sem nome...").

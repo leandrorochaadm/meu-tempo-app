@@ -7,6 +7,9 @@ Cenários marcados com "(servidor)", "(integração)" ou "(teste de widget)" nã
 domínio: vão para o `tool/pb_permissions_test.py`, para um teste de integração ou para um
 teste de widget. Os demais são do UseCase.
 
+Telas: `docs/wireframe-cadastro-e-perfil.md` mostra a disposição das telas de cadastro e
+trocar senha e o texto de cada aviso (REQ-012).
+
 ## REQ-001 Criar conta pelo app [pronto]
 
 Fonte: requisitos-time-control.md, Requisitos, Essencial, req. 16 ("Criar conta pelo app").
@@ -123,6 +126,9 @@ aviso desse campo; enquanto ela digita, não.
 
 O sistema deve decidir o checklist e o botão com a mesma conferência do domínio usada pelo
 UseCase (REQ-011), sem repetir a regra na tela.
+
+O sistema deve seguir nas telas de cadastro e de Trocar senha a disposição e os textos dos
+avisos de `docs/wireframe-cadastro-e-perfil.md`.
 
 Cenários:
 - Senha "abc": 1 critério atendido (`lowercase`)
