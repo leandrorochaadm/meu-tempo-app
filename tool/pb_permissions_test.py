@@ -412,10 +412,43 @@ def check_users(res: Results, su: Actor, a: Owner, b: Owner) -> None:
     before = su_count(su, "users", "")
     p = secrets.token_urlsafe(24)
     r = request(ANON, "POST", rec("users"), json={
-        "email": f"anon{secrets.token_hex(4)}@pb-test.local", "password": p, "passwordConfirm": p,
+        "email": f"anon{secrets.token_hex(4)}@pb-test.local", "password": p, "passwordConfirm": p, "name": "Anon",
     })
-    res.check("users:create:anon", r.status_code == 403 and su_count(su, "users", "") == before,
+    # REQ-001: sign-up is open.
+    res.check("users:create:anon", r.status_code == 200 and su_count(su, "users", "") == before + 1,
               str(r.status_code))
+    # REQ-001: new checks below sign up anonymously (open after the migration) and sign in.
+    p = secrets.token_urlsafe(24)
+    signup_email = f"anon{secrets.token_hex(4)}@pb-test.local"
+    r = request(ANON, "POST", rec("users"), json={
+        "email": signup_email, "password": p, "passwordConfirm": p, "name": "Anon",
+    })
+    signup = None
+    try:
+        signup = login("users", signup_email, p, "signup")
+        res.check("users:create:anon:login", True)
+    except EnvError as e:
+        res.check("users:create:anon:login", False, str(e)[:200])
+    # REQ-001: Bia lists the tasks: 0 tasks of Ana
+    if signup is None:
+        res.check("users:create:anon:isolated", False, "no session")
+    else:
+        r = request(signup, "GET", rec("tasks"))
+        listed = r.status_code == 200 and all(i.get("user") != A.user_id for i in r.json()["items"])
+        r2 = request(signup, "GET", rec("tasks", a.seeds["tasks"]))
+        res.check("users:create:anon:isolated",
+                  listed and r.json()["items"] == [] and refused(r2), f"{r.status_code} {r2.status_code}")
+    # An outsider must not mark themselves as verified.
+    vp = secrets.token_urlsafe(24)
+    r = request(ANON, "POST", rec("users"), json={
+        "email": f"ver{secrets.token_hex(4)}@pb-test.local", "password": vp, "passwordConfirm": vp,
+        "name": "Ver", "verified": True,
+    })
+    if refused(r) or r.status_code == 400:
+        ok_verified = True
+    else:
+        ok_verified = r.status_code == 200 and su_get(su, "users", r.json()["id"]).json()["verified"] is False
+    res.check("users:create:anon:verified", ok_verified, f"{r.status_code} {r.text[:200]}")
     r = request(su, "POST", rec("users"), json={
         "email": f"short{secrets.token_hex(4)}@pb-test.local", "password": "1234567", "passwordConfirm": "1234567",
     })
