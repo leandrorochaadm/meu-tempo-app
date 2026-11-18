@@ -8,8 +8,10 @@ import '../../../../core/error/account_field_error_enum.dart';
 import '../../../../core/router/routes.dart';
 import '../../../../core/theme/theme_context_extensions.dart';
 import '../../../../core/ui/app_primary_button.dart';
+import '../../domain/entities/sign_up_form_entity.dart';
 import '../account_field_error_label.dart';
 import '../bloc/sign_up_bloc.dart';
+import '../widgets/password_checklist_widget.dart';
 
 /// "Criar conta" screen — name, email and password.
 class SignUpPage extends StatefulWidget {
@@ -25,6 +27,37 @@ class _SignUpPageState extends State<SignUpPage> {
   final TextEditingController _passwordController = TextEditingController();
   bool _obscurePassword = true;
   bool _acceptedPrivacyPolicy = false;
+  final FocusNode _nameFocus = FocusNode();
+  final FocusNode _emailFocus = FocusNode();
+  SignUpFormEntity? _form;
+
+  @override
+  void initState() {
+    super.initState();
+    final state = context.read<SignUpBloc>().state;
+    _form = state is SignUpEditing ? state.form : null;
+    _nameFocus.addListener(() {
+      if (!_nameFocus.hasFocus) {
+        context.read<SignUpBloc>().add(const SignUpDisplayNameLeft());
+      }
+    });
+    _emailFocus.addListener(() {
+      if (!_emailFocus.hasFocus) {
+        context.read<SignUpBloc>().add(const SignUpEmailLeft());
+      }
+    });
+  }
+
+  void _formChanged() {
+    if (context.read<SignUpBloc>().state is SignUpInProgress) return;
+    context.read<SignUpBloc>().add(
+      SignUpFormChanged(
+        displayName: _nameController.text,
+        email: _emailController.text,
+        password: _passwordController.text,
+      ),
+    );
+  }
 
   void _submit() {
     FocusScope.of(context).unfocus();
@@ -42,6 +75,8 @@ class _SignUpPageState extends State<SignUpPage> {
     _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
+    _nameFocus.dispose();
+    _emailFocus.dispose();
     super.dispose();
   }
 
@@ -51,8 +86,12 @@ class _SignUpPageState extends State<SignUpPage> {
       appBar: AppBar(title: const Text('Criar conta')),
       body: SafeArea(
         child: BlocConsumer<SignUpBloc, SignUpState>(
-          listenWhen: (_, curr) => curr is SignUpFailed,
+          listenWhen: (_, curr) =>
+              curr is SignUpFailed || curr is SignUpEditing,
           listener: (context, state) {
+            if (state is SignUpEditing) {
+              _form = state.form;
+            }
             if (state is SignUpFailed) {
               ScaffoldMessenger.of(context)
                 ..hideCurrentSnackBar()
@@ -61,25 +100,26 @@ class _SignUpPageState extends State<SignUpPage> {
           },
           builder: (context, state) {
             final loading = state is SignUpInProgress;
+            final form = state is SignUpEditing ? state.form : _form;
             final nameError =
                 state is SignUpFieldsInvalid &&
                     state.errors.contains(
                       AccountFieldErrorEnum.displayNameLength,
                     )
                 ? AccountFieldErrorEnum.displayNameLength.label
-                : null;
+                : form?.displayNameWarning?.label;
             final emailError = switch (state) {
               SignUpEmailInUse(:final message) => message,
               SignUpFieldsInvalid(:final errors)
                   when errors.contains(AccountFieldErrorEnum.invalidEmail) =>
                 AccountFieldErrorEnum.invalidEmail.label,
-              _ => null,
+              _ => form?.emailWarning?.label,
             };
             final passwordError =
                 state is SignUpFieldsInvalid &&
                     state.errors.contains(AccountFieldErrorEnum.passwordTooLong)
                 ? AccountFieldErrorEnum.passwordTooLong.label
-                : null;
+                : form?.passwordWarning?.label;
             final policyError =
                 state is SignUpFieldsInvalid &&
                     state.errors.contains(
@@ -98,6 +138,8 @@ class _SignUpPageState extends State<SignUpPage> {
                         children: [
                           TextField(
                             controller: _nameController,
+                            focusNode: _nameFocus,
+                            onChanged: (_) => _formChanged(),
                             style: context.text.bodyMedium,
                             decoration: InputDecoration(
                               labelText: 'Nome',
@@ -111,6 +153,8 @@ class _SignUpPageState extends State<SignUpPage> {
                           SizedBox(height: context.space.lg),
                           TextField(
                             controller: _emailController,
+                            focusNode: _emailFocus,
+                            onChanged: (_) => _formChanged(),
                             style: context.text.bodyMedium,
                             decoration: InputDecoration(
                               labelText: 'E-mail',
@@ -125,6 +169,7 @@ class _SignUpPageState extends State<SignUpPage> {
                           SizedBox(height: context.space.lg),
                           TextField(
                             controller: _passwordController,
+                            onChanged: (_) => _formChanged(),
                             style: context.text.bodyMedium,
                             obscureText: _obscurePassword,
                             decoration: InputDecoration(
@@ -147,12 +192,18 @@ class _SignUpPageState extends State<SignUpPage> {
                             textInputAction: TextInputAction.done,
                             autofillHints: const [AutofillHints.newPassword],
                             onSubmitted: (_) {
-                              if (!loading) _submit();
+                              if (!loading && (form?.canSubmit ?? true)) {
+                                _submit();
+                              }
                             },
                           ),
                         ],
                       ),
                     ),
+                    if (form != null) ...[
+                      SizedBox(height: context.space.sm),
+                      PasswordChecklistWidget(metRules: form.metPasswordRules),
+                    ],
                     CheckboxListTile(
                       controlAffinity: ListTileControlAffinity.leading,
                       contentPadding: EdgeInsets.zero,
@@ -162,15 +213,19 @@ class _SignUpPageState extends State<SignUpPage> {
                         context.read<SignUpBloc>().add(
                           SignUpPrivacyPolicyChanged(value ?? false),
                         );
+                        _formChanged();
                       },
-                      title: Wrap(
-                        crossAxisAlignment: WrapCrossAlignment.center,
+                      title: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            'Li e aceito a ',
-                            style: context.text.bodyMedium,
-                          ),
+                          Text('Li e aceito a', style: context.text.bodyMedium),
+                          SizedBox(height: context.space.xxl),
                           TextButton(
+                            style: TextButton.styleFrom(
+                              padding: EdgeInsets.zero,
+                              minimumSize: Size.zero,
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            ),
                             onPressed: () => launchUrl(
                               Uri.parse(AppLinks.privacyPolicy),
                               mode: LaunchMode.externalApplication,
@@ -192,7 +247,7 @@ class _SignUpPageState extends State<SignUpPage> {
                       label: 'Criar conta',
                       icon: Icons.person_add_rounded,
                       loading: loading,
-                      onPressed: _submit,
+                      onPressed: (form?.canSubmit ?? true) ? _submit : null,
                     ),
                     SizedBox(height: context.space.lg),
                     Wrap(

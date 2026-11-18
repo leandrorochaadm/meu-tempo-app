@@ -37,3 +37,29 @@ final class SignUpPrivacyPolicyChanged extends SignUpEvent {
   @override
   List<Object?> get props => [accepted];
 }
+
+/// Any text field changed: the form snapshot is rebuilt (REQ-012).
+final class SignUpFormChanged extends SignUpEvent {
+  const SignUpFormChanged({
+    required this.displayName,
+    required this.email,
+    required this.password,
+  });
+
+  final String displayName;
+  final String email;
+  final String password;
+
+  @override
+  List<Object?> get props => [displayName, email, password];
+}
+
+/// The person left the name field.
+final class SignUpDisplayNameLeft extends SignUpEvent {
+  const SignUpDisplayNameLeft();
+}
+
+/// The person left the e-mail field.
+final class SignUpEmailLeft extends SignUpEvent {
+  const SignUpEmailLeft();
+}

@@ -21,3 +21,8 @@ enum PasswordRuleEnum {
     PasswordRuleEnum.lowercase => password != password.toUpperCase(),
   };
 }
+
+/// Rules met by [password], used as typed, in enum order (REQ-012).
+List<PasswordRuleEnum> metPasswordRules(String password) => List.unmodifiable(
+  PasswordRuleEnum.values.where((rule) => rule.isMetBy(password)),
+);

@@ -48,4 +48,58 @@ void main() {
     final met = PasswordRuleEnum.values.where((r) => r.isMetBy('Abc'));
     expect(met, {PasswordRuleEnum.uppercase, PasswordRuleEnum.lowercase});
   });
+
+  // REQ-012: password "abc" meets 1 rule (lowercase)
+  test('should meet only lowercase when password is abc', () {
+    expect(metPasswordRules('abc'), [PasswordRuleEnum.lowercase]);
+  });
+
+  // REQ-012: password "Abc" meets 2 rules (uppercase, lowercase)
+  test('should meet uppercase and lowercase when password is Abc', () {
+    expect(metPasswordRules('Abc'), [
+      PasswordRuleEnum.uppercase,
+      PasswordRuleEnum.lowercase,
+    ]);
+  });
+
+  // REQ-012: password "Abcdefg" (7 characters) meets 2 rules and not minLength
+  test('should not meet minLength when password has 7 characters', () {
+    final met = metPasswordRules('Abcdefg');
+    expect(met, [PasswordRuleEnum.uppercase, PasswordRuleEnum.lowercase]);
+    expect(met, isNot(contains(PasswordRuleEnum.minLength)));
+  });
+
+  // REQ-012: password "Abcdefgh" (8 characters) meets 3 rules and not digit
+  test('should meet 3 rules without digit when password is Abcdefgh', () {
+    final met = metPasswordRules('Abcdefgh');
+    expect(met, [
+      PasswordRuleEnum.minLength,
+      PasswordRuleEnum.uppercase,
+      PasswordRuleEnum.lowercase,
+    ]);
+    expect(met, isNot(contains(PasswordRuleEnum.digit)));
+  });
+
+  // REQ-012: password "Abcdefg1" meets all 4 rules, in enum order
+  test('should meet all 4 rules when password is Abcdefg1', () {
+    expect(metPasswordRules('Abcdefg1'), [
+      PasswordRuleEnum.minLength,
+      PasswordRuleEnum.digit,
+      PasswordRuleEnum.uppercase,
+      PasswordRuleEnum.lowercase,
+    ]);
+  });
+
+  // REQ-012: empty password meets 0 rules
+  test('should meet no rule when password is empty', () {
+    expect(metPasswordRules(''), isEmpty);
+  });
+
+  // REQ-012: the list of met rules cannot be changed
+  test('should return an unmodifiable list of met rules', () {
+    expect(
+      () => metPasswordRules('Abc').add(PasswordRuleEnum.digit),
+      throwsUnsupportedError,
+    );
+  });
 }

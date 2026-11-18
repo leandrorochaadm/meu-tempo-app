@@ -7,6 +7,7 @@ import 'package:injectable/injectable.dart';
 import '../../../../core/error/account_field_error_enum.dart';
 import '../../../../core/error/auth_failures.dart';
 import '../../../../core/error/failures.dart';
+import '../../domain/entities/sign_up_form_entity.dart';
 import '../../domain/usecases/sign_up_use_case.dart';
 
 part 'sign_up_event.dart';
@@ -16,12 +17,62 @@ part 'sign_up_state.dart';
 /// [AuthBloc] sees it and the router leaves the screen.
 @injectable
 class SignUpBloc extends Bloc<SignUpEvent, SignUpState> {
-  SignUpBloc(this._signUp) : super(const SignUpIdle()) {
-    on<SignUpStarted>((_, _) => _acceptedPrivacyPolicy = false);
-    on<SignUpPrivacyPolicyChanged>(
-      (event, _) => _acceptedPrivacyPolicy = event.accepted,
-    );
+  SignUpBloc(this._signUp) : super(const SignUpEditing(SignUpFormEntity())) {
+    on<SignUpStarted>((_, _) {
+      _acceptedPrivacyPolicy = false;
+      _form = SignUpFormEntity(
+        displayName: _form.displayName,
+        email: _form.email,
+        password: _form.password,
+        displayNameLeft: _form.displayNameLeft,
+        emailLeft: _form.emailLeft,
+      );
+    });
+    on<SignUpPrivacyPolicyChanged>((event, _) {
+      _acceptedPrivacyPolicy = event.accepted;
+      _form = SignUpFormEntity(
+        displayName: _form.displayName,
+        email: _form.email,
+        password: _form.password,
+        acceptedPrivacyPolicy: event.accepted,
+        displayNameLeft: _form.displayNameLeft,
+        emailLeft: _form.emailLeft,
+      );
+    });
     on<SignUpSubmitted>(_onSubmitted);
+    on<SignUpFormChanged>((event, emit) {
+      _form = SignUpFormEntity(
+        displayName: event.displayName,
+        email: event.email,
+        password: event.password,
+        acceptedPrivacyPolicy: _form.acceptedPrivacyPolicy,
+        displayNameLeft: _form.displayNameLeft,
+        emailLeft: _form.emailLeft,
+      );
+      _emitForm(emit);
+    });
+    on<SignUpDisplayNameLeft>((_, emit) {
+      _form = SignUpFormEntity(
+        displayName: _form.displayName,
+        email: _form.email,
+        password: _form.password,
+        acceptedPrivacyPolicy: _form.acceptedPrivacyPolicy,
+        displayNameLeft: true,
+        emailLeft: _form.emailLeft,
+      );
+      _emitForm(emit);
+    });
+    on<SignUpEmailLeft>((_, emit) {
+      _form = SignUpFormEntity(
+        displayName: _form.displayName,
+        email: _form.email,
+        password: _form.password,
+        acceptedPrivacyPolicy: _form.acceptedPrivacyPolicy,
+        displayNameLeft: _form.displayNameLeft,
+        emailLeft: true,
+      );
+      _emitForm(emit);
+    });
   }
 
   static const Duration _signUpTimeout = Duration(seconds: 30);
@@ -29,6 +80,13 @@ class SignUpBloc extends Bloc<SignUpEvent, SignUpState> {
   final SignUpUseCase _signUp;
   // Starts true only for callers that never send SignUpStarted; the router always does.
   bool _acceptedPrivacyPolicy = true;
+  SignUpFormEntity _form = const SignUpFormEntity();
+
+  /// Emits the form unless a submit is running (keeps the loading state).
+  void _emitForm(Emitter<SignUpState> emit) {
+    if (state is SignUpInProgress) return;
+    emit(SignUpEditing(_form));
+  }
 
   Future<void> _onSubmitted(
     SignUpSubmitted event,

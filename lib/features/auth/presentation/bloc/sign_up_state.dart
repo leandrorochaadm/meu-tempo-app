@@ -42,3 +42,13 @@ final class SignUpFieldsInvalid extends SignUpState {
   @override
   List<Object?> get props => [errors];
 }
+
+/// The form being edited, with the entity ready for the screen (REQ-012).
+final class SignUpEditing extends SignUpState {
+  const SignUpEditing(this.form);
+
+  final SignUpFormEntity form;
+
+  @override
+  List<Object?> get props => [form];
+}
