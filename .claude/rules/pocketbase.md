@@ -56,8 +56,9 @@ opcional (create):     (@request.body.parent = "" || @request.body.parent.user =
 opcional (update):     (@request.body.parent:isset = false || @request.body.parent = "" || @request.body.parent.user = @request.auth.id)
 ```
 
-- `users`: cadastro fechado (`createRule = null`), demais regras `id = @request.auth.id`,
-  senha mínima 8, token de 30 dias.
+- `users`: cadastro aberto (`createRule = ""`, rota de autenticação, `specs/sign_up.md`), demais
+  regras `id = @request.auth.id`, senha mínima 8, token de 30 dias, índice único do e-mail
+  sem diferenciar maiúsculas (`COLLATE NOCASE`) e `privacy_policy_accepted_at` marcado pelo servidor.
 - **Coleção nova**: nasce travada, ganha a regra de dono e passa no
   `uv run ~/.claude/skills/pocketbase-db/scripts/pb_check.py` sem FAIL (sem login nada passa;
   B não lista, lê, cria em nome de A, altera, apaga nem aponta para registro de A).
@@ -67,8 +68,8 @@ opcional (update):     (@request.body.parent:isset = false || @request.body.pare
 
 ## Sessão e login
 
-- Login por e-mail e senha (`authWithPassword` em `PbCollections.users`); sem cadastro nem
-  recuperação de senha no app.
+- Login e cadastro por e-mail e senha (`authWithPassword`/`create` em `PbCollections.users`), com
+  o e-mail normalizado (minúsculas, sem espaços nas pontas); sem recuperação de senha no app.
 - `PocketBaseClientFactory.create` monta o cliente com `AsyncAuthStore` gravado em
   `flutter_secure_storage` (`SecureStorageKeys.pocketBaseAuth`; iOS `first_unlock`).
   É o único lugar que cria `PocketBase(` ou usa `flutter_secure_storage`.

@@ -48,7 +48,7 @@ Nunca invente requisito. Se algo não está nos documentos, **pergunte** (ver sk
     a VPS gera só o PWA.
 - **Sempre online** — sem modo offline nesta versão.
 - **Backend: PocketBase** (0.40.5, na VPS, atrás do Caddy) — login por e-mail e senha
-  (cadastro fechado) + coleções planas. **Dados isolados por usuário**: todo registro tem
+  (cadastro aberto pelo app, `specs/sign_up.md`) + coleções planas. **Dados isolados por usuário**: todo registro tem
   o campo `user`, e as API Rules de dono no servidor garantem que só o dono acessa.
   Tempo real por `subscribe` (`RecordWatcher`). Schema e regras em
   `pocketbase/pb_migrations/`. Detalhes em `.claude/rules/pocketbase.md` e

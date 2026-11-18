@@ -35,7 +35,7 @@ nativo Android/iOS.
 ## Rodar localmente
 
 1. `tool/pb.sh serve` — sobe o PocketBase em `http://127.0.0.1:8095` com as migrations de `pocketbase/pb_migrations` (dados em `.pb/`, fora do git).
-2. `tool/pb.sh superuser <email>` — cria o superusuário local (pede a senha); criar a conta de login no painel `http://127.0.0.1:8095/_/` (coleção `users`), pois o cadastro pelo app é fechado.
+2. `tool/pb.sh superuser <email>` — cria o superusuário local (pede a senha); a conta de login se cria pelo app, em "Criar conta" na tela de entrada.
 3. `cp config/dev.json.example config/dev.json` — aponta o app para `http://127.0.0.1:8095` (`POCKETBASE_URL`). Sem o arquivo, o app abre a tela "O app não foi configurado."
 4. `make run` — roda no Chrome com perfil e porta fixos (mantém o login entre execuções).
 
