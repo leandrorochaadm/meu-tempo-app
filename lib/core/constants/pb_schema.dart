@@ -17,6 +17,7 @@ abstract final class PbFields {
   static const id = 'id';
   static const user = 'user';
   static const createdAt = 'created_at';
+  static const privacyPolicyAcceptedAt = 'privacy_policy_accepted_at';
 
   // users
   static const email = 'email';

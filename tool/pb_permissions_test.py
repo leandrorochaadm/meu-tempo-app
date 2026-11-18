@@ -22,6 +22,7 @@ import sys
 import tempfile
 import time
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
 from pathlib import Path
 
 import httpx
@@ -382,6 +383,11 @@ def check_permissions(su: Actor, a: Owner, b: Owner) -> list[str]:
     return res.failed
 
 
+def _pb_time(raw: str) -> datetime:
+    """Parses a PocketBase timestamp (`YYYY-MM-DD HH:MM:SS.fffZ`, UTC)."""
+    return datetime.strptime(raw, "%Y-%m-%d %H:%M:%S.%fZ").replace(tzinfo=timezone.utc)
+
+
 def check_users(res: Results, su: Actor, a: Owner, b: Owner) -> None:
     A, B = a.actor, b.actor
     r = request(A, "GET", rec("users", A.user_id))
@@ -469,6 +475,52 @@ def check_users(res: Results, su: Actor, a: Owner, b: Owner) -> None:
             "name": "Len",
         })
         res.check(f"users:create:password-{size}", r.status_code == expected, f"{r.status_code} {r.text[:200]}")
+
+    # REQ-004: the acceptance date is stamped by the server at creation; the app never sends it.
+    forged_raw = "2000-01-01 00:00:00.000Z"
+
+    def accepted_gap(user_id: str) -> tuple[bool, str]:
+        data = su_get(su, "users", user_id).json()
+        raw = data.get("privacy_policy_accepted_at") or ""
+        if not raw:
+            return False, "empty"
+        gap = abs((_pb_time(raw) - _pb_time(data["created"])).total_seconds())
+        return gap <= 1.0, f"gap={gap}s"
+
+    if signup is None:
+        res.check("users:create:anon:privacy-accepted-at", False, "no session")
+    else:
+        ok, detail = accepted_gap(signup.user_id)
+        res.check("users:create:anon:privacy-accepted-at", ok, detail)
+
+    fp = secrets.token_urlsafe(24)
+    r = request(ANON, "POST", rec("users"), json={
+        "email": f"forged{secrets.token_hex(4)}@pb-test.local", "password": fp, "passwordConfirm": fp,
+        "name": "Forged", "privacy_policy_accepted_at": forged_raw,
+    })
+    if r.status_code == 200:
+        ok, detail = accepted_gap(r.json()["id"])
+    else:
+        ok, detail = False, f"{r.status_code} {r.text[:200]}"
+    res.check("users:create:anon:privacy-accepted-at:forged", ok, detail)
+
+    if signup is None:
+        res.check("users:update:privacy-accepted-at:owner", False, "no session")
+        res.check("users:update:privacy-accepted-at:on-update", False, "no session")
+    else:
+        def stored() -> str:
+            return su_get(su, "users", signup.user_id).json().get("privacy_policy_accepted_at", "")
+
+        before_value = stored()
+        r = request(signup, "PATCH", rec("users", signup.user_id), json={"privacy_policy_accepted_at": forged_raw})
+        res.check("users:update:privacy-accepted-at:owner",
+                  r.status_code in (200, 400) and before_value != "" and stored() == before_value,
+                  f"{r.status_code} {r.text[:200]}")
+        r = request(signup, "PATCH", rec("users", signup.user_id), json={"name": "Renamed"})
+        res.check("users:update:privacy-accepted-at:on-update",
+                  r.status_code == 200 and before_value != "" and stored() == before_value,
+                  f"{r.status_code} {r.text[:200]}")
+
 
 
 def check_account_deletion(res: Results, su: Actor) -> None:
