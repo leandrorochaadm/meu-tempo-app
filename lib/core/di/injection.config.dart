@@ -70,6 +70,8 @@ import 'package:meu_tempo/features/auth/domain/usecases/watch_auth_state_use_cas
     as _i1046;
 import 'package:meu_tempo/features/auth/presentation/bloc/auth_bloc.dart'
     as _i708;
+import 'package:meu_tempo/features/auth/presentation/bloc/change_email_bloc.dart'
+    as _i694;
 import 'package:meu_tempo/features/auth/presentation/bloc/change_password_form_bloc.dart'
     as _i645;
 import 'package:meu_tempo/features/auth/presentation/bloc/delete_account_bloc.dart'
@@ -448,6 +450,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i32.SaveTaskListFilterUseCase>(
       () => _i32.SaveTaskListFilterUseCase(gh<_i74.TaskListFilterRepository>()),
+    );
+    gh.factory<_i694.ChangeEmailBloc>(
+      () => _i694.ChangeEmailBloc(gh<_i997.ChangeEmailUseCase>()),
     );
     gh.factory<_i721.DeleteAccountBloc>(
       () => _i721.DeleteAccountBloc(gh<_i975.DeleteAccountUseCase>()),
