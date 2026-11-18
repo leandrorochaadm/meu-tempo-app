@@ -23,3 +23,13 @@ final class SignUpFailed extends SignUpState {
   @override
   List<Object?> get props => [message];
 }
+
+final class SignUpFieldsInvalid extends SignUpState {
+  SignUpFieldsInvalid(List<AccountFieldErrorEnum> errors)
+    : errors = List.unmodifiable(errors);
+
+  final List<AccountFieldErrorEnum> errors;
+
+  @override
+  List<Object?> get props => [errors];
+}

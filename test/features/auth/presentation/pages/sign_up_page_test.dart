@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:meu_tempo/core/error/account_field_error_enum.dart';
 import 'package:meu_tempo/core/router/routes.dart';
 import 'package:meu_tempo/core/theme/app_theme.dart';
 import 'package:meu_tempo/core/ui/app_primary_button.dart';
@@ -175,5 +176,23 @@ void main() {
 
     expect(find.text('login'), findsOneWidget);
     expect(find.byType(SignUpPage), findsNothing);
+  });
+
+  // REQ-002: state SignUpFieldsInvalid([displayNameLength]): 1 warning below Nome, 0 snackbars
+  testWidgets('should show name length warning below Nome', (tester) async {
+    when(() => bloc.state).thenReturn(
+      SignUpFieldsInvalid([AccountFieldErrorEnum.displayNameLength]),
+    );
+    await pump(tester);
+
+    expect(find.text('Use de 2 a 50 caracteres.'), findsOneWidget);
+    expect(find.byType(SnackBar), findsNothing);
+  });
+
+  // REQ-002: state SignUpIdle: no name warning
+  testWidgets('should not show name warning when idle', (tester) async {
+    await pump(tester);
+
+    expect(find.text('Use de 2 a 50 caracteres.'), findsNothing);
   });
 }

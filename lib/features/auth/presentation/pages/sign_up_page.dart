@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/error/account_field_error_enum.dart';
 import '../../../../core/router/routes.dart';
 import '../../../../core/theme/theme_context_extensions.dart';
 import '../../../../core/ui/app_primary_button.dart';
+import '../account_field_error_label.dart';
 import '../bloc/sign_up_bloc.dart';
 
 /// "Criar conta" screen — name, email and password.
@@ -56,6 +58,13 @@ class _SignUpPageState extends State<SignUpPage> {
           },
           builder: (context, state) {
             final loading = state is SignUpInProgress;
+            final nameError =
+                state is SignUpFieldsInvalid &&
+                    state.errors.contains(
+                      AccountFieldErrorEnum.displayNameLength,
+                    )
+                ? AccountFieldErrorEnum.displayNameLength.label
+                : null;
             return SingleChildScrollView(
               child: Padding(
                 padding: EdgeInsets.all(context.space.xxl),
@@ -68,8 +77,9 @@ class _SignUpPageState extends State<SignUpPage> {
                           TextField(
                             controller: _nameController,
                             style: context.text.bodyMedium,
-                            decoration: const InputDecoration(
+                            decoration: InputDecoration(
                               labelText: 'Nome',
+                              errorText: nameError,
                             ),
                             keyboardType: TextInputType.name,
                             textCapitalization: TextCapitalization.words,

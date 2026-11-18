@@ -39,6 +39,8 @@ dependencies:
 
   # Programação funcional — Either<Failure, T> no domínio
   fpdart: ^1.2.0
+  # Contar texto como a pessoa vê (emoji e acento combinado = 1) — REQ-002
+  characters: ^1.4.1
 
   # Injeção de dependências
   get_it: ^9.2.1

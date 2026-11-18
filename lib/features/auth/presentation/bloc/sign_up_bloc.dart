@@ -4,6 +4,8 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 
+import '../../../../core/error/account_field_error_enum.dart';
+import '../../../../core/error/auth_failures.dart';
 import '../../../../core/error/failures.dart';
 import '../../domain/usecases/sign_up_use_case.dart';
 
@@ -37,7 +39,12 @@ class SignUpBloc extends Bloc<SignUpEvent, SignUpState> {
         ),
       ).timeout(_signUpTimeout);
       result.match(
-        (failure) => emit(SignUpFailed(_mapFailure(failure))),
+        (failure) => switch (failure) {
+          InvalidAccountFieldsFailure(:final errors) => emit(
+            SignUpFieldsInvalid(errors),
+          ),
+          _ => emit(SignUpFailed(_mapFailure(failure))),
+        },
         (_) {},
       );
     } on TimeoutException {

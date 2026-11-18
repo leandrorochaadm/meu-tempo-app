@@ -2,9 +2,11 @@ import 'package:equatable/equatable.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:injectable/injectable.dart';
 
+import '../../../../core/error/auth_failures.dart';
 import '../../../../core/error/failures.dart';
 import '../../../../core/usecase/usecase.dart';
 import '../repositories/auth_repository.dart';
+import '../validation/account_field_rules.dart';
 import 'normalize_email.dart';
 
 /// Creates an account and starts the session. The user arrives through the auth stream.
@@ -15,7 +17,10 @@ class SignUpUseCase implements UseCase<Unit, SignUpParams> {
   final AuthRepository _repository;
 
   @override
-  Future<Either<Failure, Unit>> call(SignUpParams params) {
+  Future<Either<Failure, Unit>> call(SignUpParams params) async {
+    // REQ-002, REQ-011
+    final errors = checkDisplayName(params.displayName);
+    if (errors.isNotEmpty) return Left(InvalidAccountFieldsFailure(errors));
     // REQ-001, REQ-005
     return _repository.signUp(
       displayName: params.displayName.trim(),

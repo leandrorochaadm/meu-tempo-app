@@ -4,6 +4,8 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:fake_async/fake_async.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:meu_tempo/core/error/account_field_error_enum.dart';
+import 'package:meu_tempo/core/error/auth_failures.dart';
 import 'package:meu_tempo/core/error/failures.dart';
 import 'package:meu_tempo/features/auth/domain/usecases/sign_up_use_case.dart';
 import 'package:meu_tempo/features/auth/presentation/bloc/sign_up_bloc.dart';
@@ -164,5 +166,38 @@ void main() {
       const SignUpFailed('Não foi possível criar a conta. Tente de novo.'),
     ],
     verify: (_) => verify(() => signUp(any())).called(2),
+  );
+
+  // REQ-002: the use case rejects the name with displayNameLength: the bloc emits SignUpFieldsInvalid with that error
+  blocTest<SignUpBloc, SignUpState>(
+    'should emit SignUpFieldsInvalid when use case rejects fields',
+    build: () {
+      when(() => signUp(any())).thenAnswer(
+        (_) async => Left(
+          InvalidAccountFieldsFailure([
+            AccountFieldErrorEnum.displayNameLength,
+          ]),
+        ),
+      );
+      return SignUpBloc(signUp);
+    },
+    act: (bloc) => bloc.add(submitted),
+    expect: () => [
+      const SignUpInProgress(),
+      SignUpFieldsInvalid([AccountFieldErrorEnum.displayNameLength]),
+    ],
+  );
+
+  // REQ-002: a new valid submit after SignUpFieldsInvalid starts again with SignUpInProgress
+  blocTest<SignUpBloc, SignUpState>(
+    'should accept a new submit after SignUpFieldsInvalid',
+    build: () {
+      when(() => signUp(any())).thenAnswer((_) async => const Right(unit));
+      return SignUpBloc(signUp);
+    },
+    seed: () => SignUpFieldsInvalid([AccountFieldErrorEnum.displayNameLength]),
+    act: (bloc) => bloc.add(submitted),
+    expect: () => [const SignUpInProgress()],
+    verify: (_) => verify(() => signUp(params)).called(1),
   );
 }
