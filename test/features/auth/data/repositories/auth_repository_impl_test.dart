@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:meu_tempo/core/error/auth_failures.dart';
 import 'package:meu_tempo/core/error/exceptions.dart';
+import 'package:meu_tempo/core/error/failures.dart';
 import 'package:meu_tempo/features/auth/data/datasources/auth_remote_data_source.dart';
 import 'package:meu_tempo/features/auth/data/models/user_model.dart';
 import 'package:meu_tempo/features/auth/data/repositories/auth_repository_impl.dart';
@@ -49,5 +50,66 @@ void main() {
     expect(values.first?.uid, 'u1');
     expect(values.last, isNull);
     expect(repo.currentUser()?.email, 'a@b.com');
+  });
+
+  // REQ-001: data source succeeds: Right(unit), data source called once with the same values
+  test('signUp should return Right when data source succeeds', () async {
+    when(
+      () => ds.signUp(
+        displayName: 'Ana',
+        email: 'ana@exemplo.com',
+        password: 'Abcd1234',
+      ),
+    ).thenAnswer((_) async {});
+
+    final result = await repo.signUp(
+      displayName: 'Ana',
+      email: 'ana@exemplo.com',
+      password: 'Abcd1234',
+    );
+
+    expect(result, const Right<Failure, Unit>(unit));
+    verify(
+      () => ds.signUp(
+        displayName: 'Ana',
+        email: 'ana@exemplo.com',
+        password: 'Abcd1234',
+      ),
+    ).called(1);
+  });
+
+  // REQ-001: data source throws NetworkException / ServerException: Left(NetworkFailure()) / Left(ServerFailure())
+  test('signUp should map AppException to failure', () async {
+    when(
+      () => ds.signUp(
+        displayName: any(named: 'displayName'),
+        email: any(named: 'email'),
+        password: any(named: 'password'),
+      ),
+    ).thenThrow(const NetworkException());
+    expect(
+      await repo.signUp(
+        displayName: 'Ana',
+        email: 'ana@exemplo.com',
+        password: 'Abcd1234',
+      ),
+      const Left<Failure, Unit>(NetworkFailure()),
+    );
+
+    when(
+      () => ds.signUp(
+        displayName: any(named: 'displayName'),
+        email: any(named: 'email'),
+        password: any(named: 'password'),
+      ),
+    ).thenThrow(const ServerException());
+    expect(
+      await repo.signUp(
+        displayName: 'Ana',
+        email: 'ana@exemplo.com',
+        password: 'Abcd1234',
+      ),
+      const Left<Failure, Unit>(ServerFailure()),
+    );
   });
 }

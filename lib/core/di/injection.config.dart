@@ -60,6 +60,8 @@ import 'package:meu_tempo/features/auth/domain/usecases/sign_in_with_email_use_c
     as _i850;
 import 'package:meu_tempo/features/auth/domain/usecases/sign_out_use_case.dart'
     as _i846;
+import 'package:meu_tempo/features/auth/domain/usecases/sign_up_use_case.dart'
+    as _i389;
 import 'package:meu_tempo/features/auth/domain/usecases/watch_auth_state_use_case.dart'
     as _i1046;
 import 'package:meu_tempo/features/auth/presentation/bloc/auth_bloc.dart'
@@ -387,6 +389,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i846.SignOutUseCase>(
       () => _i846.SignOutUseCase(gh<_i224.AuthRepository>()),
+    );
+    gh.lazySingleton<_i389.SignUpUseCase>(
+      () => _i389.SignUpUseCase(gh<_i224.AuthRepository>()),
     );
     gh.lazySingleton<_i1046.WatchAuthStateUseCase>(
       () => _i1046.WatchAuthStateUseCase(gh<_i224.AuthRepository>()),

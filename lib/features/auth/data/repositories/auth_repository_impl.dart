@@ -29,6 +29,25 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<Either<Failure, Unit>> signUp({
+    required String displayName,
+    required String email,
+    required String password,
+  }) async {
+    try {
+      await _dataSource.signUp(
+        displayName: displayName,
+        email: email,
+        password: password,
+      );
+      return const Right(unit);
+    } on AppException catch (e, s) {
+      AppLogger.logError('signUp falhou', error: e, stackTrace: s);
+      return Left(e.toFailure());
+    }
+  }
+
+  @override
   Future<Either<Failure, Unit>> signOut() async {
     try {
       await _dataSource.signOut();

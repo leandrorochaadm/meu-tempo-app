@@ -15,6 +15,13 @@ const int _statusBadRequest = 400;
 abstract class AuthRemoteDataSource {
   /// Signs in with e-mail and password. The user arrives through [authState].
   Future<void> signInWithEmail(String email, String password);
+
+  /// Creates the user record and signs in. Throws [AppException] on error.
+  Future<void> signUp({
+    required String displayName,
+    required String email,
+    required String password,
+  });
   Future<void> signOut();
 
   /// Deletes the signed-in user's record. The SDK clears the session on
@@ -39,6 +46,28 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     } on ClientException catch (e) {
       // 400 = wrong credentials or unknown account.
       if (e.statusCode == _statusBadRequest) throw const AuthException();
+      throw mapPocketBaseError(e);
+    }
+  }
+
+  @override
+  Future<void> signUp({
+    required String displayName,
+    required String email,
+    required String password,
+  }) async {
+    try {
+      final users = _session.client.collection(PbCollections.users);
+      await users.create(
+        body: {
+          PbFields.email: email,
+          PbFields.password: password,
+          PbFields.passwordConfirm: password,
+          PbFields.name: displayName,
+        },
+      );
+      await users.authWithPassword(email, password);
+    } on ClientException catch (e) {
       throw mapPocketBaseError(e);
     }
   }

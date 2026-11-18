@@ -9,6 +9,8 @@ import 'package:meu_tempo/core/error/exceptions.dart';
 import 'package:meu_tempo/features/auth/data/datasources/auth_remote_data_source.dart';
 import 'package:pocketbase/pocketbase.dart';
 
+import '../../../../helpers/pocketbase_test_support.dart';
+
 String _jwt(DateTime exp) {
   String enc(Map<String, Object?> m) =>
       base64Url.encode(utf8.encode(jsonEncode(m))).replaceAll('=', '');
@@ -198,5 +200,122 @@ void main() {
       );
       expect(requests, isEmpty);
     });
+  });
+
+  group('signUp', () {
+    http.Response created() => pbJson({
+      'id': 'user-a',
+      'collectionName': 'users',
+      'email': 'ana@exemplo.com',
+    });
+
+    // REQ-001: successful sign-up makes 2 requests in order: create user, then sign in
+    test('should create user then sign in', () async {
+      final ds = build((request) async {
+        if (request.url.path == '/api/collections/users/records') {
+          return created();
+        }
+        return ok();
+      });
+
+      await ds.signUp(
+        displayName: 'Ana',
+        email: 'ana@exemplo.com',
+        password: 'Abcd1234',
+      );
+
+      expect(requests.length, 2);
+      expect(requests[0].method, 'POST');
+      expect(requests[0].url.path, '/api/collections/users/records');
+      final body = jsonDecode(requests[0].body) as Map<String, Object?>;
+      expect(body['email'], 'ana@exemplo.com');
+      expect(body['password'], 'Abcd1234');
+      expect(body['passwordConfirm'], 'Abcd1234');
+      expect(body['name'], 'Ana');
+      expect(requests[1].url.path, '/api/collections/users/auth-with-password');
+      expect(client.authStore.isValid, isTrue);
+    });
+
+    // REQ-001: create fails offline: NetworkException and no sign-in request
+    test(
+      'should throw NetworkException and not sign in when create fails offline',
+      () async {
+        final ds = build((_) async => throw const SocketException('down'));
+
+        await expectLater(
+          ds.signUp(
+            displayName: 'Ana',
+            email: 'ana@exemplo.com',
+            password: 'Abcd1234',
+          ),
+          throwsA(isA<NetworkException>()),
+        );
+        expect(requests.length, 1);
+      },
+    );
+
+    // REQ-001: create fails with 500: ServerException and no sign-in request
+    test('should throw ServerException when create fails on server', () async {
+      final ds = build((_) async => pbError(500));
+
+      await expectLater(
+        ds.signUp(
+          displayName: 'Ana',
+          email: 'ana@exemplo.com',
+          password: 'Abcd1234',
+        ),
+        throwsA(isA<ServerException>()),
+      );
+      expect(requests.length, 1);
+    });
+
+    // REQ-001: create fails with 400 validation_not_unique on email: ConflictException
+    test('should throw ConflictException when email is taken', () async {
+      final ds = build(
+        (_) async => pbError(
+          400,
+          data: {
+            'email': {
+              'code': 'validation_not_unique',
+              'message': 'The email is invalid or already in use.',
+            },
+          },
+        ),
+      );
+
+      await expectLater(
+        ds.signUp(
+          displayName: 'Ana',
+          email: 'ana@exemplo.com',
+          password: 'Abcd1234',
+        ),
+        throwsA(isA<ConflictException>()),
+      );
+      expect(requests.length, 1);
+    });
+
+    // REQ-001: create succeeds but sign-in returns 400: mapped error (not AuthException), 2 requests, empty session
+    test(
+      'should map sign-in error after create through mapPocketBaseError',
+      () async {
+        final ds = build((request) async {
+          if (request.url.path == '/api/collections/users/records') {
+            return created();
+          }
+          return pbError(400);
+        });
+
+        await expectLater(
+          ds.signUp(
+            displayName: 'Ana',
+            email: 'ana@exemplo.com',
+            password: 'Abcd1234',
+          ),
+          throwsA(isNot(isA<AuthException>())),
+        );
+        expect(requests.length, 2);
+        expect(client.authStore.isValid, isFalse);
+      },
+    );
   });
 }

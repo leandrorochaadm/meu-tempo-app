@@ -9,6 +9,14 @@ abstract class AuthRepository {
   /// user arrives through [authState], not through this return value.
   Future<Either<Failure, Unit>> signInWithEmail(String email, String password);
 
+  /// Creates the account and starts the session. The user arrives through
+  /// [authState], not through this return value.
+  Future<Either<Failure, Unit>> signUp({
+    required String displayName,
+    required String email,
+    required String password,
+  });
+
   /// Encerra a sessão.
   Future<Either<Failure, Unit>> signOut();
 

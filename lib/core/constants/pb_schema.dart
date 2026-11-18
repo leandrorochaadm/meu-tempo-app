@@ -20,6 +20,8 @@ abstract final class PbFields {
 
   // users
   static const email = 'email';
+  static const password = 'password';
+  static const passwordConfirm = 'passwordConfirm';
 
   // task_lists
   static const name = 'name';
