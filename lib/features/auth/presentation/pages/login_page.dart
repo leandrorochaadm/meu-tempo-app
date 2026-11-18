@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../core/router/routes.dart';
 import '../../../../core/theme/theme_context_extensions.dart';
 import '../../../../core/ui/app_primary_button.dart';
 import '../bloc/auth_bloc.dart';
@@ -117,9 +119,16 @@ class _LoginPageState extends State<LoginPage> {
                         onPressed: _submit,
                       ),
                       SizedBox(height: context.space.lg),
-                      Text(
-                        'Sem conta? Fale com quem cuida do app.',
-                        style: context.text.bodySmall,
+                      Wrap(
+                        alignment: WrapAlignment.center,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [
+                          Text('Não tem conta?', style: context.text.bodySmall),
+                          TextButton(
+                            onPressed: () => context.push(Routes.signUp),
+                            child: const Text('Criar conta'),
+                          ),
+                        ],
                       ),
                     ],
                   ),

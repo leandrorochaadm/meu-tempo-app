@@ -27,4 +27,9 @@ void main() {
     );
     expect(q[TimerTargetQueryParams.id], 't1');
   });
+
+  // REQ-001: the sign-up route path
+  test('signUp path', () {
+    expect(Routes.signUp, '/sign-up');
+  });
 }

@@ -5,7 +5,9 @@ import 'package:go_router/go_router.dart';
 import '../../features/appointment/presentation/bloc/agenda_bloc.dart';
 import '../../features/appointment/presentation/pages/agenda_page.dart';
 import '../../features/auth/presentation/bloc/auth_bloc.dart';
+import '../../features/auth/presentation/bloc/sign_up_bloc.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
+import '../../features/auth/presentation/pages/sign_up_page.dart';
 import '../../features/config/presentation/bloc/settings_bloc.dart';
 import '../../features/config/presentation/pages/settings_page.dart';
 import '../../features/list/presentation/bloc/list_manager_bloc.dart';
@@ -36,7 +38,7 @@ import 'go_router_refresh_stream.dart';
 import 'routes.dart';
 
 /// Raiz de composição do roteamento. Reage ao estado de auth via
-/// `refreshListenable` e redireciona login/home conforme a sessão.
+/// `refreshListenable` e redireciona login/cadastro/home conforme a sessão.
 class AppRouter {
   AppRouter(this._authBloc);
 
@@ -48,17 +50,26 @@ class AppRouter {
     redirect: (context, state) {
       final authState = _authBloc.state;
       final loggedIn = authState is AuthAuthenticated;
-      final loggingIn = state.matchedLocation == Routes.login;
+      final onPublicRoute =
+          state.matchedLocation == Routes.login ||
+          state.matchedLocation == Routes.signUp;
 
       // Enquanto resolve o estado inicial, não redireciona.
       if (authState is AuthInitial || authState is AuthLoading) return null;
 
-      if (!loggedIn) return loggingIn ? null : Routes.login;
-      if (loggingIn) return Routes.home;
+      if (!loggedIn) return onPublicRoute ? null : Routes.login;
+      if (onPublicRoute) return Routes.home;
       return null;
     },
     routes: [
       GoRoute(path: Routes.login, builder: (_, _) => const LoginPage()),
+      GoRoute(
+        path: Routes.signUp,
+        builder: (_, _) => BlocProvider(
+          create: (_) => getIt<SignUpBloc>(),
+          child: const SignUpPage(),
+        ),
+      ),
       // Shell das rotas autenticadas: mantém a barra "now playing" fixa no
       // rodapé, dentro do Navigator raiz (assim seus Tooltip/diálogos têm
       // Overlay/Navigator). O login fica fora — sem barra.

@@ -5,6 +5,9 @@ class Routes {
   const Routes._();
 
   static const String login = '/login';
+
+  /// "Criar conta" screen, opened without a session.
+  static const String signUp = '/sign-up';
   static const String home = '/';
   static const String lists = '/lists';
 

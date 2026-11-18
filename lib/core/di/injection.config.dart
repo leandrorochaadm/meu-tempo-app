@@ -68,6 +68,8 @@ import 'package:meu_tempo/features/auth/presentation/bloc/auth_bloc.dart'
     as _i708;
 import 'package:meu_tempo/features/auth/presentation/bloc/delete_account_bloc.dart'
     as _i721;
+import 'package:meu_tempo/features/auth/presentation/bloc/sign_up_bloc.dart'
+    as _i1020;
 import 'package:meu_tempo/features/config/data/datasources/config_remote_data_source.dart'
     as _i584;
 import 'package:meu_tempo/features/config/data/repositories/config_repository_impl.dart'
@@ -408,6 +410,9 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i846.SignOutUseCase>(),
         gh<_i1046.WatchAuthStateUseCase>(),
       ),
+    );
+    gh.factory<_i1020.SignUpBloc>(
+      () => _i1020.SignUpBloc(gh<_i389.SignUpUseCase>()),
     );
     gh.lazySingleton<_i975.DeleteAccountUseCase>(
       () => _i975.DeleteAccountUseCase(
