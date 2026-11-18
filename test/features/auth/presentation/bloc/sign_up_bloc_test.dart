@@ -218,4 +218,22 @@ void main() {
       SignUpFieldsInvalid([AccountFieldErrorEnum.invalidEmail]),
     ],
   );
+
+  // REQ-003: the use case rejects the password with passwordTooLong: the bloc emits SignUpFieldsInvalid with that error
+  blocTest<SignUpBloc, SignUpState>(
+    'should emit SignUpFieldsInvalid with password errors',
+    build: () {
+      when(() => signUp(any())).thenAnswer(
+        (_) async => Left(
+          InvalidAccountFieldsFailure([AccountFieldErrorEnum.passwordTooLong]),
+        ),
+      );
+      return SignUpBloc(signUp);
+    },
+    act: (bloc) => bloc.add(submitted),
+    expect: () => [
+      const SignUpInProgress(),
+      SignUpFieldsInvalid([AccountFieldErrorEnum.passwordTooLong]),
+    ],
+  );
 }

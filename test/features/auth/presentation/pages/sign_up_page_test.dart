@@ -227,4 +227,30 @@ void main() {
 
     expect(find.text('Confira o e-mail.'), findsNothing);
   });
+
+  // REQ-003: state SignUpFieldsInvalid([passwordTooLong]): "Use no máximo 71 caracteres." once below Senha
+  testWidgets('should show long password warning under Senha', (tester) async {
+    when(
+      () => bloc.state,
+    ).thenReturn(SignUpFieldsInvalid([AccountFieldErrorEnum.passwordTooLong]));
+    await pump(tester);
+
+    expect(find.text('Use no máximo 71 caracteres.'), findsOneWidget);
+  });
+
+  // REQ-003: state SignUpFieldsInvalid([passwordMissingDigit]): no text below Senha
+  testWidgets('should not show criterion errors under Senha', (tester) async {
+    when(() => bloc.state).thenReturn(
+      SignUpFieldsInvalid([
+        AccountFieldErrorEnum.passwordTooShort,
+        AccountFieldErrorEnum.passwordMissingDigit,
+        AccountFieldErrorEnum.passwordMissingUppercase,
+        AccountFieldErrorEnum.passwordMissingLowercase,
+      ]),
+    );
+    await pump(tester);
+
+    expect(find.text('Pelo menos 1 número'), findsNothing);
+    expect(find.text('Use no máximo 71 caracteres.'), findsNothing);
+  });
 }

@@ -70,6 +70,11 @@ class _SignUpPageState extends State<SignUpPage> {
                     state.errors.contains(AccountFieldErrorEnum.invalidEmail)
                 ? AccountFieldErrorEnum.invalidEmail.label
                 : null;
+            final passwordError =
+                state is SignUpFieldsInvalid &&
+                    state.errors.contains(AccountFieldErrorEnum.passwordTooLong)
+                ? AccountFieldErrorEnum.passwordTooLong.label
+                : null;
             return SingleChildScrollView(
               child: Padding(
                 padding: EdgeInsets.all(context.space.xxl),
@@ -112,6 +117,7 @@ class _SignUpPageState extends State<SignUpPage> {
                             obscureText: _obscurePassword,
                             decoration: InputDecoration(
                               labelText: 'Senha',
+                              errorText: passwordError,
                               suffixIcon: IconButton(
                                 tooltip: _obscurePassword
                                     ? 'Mostrar senha'

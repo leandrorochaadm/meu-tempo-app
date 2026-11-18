@@ -1,6 +1,7 @@
 import 'package:characters/characters.dart';
 
 import '../../../../core/error/account_field_error_enum.dart';
+import '../entities/password_rule_enum.dart';
 import '../usecases/normalize_email.dart';
 
 const int displayNameMinLength = 2; // REQ-002
@@ -37,3 +38,24 @@ List<AccountFieldErrorEnum> checkEmail(String email) {
       !normalized.contains(_emailDoubleDot);
   return valid ? const [] : const [AccountFieldErrorEnum.invalidEmail];
 }
+
+/// Checks the password as typed (no trim): length from 8 to 71, a digit, an uppercase and a lowercase letter.
+List<AccountFieldErrorEnum> checkPassword(String password) {
+  // REQ-003
+  final errors = <AccountFieldErrorEnum>[];
+  for (final rule in PasswordRuleEnum.values) {
+    if (!rule.isMetBy(password)) errors.add(_errorFor(rule));
+    if (rule == PasswordRuleEnum.minLength &&
+        passwordLength(password) > passwordMaxLength) {
+      errors.add(AccountFieldErrorEnum.passwordTooLong);
+    }
+  }
+  return errors;
+}
+
+AccountFieldErrorEnum _errorFor(PasswordRuleEnum rule) => switch (rule) {
+  PasswordRuleEnum.minLength => AccountFieldErrorEnum.passwordTooShort,
+  PasswordRuleEnum.digit => AccountFieldErrorEnum.passwordMissingDigit,
+  PasswordRuleEnum.uppercase => AccountFieldErrorEnum.passwordMissingUppercase,
+  PasswordRuleEnum.lowercase => AccountFieldErrorEnum.passwordMissingLowercase,
+};

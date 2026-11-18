@@ -798,4 +798,182 @@ void main() {
       ),
     );
   });
+
+  group('password rules', () {
+    Future<Either<Failure, Unit>> signUpWith(String password) => useCase(
+      SignUpParams(
+        displayName: 'Ana',
+        email: 'ana@exemplo.com',
+        password: password,
+      ),
+    );
+
+    void expectRepositoryNotCalled() {
+      verifyNever(
+        () => repo.signUp(
+          displayName: any(named: 'displayName'),
+          email: any(named: 'email'),
+          password: any(named: 'password'),
+        ),
+      );
+    }
+
+    void expectRepositoryCalledOnce(String password) {
+      verify(
+        () => repo.signUp(
+          displayName: 'Ana',
+          email: 'ana@exemplo.com',
+          password: password,
+        ),
+      ).called(1);
+    }
+
+    Left<Failure, Unit> rejected(List<AccountFieldErrorEnum> errors) =>
+        Left<Failure, Unit>(InvalidAccountFieldsFailure(errors));
+
+    // REQ-003: Sign up, Password "Abcd123" (7 characters): rejected with passwordTooShort, repository not called
+    test(
+      'should reject 7-character password without calling repository',
+      () async {
+        final result = await signUpWith('Abcd123');
+
+        expect(result, rejected([AccountFieldErrorEnum.passwordTooShort]));
+        expectRepositoryNotCalled();
+      },
+    );
+
+    // REQ-003: Sign up, empty Password: 4 errors, repository not called
+    test(
+      'should reject empty password with 4 errors without calling repository',
+      () async {
+        final result = await signUpWith('');
+
+        expect(
+          result,
+          rejected([
+            AccountFieldErrorEnum.passwordTooShort,
+            AccountFieldErrorEnum.passwordMissingDigit,
+            AccountFieldErrorEnum.passwordMissingUppercase,
+            AccountFieldErrorEnum.passwordMissingLowercase,
+          ]),
+        );
+        expectRepositoryNotCalled();
+      },
+    );
+
+    // REQ-003: Sign up, Password with 71 characters (limit): accepted, repository called once
+    test('should call repository once with 71-character password', () async {
+      final password = 'Ab1${'x' * 68}';
+      final result = await signUpWith(password);
+
+      expect(result, const Right<Failure, Unit>(unit));
+      expectRepositoryCalledOnce(password);
+    });
+
+    // REQ-003: Sign up, Password with 72 characters: rejected with passwordTooLong, repository not called
+    test(
+      'should reject 72-character password without calling repository',
+      () async {
+        final result = await signUpWith('Ab1${'x' * 69}');
+
+        expect(result, rejected([AccountFieldErrorEnum.passwordTooLong]));
+        expectRepositoryNotCalled();
+      },
+    );
+
+    // REQ-003: Sign up, Password "Abcdefgh" (no digit): rejected with passwordMissingDigit, repository not called
+    test(
+      'should reject password without digit without calling repository',
+      () async {
+        final result = await signUpWith('Abcdefgh');
+
+        expect(result, rejected([AccountFieldErrorEnum.passwordMissingDigit]));
+        expectRepositoryNotCalled();
+      },
+    );
+
+    // REQ-003: Sign up, Password "abcd1234" (no uppercase): rejected with passwordMissingUppercase, repository not called
+    test(
+      'should reject password without uppercase without calling repository',
+      () async {
+        final result = await signUpWith('abcd1234');
+
+        expect(
+          result,
+          rejected([AccountFieldErrorEnum.passwordMissingUppercase]),
+        );
+        expectRepositoryNotCalled();
+      },
+    );
+
+    // REQ-003: Sign up, Password "ABCD1234" (no lowercase): rejected with passwordMissingLowercase, repository not called
+    test(
+      'should reject password without lowercase without calling repository',
+      () async {
+        final result = await signUpWith('ABCD1234');
+
+        expect(
+          result,
+          rejected([AccountFieldErrorEnum.passwordMissingLowercase]),
+        );
+        expectRepositoryNotCalled();
+      },
+    );
+
+    // REQ-003: Sign up, Password "Ébcd1234" (accented uppercase): accepted, repository called once
+    test('should call repository once with Ébcd1234', () async {
+      final result = await signUpWith('Ébcd1234');
+
+      expect(result, const Right<Failure, Unit>(unit));
+      expectRepositoryCalledOnce('Ébcd1234');
+    });
+
+    // REQ-003: Sign up, Password "ABCDé123" (accented lowercase): accepted, repository called once
+    test('should call repository once with ABCDé123', () async {
+      final result = await signUpWith('ABCDé123');
+
+      expect(result, const Right<Failure, Unit>(unit));
+      expectRepositoryCalledOnce('ABCDé123');
+    });
+
+    // REQ-003: Sign up, Password with 8 spaces: 3 errors, repository not called
+    test(
+      'should reject 8 spaces with 3 errors without calling repository',
+      () async {
+        final result = await signUpWith('        ');
+
+        expect(
+          result,
+          rejected([
+            AccountFieldErrorEnum.passwordMissingDigit,
+            AccountFieldErrorEnum.passwordMissingUppercase,
+            AccountFieldErrorEnum.passwordMissingLowercase,
+          ]),
+        );
+        expectRepositoryNotCalled();
+      },
+    );
+
+    // REQ-003, REQ-011: Sign up, Name "A", E-mail "ana@" and Password "abc" together: errors in field order (name, e-mail, password)
+    test(
+      'should return name, email and password errors in field order',
+      () async {
+        final result = await useCase(
+          const SignUpParams(displayName: 'A', email: 'ana@', password: 'abc'),
+        );
+
+        expect(
+          result,
+          rejected([
+            AccountFieldErrorEnum.displayNameLength,
+            AccountFieldErrorEnum.invalidEmail,
+            AccountFieldErrorEnum.passwordTooShort,
+            AccountFieldErrorEnum.passwordMissingDigit,
+            AccountFieldErrorEnum.passwordMissingUppercase,
+          ]),
+        );
+        expectRepositoryNotCalled();
+      },
+    );
+  });
 }

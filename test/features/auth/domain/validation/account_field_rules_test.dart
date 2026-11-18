@@ -144,4 +144,82 @@ void main() {
       expect(checkEmail('ana@exemplo\n.com'), invalid);
     });
   });
+
+  group('checkPassword', () {
+    const tooShort = AccountFieldErrorEnum.passwordTooShort;
+    const tooLong = AccountFieldErrorEnum.passwordTooLong;
+    const noDigit = AccountFieldErrorEnum.passwordMissingDigit;
+    const noUpper = AccountFieldErrorEnum.passwordMissingUppercase;
+    const noLower = AccountFieldErrorEnum.passwordMissingLowercase;
+
+    // REQ-003: Password "Abcd123" (7 characters): rejected with passwordTooShort
+    test('should reject Abcd123 with passwordTooShort', () {
+      expect(checkPassword('Abcd123'), [tooShort]);
+    });
+
+    // REQ-003: Password "Abcd1234" (8 characters): accepted
+    test('should accept Abcd1234', () {
+      expect(checkPassword('Abcd1234'), isEmpty);
+    });
+
+    // REQ-003: Password "Abcd12345" (9 characters): accepted
+    test('should accept Abcd12345', () {
+      expect(checkPassword('Abcd12345'), isEmpty);
+    });
+
+    // REQ-003: Password " Abcd123" (8 characters, leading space): accepted, the space counts
+    test('should accept leading space counted as a character', () {
+      expect(checkPassword(' Abcd123'), isEmpty);
+    });
+
+    // REQ-003: Empty password: 4 errors in fixed order
+    test('should return 4 errors in order for empty password', () {
+      expect(checkPassword(''), [tooShort, noDigit, noUpper, noLower]);
+    });
+
+    // REQ-003: Password with 70 characters, with digit, uppercase and lowercase: accepted
+    test('should accept 70 characters', () {
+      expect(checkPassword('Ab1${'x' * 67}'), isEmpty);
+    });
+
+    // REQ-003: Password with 71 characters (limit): accepted
+    test('should accept 71 characters', () {
+      expect(checkPassword('Ab1${'x' * 68}'), isEmpty);
+    });
+
+    // REQ-003: Password with 72 characters: rejected with passwordTooLong only
+    test('should reject 72 characters with passwordTooLong only', () {
+      expect(checkPassword('Ab1${'x' * 69}'), [tooLong]);
+    });
+
+    // REQ-003: Password "Abcdefgh" (no digit): rejected with passwordMissingDigit
+    test('should reject Abcdefgh with passwordMissingDigit', () {
+      expect(checkPassword('Abcdefgh'), [noDigit]);
+    });
+
+    // REQ-003: Password "abcd1234" (no uppercase): rejected with passwordMissingUppercase
+    test('should reject abcd1234 with passwordMissingUppercase', () {
+      expect(checkPassword('abcd1234'), [noUpper]);
+    });
+
+    // REQ-003: Password "ABCD1234" (no lowercase): rejected with passwordMissingLowercase
+    test('should reject ABCD1234 with passwordMissingLowercase', () {
+      expect(checkPassword('ABCD1234'), [noLower]);
+    });
+
+    // REQ-003: Password "Ébcd1234" (accented uppercase): accepted
+    test('should accept accented uppercase Ébcd1234', () {
+      expect(checkPassword('Ébcd1234'), isEmpty);
+    });
+
+    // REQ-003: Password "ABCDé123" (accented lowercase): accepted
+    test('should accept accented lowercase ABCDé123', () {
+      expect(checkPassword('ABCDé123'), isEmpty);
+    });
+
+    // REQ-003: Password with 8 spaces: 3 errors (digit, uppercase, lowercase)
+    test('should return 3 errors for 8 spaces', () {
+      expect(checkPassword('        '), [noDigit, noUpper, noLower]);
+    });
+  });
 }

@@ -453,6 +453,22 @@ def check_users(res: Results, su: Actor, a: Owner, b: Owner) -> None:
         "email": f"short{secrets.token_hex(4)}@pb-test.local", "password": "1234567", "passwordConfirm": "1234567",
     })
     res.check("users:create:short-password", r.status_code == 400, str(r.status_code))
+    # REQ-003: an old account whose password breaks the new rules (no uppercase) still signs in.
+    legacy_email = f"legacy{secrets.token_hex(4)}@pb-test.local"
+    create_user(su, legacy_email, "abcd1234")
+    try:
+        login("users", legacy_email, "abcd1234", "legacy")
+        res.check("users:sign-in:legacy-password", True)
+    except EnvError as e:
+        res.check("users:sign-in:legacy-password", False, str(e)[:200])
+    # REQ-003: the server limit matches the app: 71 characters accepted, 72 refused.
+    for size, expected in ((71, 200), (72, 400)):
+        pwd = "Ab1" + "x" * (size - 3)
+        r = request(ANON, "POST", rec("users"), json={
+            "email": f"len{size}{secrets.token_hex(4)}@pb-test.local", "password": pwd, "passwordConfirm": pwd,
+            "name": "Len",
+        })
+        res.check(f"users:create:password-{size}", r.status_code == expected, f"{r.status_code} {r.text[:200]}")
 
 
 def check_account_deletion(res: Results, su: Actor) -> None:
