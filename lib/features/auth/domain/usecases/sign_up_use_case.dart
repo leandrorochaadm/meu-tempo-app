@@ -19,12 +19,12 @@ class SignUpUseCase implements UseCase<Unit, SignUpParams> {
   @override
   Future<Either<Failure, Unit>> call(SignUpParams params) async {
     // REQ-002, REQ-003, REQ-004, REQ-010, REQ-011
-    final errors = [
-      ...checkDisplayName(params.displayName),
-      ...checkEmail(params.email),
-      ...checkPassword(params.password),
-      ...checkPrivacyPolicyAccepted(params.acceptedPrivacyPolicy),
-    ];
+    final errors = checkSignUpFields(
+      displayName: params.displayName,
+      email: params.email,
+      password: params.password,
+      acceptedPrivacyPolicy: params.acceptedPrivacyPolicy,
+    );
     if (errors.isNotEmpty) return Left(InvalidAccountFieldsFailure(errors));
     // REQ-001, REQ-005
     return _repository.signUp(

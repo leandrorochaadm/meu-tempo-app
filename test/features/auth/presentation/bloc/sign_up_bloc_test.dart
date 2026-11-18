@@ -351,4 +351,36 @@ void main() {
       ..add(const SignUpPrivacyPolicyChanged(true)),
     expect: () => <SignUpState>[],
   );
+
+  // REQ-011: the use case refuses with 6 errors: the bloc emits SignUpFieldsInvalid with all 6 at once
+  blocTest<SignUpBloc, SignUpState>(
+    'should emit SignUpFieldsInvalid with all 6 errors at once',
+    build: () {
+      when(() => signUp(any())).thenAnswer(
+        (_) async => Left(
+          InvalidAccountFieldsFailure([
+            AccountFieldErrorEnum.displayNameLength,
+            AccountFieldErrorEnum.invalidEmail,
+            AccountFieldErrorEnum.passwordTooShort,
+            AccountFieldErrorEnum.passwordMissingDigit,
+            AccountFieldErrorEnum.passwordMissingUppercase,
+            AccountFieldErrorEnum.privacyPolicyNotAccepted,
+          ]),
+        ),
+      );
+      return SignUpBloc(signUp);
+    },
+    act: (bloc) => bloc.add(submitted),
+    expect: () => [
+      const SignUpInProgress(),
+      SignUpFieldsInvalid([
+        AccountFieldErrorEnum.displayNameLength,
+        AccountFieldErrorEnum.invalidEmail,
+        AccountFieldErrorEnum.passwordTooShort,
+        AccountFieldErrorEnum.passwordMissingDigit,
+        AccountFieldErrorEnum.passwordMissingUppercase,
+        AccountFieldErrorEnum.privacyPolicyNotAccepted,
+      ]),
+    ],
+  );
 }

@@ -1106,4 +1106,131 @@ void main() {
       ).called(1);
     },
   );
+
+  group('REQ-011', () {
+    void verifyNoSignUpCall() => verifyNever(
+      () => repo.signUp(
+        displayName: any(named: 'displayName'),
+        email: any(named: 'email'),
+        password: any(named: 'password'),
+      ),
+    );
+
+    const valid = SignUpParams(
+      displayName: 'Ana',
+      email: 'ana@exemplo.com',
+      password: 'Abcd1234',
+      acceptedPrivacyPolicy: true,
+    );
+
+    void stubSignUp(Failure failure) => when(
+      () => repo.signUp(
+        displayName: any(named: 'displayName'),
+        email: any(named: 'email'),
+        password: any(named: 'password'),
+      ),
+    ).thenAnswer((_) async => Left(failure));
+
+    void verifySignUpCalledOnce() => verify(
+      () => repo.signUp(
+        displayName: 'Ana',
+        email: 'ana@exemplo.com',
+        password: 'Abcd1234',
+      ),
+    ).called(1);
+
+    // REQ-011: Name "A", email "ana@", password "abc", acceptance unchecked: refused with 6 errors, 0 server calls
+    test(
+      'should return InvalidAccountFieldsFailure with 6 errors and not call repository when every field is wrong',
+      () async {
+        final result = await useCase(
+          const SignUpParams(
+            displayName: 'A',
+            email: 'ana@',
+            password: 'abc',
+            acceptedPrivacyPolicy: false,
+          ),
+        );
+
+        expect(
+          result,
+          Left<Failure, Unit>(
+            InvalidAccountFieldsFailure([
+              AccountFieldErrorEnum.displayNameLength,
+              AccountFieldErrorEnum.invalidEmail,
+              AccountFieldErrorEnum.passwordTooShort,
+              AccountFieldErrorEnum.passwordMissingDigit,
+              AccountFieldErrorEnum.passwordMissingUppercase,
+              AccountFieldErrorEnum.privacyPolicyNotAccepted,
+            ]),
+          ),
+        );
+        verifyNoSignUpCall();
+      },
+    );
+
+    // REQ-011: Name "Ana", email "ana@", password "Abcd1234", acceptance checked: refused with only invalidEmail, 0 server calls
+    test(
+      'should return InvalidAccountFieldsFailure with only invalidEmail and not call repository',
+      () async {
+        final result = await useCase(
+          const SignUpParams(
+            displayName: 'Ana',
+            email: 'ana@',
+            password: 'Abcd1234',
+            acceptedPrivacyPolicy: true,
+          ),
+        );
+
+        expect(
+          result,
+          Left<Failure, Unit>(
+            InvalidAccountFieldsFailure(const [
+              AccountFieldErrorEnum.invalidEmail,
+            ]),
+          ),
+        );
+        verifyNoSignUpCall();
+      },
+    );
+
+    // REQ-011: valid data and the server says the email already has an account: EmailAlreadyInUseFailure after 1 call
+    test(
+      'should return EmailAlreadyInUseFailure after 1 repository call when email is in use',
+      () async {
+        stubSignUp(const EmailAlreadyInUseFailure());
+
+        final result = await useCase(valid);
+
+        expect(result.getLeft().toNullable(), const EmailAlreadyInUseFailure());
+        verifySignUpCalledOnce();
+      },
+    );
+
+    // REQ-011: valid data and no internet: NetworkFailure after 1 call, 0 accounts
+    test(
+      'should return NetworkFailure after 1 repository call when offline',
+      () async {
+        stubSignUp(const NetworkFailure());
+
+        final result = await useCase(valid);
+
+        expect(result.getLeft().toNullable(), const NetworkFailure());
+        verifySignUpCalledOnce();
+      },
+    );
+
+    // REQ-011: valid data and the server fails: ServerFailure after 1 call, 0 accounts
+    test(
+      'should return ServerFailure after 1 repository call when the server fails',
+      () async {
+        stubSignUp(const ServerFailure());
+
+        final result = await useCase(valid);
+
+        expect(result.getLeft().toNullable(), const ServerFailure());
+        verifySignUpCalledOnce();
+      },
+    );
+  });
 }

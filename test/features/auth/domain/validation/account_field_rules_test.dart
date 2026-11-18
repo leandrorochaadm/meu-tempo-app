@@ -236,4 +236,67 @@ void main() {
       ]);
     });
   });
+
+  group('checkSignUpFields', () {
+    // REQ-011: Name "A", email "ana@", password "abc", acceptance unchecked: 6 errors in field order
+    test('should return 6 errors in field order when every field is wrong', () {
+      expect(
+        checkSignUpFields(
+          displayName: 'A',
+          email: 'ana@',
+          password: 'abc',
+          acceptedPrivacyPolicy: false,
+        ),
+        [
+          AccountFieldErrorEnum.displayNameLength,
+          AccountFieldErrorEnum.invalidEmail,
+          AccountFieldErrorEnum.passwordTooShort,
+          AccountFieldErrorEnum.passwordMissingDigit,
+          AccountFieldErrorEnum.passwordMissingUppercase,
+          AccountFieldErrorEnum.privacyPolicyNotAccepted,
+        ],
+      );
+    });
+
+    // REQ-011: Name "Ana", email "ana@", password "Abcd1234", acceptance checked: only invalidEmail
+    test('should return only invalidEmail when only the email is wrong', () {
+      expect(
+        checkSignUpFields(
+          displayName: 'Ana',
+          email: 'ana@',
+          password: 'Abcd1234',
+          acceptedPrivacyPolicy: true,
+        ),
+        [AccountFieldErrorEnum.invalidEmail],
+      );
+    });
+
+    // REQ-011: valid data ("Ana", "ana@exemplo.com", "Abcd1234", acceptance checked): no errors
+    test('should return no errors when every field is right', () {
+      expect(
+        checkSignUpFields(
+          displayName: 'Ana',
+          email: 'ana@exemplo.com',
+          password: 'Abcd1234',
+          acceptedPrivacyPolicy: true,
+        ),
+        isEmpty,
+      );
+    });
+
+    // REQ-011: the returned list cannot be modified
+    test('should return an unmodifiable list', () {
+      final errors = checkSignUpFields(
+        displayName: 'A',
+        email: 'ana@',
+        password: 'abc',
+        acceptedPrivacyPolicy: false,
+      );
+
+      expect(
+        () => errors.add(AccountFieldErrorEnum.samePassword),
+        throwsUnsupportedError,
+      );
+    });
+  });
 }

@@ -314,4 +314,83 @@ void main() {
 
     expect(find.text('Marque para continuar.'), findsNothing);
   });
+
+  // REQ-011: state with 6 field errors: name, email and policy warnings together, no password text, no SnackBar
+  testWidgets(
+    'should show name, email and policy warnings together for 6 errors',
+    (tester) async {
+      when(() => bloc.state).thenReturn(
+        SignUpFieldsInvalid([
+          AccountFieldErrorEnum.displayNameLength,
+          AccountFieldErrorEnum.invalidEmail,
+          AccountFieldErrorEnum.passwordTooShort,
+          AccountFieldErrorEnum.passwordMissingDigit,
+          AccountFieldErrorEnum.passwordMissingUppercase,
+          AccountFieldErrorEnum.privacyPolicyNotAccepted,
+        ]),
+      );
+      await pump(tester);
+
+      expect(find.text('Use de 2 a 50 caracteres.'), findsOneWidget);
+      expect(find.text('Confira o e-mail.'), findsOneWidget);
+      expect(find.text('Marque para continuar.'), findsOneWidget);
+      expect(find.text('Pelo menos 8 caracteres'), findsNothing);
+      expect(find.text('Pelo menos 1 número'), findsNothing);
+      expect(find.text('Pelo menos 1 letra maiúscula'), findsNothing);
+      expect(find.byType(SnackBar), findsNothing);
+    },
+  );
+
+  // REQ-011: state with only invalidEmail: only the email warning
+  testWidgets('should show only the email warning when only invalidEmail', (
+    tester,
+  ) async {
+    when(
+      () => bloc.state,
+    ).thenReturn(SignUpFieldsInvalid([AccountFieldErrorEnum.invalidEmail]));
+    await pump(tester);
+
+    expect(find.text('Confira o e-mail.'), findsOneWidget);
+    expect(find.text('Use de 2 a 50 caracteres.'), findsNothing);
+    expect(find.text('Marque para continuar.'), findsNothing);
+  });
+
+  // REQ-011: valid data and no internet: SignUpFailed with the network message shows the snackbar
+  testWidgets(
+    'should show Sem internet snackbar when SignUpFailed has the network message',
+    (tester) async {
+      whenListen(
+        bloc,
+        Stream.fromIterable([
+          const SignUpFailed('Sem internet. Tente de novo.'),
+        ]),
+        initialState: const SignUpIdle(),
+      );
+      await pump(tester);
+      await tester.pump();
+
+      expect(find.text('Sem internet. Tente de novo.'), findsOneWidget);
+    },
+  );
+
+  // REQ-011: valid data and the server fails: SignUpFailed with the generic message shows the snackbar
+  testWidgets(
+    'should show generic snackbar when SignUpFailed has the server message',
+    (tester) async {
+      whenListen(
+        bloc,
+        Stream.fromIterable([
+          const SignUpFailed('Não foi possível criar a conta. Tente de novo.'),
+        ]),
+        initialState: const SignUpIdle(),
+      );
+      await pump(tester);
+      await tester.pump();
+
+      expect(
+        find.text('Não foi possível criar a conta. Tente de novo.'),
+        findsOneWidget,
+      );
+    },
+  );
 }

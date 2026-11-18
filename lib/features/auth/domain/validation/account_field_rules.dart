@@ -67,3 +67,17 @@ List<AccountFieldErrorEnum> checkPrivacyPolicyAccepted(bool accepted) {
       ? const []
       : const [AccountFieldErrorEnum.privacyPolicyNotAccepted];
 }
+
+/// Checks every sign-up field at once, in screen order. Empty when all fields are right.
+// REQ-011
+List<AccountFieldErrorEnum> checkSignUpFields({
+  required String displayName,
+  required String email,
+  required String password,
+  required bool acceptedPrivacyPolicy,
+}) => List.unmodifiable([
+  ...checkDisplayName(displayName),
+  ...checkEmail(email),
+  ...checkPassword(password),
+  ...checkPrivacyPolicyAccepted(acceptedPrivacyPolicy),
+]);
