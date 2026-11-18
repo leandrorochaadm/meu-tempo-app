@@ -23,6 +23,9 @@ abstract class AuthRepository {
   /// Deletes the signed-in user's account record. The session ends on success.
   Future<Either<Failure, Unit>> deleteCurrentUser();
 
+  /// Saves the signed-in user's display name. The new name arrives through [authState].
+  Future<Either<Failure, Unit>> updateDisplayName(String displayName);
+
   /// Fluxo do estado de autenticação (`null` = deslogado).
   Stream<UserEntity?> authState();
 

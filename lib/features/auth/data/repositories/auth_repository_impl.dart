@@ -59,6 +59,17 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<Either<Failure, Unit>> updateDisplayName(String displayName) async {
+    try {
+      await _dataSource.updateDisplayName(displayName);
+      return const Right(unit);
+    } on AppException catch (e, s) {
+      AppLogger.logError('updateDisplayName falhou', error: e, stackTrace: s);
+      return Left(e.toFailure());
+    }
+  }
+
+  @override
   Future<Either<Failure, Unit>> deleteCurrentUser() async {
     try {
       await _dataSource.deleteCurrentUser();

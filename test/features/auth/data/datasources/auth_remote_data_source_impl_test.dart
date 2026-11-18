@@ -360,4 +360,64 @@ void main() {
       },
     );
   });
+
+  group('updateDisplayName', () {
+    http.Response updated() => pbJson({
+      'id': 'user-a',
+      'collectionName': 'users',
+      'email': 'a@b.com',
+      'name': 'Ana Lima',
+    });
+
+    // REQ-006: saves "Ana Lima": PATCH name on own record and auth store has the new name
+    test('should update own name and refresh auth store record', () async {
+      final ds = build((_) async => updated());
+      client.authStore.save(_jwt(_future), _record());
+
+      await ds.updateDisplayName('Ana Lima');
+
+      expect(requests.single.method, 'PATCH');
+      expect(requests.single.url.path, '/api/collections/users/records/user-a');
+      final body = jsonDecode(requests.single.body) as Map<String, Object?>;
+      expect(body[PbFields.name], 'Ana Lima');
+      expect(ds.currentUser()?.displayName, 'Ana Lima');
+    });
+
+    // REQ-006: no session: UnauthenticatedException and no request
+    test('should throw UnauthenticatedException without session', () async {
+      final ds = build((_) async => updated());
+
+      await expectLater(
+        ds.updateDisplayName('Ana Lima'),
+        throwsA(isA<UnauthenticatedException>()),
+      );
+      expect(requests, isEmpty);
+    });
+
+    // REQ-006: no connection: NetworkException
+    test('should throw NetworkException when there is no connection', () async {
+      final ds = build((_) async => throw const SocketException('down'));
+      client.authStore.save(_jwt(_future), _record());
+
+      await expectLater(
+        ds.updateDisplayName('Ana Lima'),
+        throwsA(isA<NetworkException>()),
+      );
+    });
+
+    // REQ-006: server error 500: ServerException and the name stays
+    test(
+      'should throw ServerException and keep name when server fails',
+      () async {
+        final ds = build((_) async => status(500));
+        client.authStore.save(_jwt(_future), _record());
+
+        await expectLater(
+          ds.updateDisplayName('Ana Lima'),
+          throwsA(isA<ServerException>()),
+        );
+        expect(ds.currentUser()?.displayName, isNull);
+      },
+    );
+  });
 }

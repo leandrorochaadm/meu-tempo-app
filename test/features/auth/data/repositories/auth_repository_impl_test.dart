@@ -135,4 +135,50 @@ void main() {
       );
     },
   );
+
+  // REQ-006: data source succeeds: Right(unit), called once with the name
+  test(
+    'updateDisplayName should return Right(unit) when data source succeeds',
+    () async {
+      when(() => ds.updateDisplayName('Ana Lima')).thenAnswer((_) async {});
+
+      expect(
+        await repo.updateDisplayName('Ana Lima'),
+        const Right<Failure, Unit>(unit),
+      );
+      verify(() => ds.updateDisplayName('Ana Lima')).called(1);
+    },
+  );
+
+  // REQ-006: data source throws ServerException: Left(ServerFailure())
+  test(
+    'updateDisplayName should return ServerFailure when data source throws ServerException',
+    () async {
+      when(
+        () => ds.updateDisplayName(any()),
+      ).thenThrow(const ServerException());
+
+      expect(
+        await repo.updateDisplayName('Ana Lima'),
+        const Left<Failure, Unit>(ServerFailure()),
+      );
+    },
+  );
+
+  // REQ-006: data source throws NetworkException / UnauthenticatedException: matching failures
+  test('updateDisplayName should map network and session errors', () async {
+    when(() => ds.updateDisplayName(any())).thenThrow(const NetworkException());
+    expect(
+      await repo.updateDisplayName('Ana Lima'),
+      const Left<Failure, Unit>(NetworkFailure()),
+    );
+
+    when(
+      () => ds.updateDisplayName(any()),
+    ).thenThrow(const UnauthenticatedException());
+    expect(
+      await repo.updateDisplayName('Ana Lima'),
+      const Left<Failure, Unit>(UnauthenticatedFailure()),
+    );
+  });
 }

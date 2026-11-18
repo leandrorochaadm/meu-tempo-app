@@ -17,6 +17,17 @@ List<AccountFieldErrorEnum> checkDisplayName(String displayName) {
   return const [];
 }
 
+/// Checks the new display name against the current one (null for old accounts without a name).
+// REQ-002, REQ-006, REQ-011
+List<AccountFieldErrorEnum> checkDisplayNameChange({
+  required String? currentDisplayName,
+  required String newDisplayName,
+}) => List.unmodifiable([
+  ...checkDisplayName(newDisplayName),
+  if (newDisplayName.trim() == currentDisplayName)
+    AccountFieldErrorEnum.sameDisplayName,
+]);
+
 const String _emailAtSign = '@';
 const String _emailDot = '.';
 const String _emailDoubleDot = '..';

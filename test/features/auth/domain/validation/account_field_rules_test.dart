@@ -350,4 +350,66 @@ void main() {
       );
     });
   });
+
+  group('checkDisplayNameChange', () {
+    // REQ-006: current "Ana", new "Ana Lima": no errors
+    test('should return no errors when new name differs', () {
+      expect(
+        checkDisplayNameChange(
+          currentDisplayName: 'Ana',
+          newDisplayName: 'Ana Lima',
+        ),
+        isEmpty,
+      );
+    });
+
+    // REQ-006: current "Ana", new " Ana ": sameDisplayName
+    test('should return sameDisplayName when trimmed name equals current', () {
+      expect(
+        checkDisplayNameChange(
+          currentDisplayName: 'Ana',
+          newDisplayName: ' Ana ',
+        ),
+        [AccountFieldErrorEnum.sameDisplayName],
+      );
+    });
+
+    // REQ-006: current "Ana", new "ana": different (case counts), no errors
+    test('should treat different case as a different name', () {
+      expect(
+        checkDisplayNameChange(
+          currentDisplayName: 'Ana',
+          newDisplayName: 'ana',
+        ),
+        isEmpty,
+      );
+    });
+
+    // REQ-006: current "Ana", new "A": displayNameLength
+    test('should return displayNameLength when new name has 1 character', () {
+      expect(
+        checkDisplayNameChange(currentDisplayName: 'Ana', newDisplayName: 'A'),
+        [AccountFieldErrorEnum.displayNameLength],
+      );
+    });
+
+    // REQ-006: current null (old account), new "Ana": never sameDisplayName
+    test('should not return sameDisplayName when current name is null', () {
+      expect(
+        checkDisplayNameChange(currentDisplayName: null, newDisplayName: 'Ana'),
+        isEmpty,
+      );
+    });
+
+    // REQ-006: current "A", new "A": displayNameLength then sameDisplayName
+    test('should return both errors when name is short and equals current', () {
+      expect(
+        checkDisplayNameChange(currentDisplayName: 'A', newDisplayName: 'A'),
+        [
+          AccountFieldErrorEnum.displayNameLength,
+          AccountFieldErrorEnum.sameDisplayName,
+        ],
+      );
+    });
+  });
 }
