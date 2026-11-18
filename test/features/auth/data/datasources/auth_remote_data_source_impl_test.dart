@@ -517,6 +517,121 @@ void main() {
     );
   });
 
+  group('changePassword', () {
+    http.Response signedIn() => pbJson({
+      'token': _jwt(_future.add(const Duration(minutes: 5))),
+      'record': {'id': 'user-a', 'collectionName': 'users', 'email': 'a@b.com'},
+    });
+
+    bool isSignIn(http.Request r) => r.url.path.endsWith('auth-with-password');
+
+    Future<void> change(AuthRemoteDataSourceImpl ds) =>
+        ds.changePassword(currentPassword: 'abcd1234', newPassword: 'Wxyz5678');
+
+    // REQ-008: change accepted: PATCH on the user record with password, passwordConfirm and oldPassword; then POST auth-with-password with the current e-mail and the new password; auth store has the new token
+    test(
+      'should update password then sign in again with the new password',
+      () async {
+        final newToken = _jwt(_future.add(const Duration(minutes: 5)));
+        final ds = build(
+          (request) async => isSignIn(request)
+              ? pbJson({
+                  'token': newToken,
+                  'record': {
+                    'id': 'user-a',
+                    'collectionName': 'users',
+                    'email': 'a@b.com',
+                  },
+                })
+              : pbJson({
+                  'id': 'user-a',
+                  'collectionName': 'users',
+                  'email': 'a@b.com',
+                }),
+        );
+        client.authStore.save(_jwt(_future), _record());
+
+        await change(ds);
+
+        expect(requests, hasLength(2));
+        expect(requests[0].method, 'PATCH');
+        expect(
+          requests[0].url.path,
+          '/api/collections/${PbCollections.users}/records/user-a',
+        );
+        final update = jsonDecode(requests[0].body) as Map<String, Object?>;
+        expect(update[PbFields.password], 'Wxyz5678');
+        expect(update[PbFields.passwordConfirm], 'Wxyz5678');
+        expect(update[PbFields.oldPassword], 'abcd1234');
+        expect(requests[1].method, 'POST');
+        expect(isSignIn(requests[1]), isTrue);
+        final signIn = jsonDecode(requests[1].body) as Map<String, Object?>;
+        expect(signIn['identity'], 'a@b.com');
+        expect(signIn['password'], 'Wxyz5678');
+        expect(client.authStore.token, newToken);
+      },
+    );
+
+    // REQ-008: 400 oldPassword = validation_invalid_old_password: WrongCurrentPasswordException, 1 request only (no new sign in)
+    test(
+      'should throw WrongCurrentPasswordException when the current password is wrong',
+      () async {
+        final ds = build(
+          (_) async => pbError(
+            400,
+            data: {
+              'oldPassword': {'code': 'validation_invalid_old_password'},
+            },
+          ),
+        );
+        client.authStore.save(_jwt(_future), _record());
+
+        await expectLater(
+          change(ds),
+          throwsA(isA<WrongCurrentPasswordException>()),
+        );
+        expect(requests, hasLength(1));
+      },
+    );
+
+    // REQ-008: no session: UnauthenticatedException and no request
+    test('should throw UnauthenticatedException without session', () async {
+      final ds = build((_) async => signedIn());
+
+      await expectLater(change(ds), throwsA(isA<UnauthenticatedException>()));
+      expect(requests, isEmpty);
+    });
+
+    // REQ-008: no connection or 500 on the update: NetworkException and ServerException, no new sign in
+    test('should map network and server errors', () async {
+      final offline = build((_) async => throw const SocketException('down'));
+      client.authStore.save(_jwt(_future), _record());
+      await expectLater(change(offline), throwsA(isA<NetworkException>()));
+      expect(requests.where(isSignIn), isEmpty);
+
+      final broken = build((_) async => status(500));
+      client.authStore.save(_jwt(_future), _record());
+      await expectLater(change(broken), throwsA(isA<ServerException>()));
+      expect(requests.where(isSignIn), isEmpty);
+    });
+
+    // REQ-008: update accepted but auth-with-password fails (500): ServerException
+    test('should throw when signing in again fails after the change', () async {
+      final ds = build(
+        (request) async => isSignIn(request)
+            ? status(500)
+            : pbJson({
+                'id': 'user-a',
+                'collectionName': 'users',
+                'email': 'a@b.com',
+              }),
+      );
+      client.authStore.save(_jwt(_future), _record());
+
+      await expectLater(change(ds), throwsA(isA<ServerException>()));
+    });
+  });
+
   group('signOutOtherDevices', () {
     // REQ-009: sign out other devices: POST on the route and the new token is saved
     test('should post to the route and save the new token', () async {

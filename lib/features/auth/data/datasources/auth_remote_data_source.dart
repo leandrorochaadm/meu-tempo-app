@@ -44,6 +44,13 @@ abstract class AuthRemoteDataSource {
     required String currentPassword,
   });
 
+  /// Saves the new password and signs in again with it. Throws
+  /// [WrongCurrentPasswordException] (REQ-008), else [AppException].
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  });
+
   /// Renews the token key on the server (other devices lose the session) and
   /// saves the new token of this device. // REQ-009
   Future<void> signOutOtherDevices();
@@ -137,6 +144,37 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       if (isFieldNotUnique(e, PbFields.email)) {
         throw const EmailAlreadyInUseException(); // REQ-007
       }
+      throw mapPocketBaseError(e);
+    }
+  }
+
+  @override
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    final userId = _session.userId;
+    final email = currentUser()!.email;
+    final users = _session.client.collection(PbCollections.users);
+    try {
+      await users.update(
+        userId,
+        body: {
+          PbFields.password: newPassword,
+          PbFields.passwordConfirm: newPassword,
+          PbFields.oldPassword: currentPassword,
+        },
+      );
+    } on ClientException catch (e) {
+      if (isInvalidOldPassword(e, PbFields.oldPassword)) {
+        throw const WrongCurrentPasswordException(); // REQ-008
+      }
+      throw mapPocketBaseError(e);
+    }
+    try {
+      // The token key changed: this device needs a new token.
+      await users.authWithPassword(email, newPassword);
+    } on ClientException catch (e) {
       throw mapPocketBaseError(e);
     }
   }

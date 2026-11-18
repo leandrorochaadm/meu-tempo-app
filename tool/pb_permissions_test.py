@@ -632,6 +632,35 @@ def check_users(res: Results, su: Actor, a: Owner, b: Owner) -> None:
               t3_token is not None and r2.status_code == 401 and r3 is not None and r3.status_code == 200,
               f"{r.status_code} {r2.status_code} {r3.status_code if r3 else None}")
 
+    # REQ-008 (server): change password through the standard update. New user, so A and B stay untouched.
+    cp_email = f"cp{secrets.token_hex(4)}@pb-test.local"
+    cp_pwd = secrets.token_urlsafe(24)
+    cp_new = secrets.token_urlsafe(24)
+    cp_id = create_user(su, cp_email, cp_pwd)
+    cp = login("users", cp_email, cp_pwd, "cp")
+
+    def login_works(password: str, name: str) -> bool:
+        try:
+            login("users", cp_email, password, name)
+            return True
+        except EnvError:
+            return False
+
+    # REQ-008 (server): wrong current password: 400 on oldPassword, still signs in with the old one, 0 changes.
+    r = request(cp, "PATCH", rec("users", cp_id),
+                json={"password": cp_new, "passwordConfirm": cp_new, "oldPassword": cp_pwd + "x"})
+    res.check("users:change-password:wrong-current",
+              r.status_code == 400 and field_code(r, "oldPassword") == "validation_invalid_old_password"
+              and login_works(cp_pwd, "cp-old") and not login_works(cp_new, "cp-new"),
+              f"{r.status_code} {r.text[:200]}")
+
+    # REQ-008 (server): right current password: 200, signs in with the new one, not with the old one, 1 change.
+    r = request(cp, "PATCH", rec("users", cp_id),
+                json={"password": cp_new, "passwordConfirm": cp_new, "oldPassword": cp_pwd})
+    res.check("users:change-password:ok",
+              r.status_code == 200 and login_works(cp_new, "cp-new2") and not login_works(cp_pwd, "cp-old2"),
+              f"{r.status_code} {r.text[:200]}")
+
 
 def check_account_deletion(res: Results, su: Actor) -> None:
     """Account deletion as the app does it: tasks and recurring tasks first, then the user."""

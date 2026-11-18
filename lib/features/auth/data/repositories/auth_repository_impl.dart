@@ -87,6 +87,23 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<Either<Failure, Unit>> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    try {
+      await _dataSource.changePassword(
+        currentPassword: currentPassword,
+        newPassword: newPassword,
+      );
+      return const Right(unit);
+    } on AppException catch (e, s) {
+      AppLogger.logError('changePassword failed', error: e, stackTrace: s);
+      return Left(e.toFailure());
+    }
+  }
+
+  @override
   Future<Either<Failure, Unit>> signOutOtherDevices() async {
     try {
       await _dataSource.signOutOtherDevices();

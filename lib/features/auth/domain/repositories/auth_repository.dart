@@ -33,6 +33,13 @@ abstract class AuthRepository {
     required String currentPassword,
   });
 
+  /// Changes the signed-in user's password and keeps this device signed in.
+  /// // REQ-008
+  Future<Either<Failure, Unit>> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  });
+
   /// Ends every other device's session and keeps this one. // REQ-009
   Future<Either<Failure, Unit>> signOutOtherDevices();
 

@@ -253,6 +253,53 @@ void main() {
     );
   });
 
+  group('changePassword', () {
+    Future<Either<Failure, Unit>> change() => repo.changePassword(
+      currentPassword: 'abcd1234',
+      newPassword: 'Wxyz5678',
+    );
+
+    void dsThrows(Object error) => when(
+      () => ds.changePassword(
+        currentPassword: any(named: 'currentPassword'),
+        newPassword: any(named: 'newPassword'),
+      ),
+    ).thenThrow(error);
+
+    // REQ-008: data source succeeds: Right(unit), called once with the same values
+    test(
+      'changePassword should return Right when data source succeeds',
+      () async {
+        when(
+          () => ds.changePassword(
+            currentPassword: 'abcd1234',
+            newPassword: 'Wxyz5678',
+          ),
+        ).thenAnswer((_) async {});
+
+        expect(await change(), const Right<Failure, Unit>(unit));
+        verify(
+          () => ds.changePassword(
+            currentPassword: 'abcd1234',
+            newPassword: 'Wxyz5678',
+          ),
+        ).called(1);
+      },
+    );
+
+    // REQ-008: exceptions become failures: WrongCurrentPasswordException and NetworkException
+    test('changePassword should map exceptions to failures', () async {
+      dsThrows(const WrongCurrentPasswordException());
+      expect(
+        await change(),
+        const Left<Failure, Unit>(WrongCurrentPasswordFailure()),
+      );
+
+      dsThrows(const NetworkException());
+      expect(await change(), const Left<Failure, Unit>(NetworkFailure()));
+    });
+  });
+
   group('signOutOtherDevices', () {
     // REQ-009: data source succeeds: Right(unit)
     test(
