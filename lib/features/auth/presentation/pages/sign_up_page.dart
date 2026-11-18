@@ -65,6 +65,11 @@ class _SignUpPageState extends State<SignUpPage> {
                     )
                 ? AccountFieldErrorEnum.displayNameLength.label
                 : null;
+            final emailError =
+                state is SignUpFieldsInvalid &&
+                    state.errors.contains(AccountFieldErrorEnum.invalidEmail)
+                ? AccountFieldErrorEnum.invalidEmail.label
+                : null;
             return SingleChildScrollView(
               child: Padding(
                 padding: EdgeInsets.all(context.space.xxl),
@@ -90,8 +95,9 @@ class _SignUpPageState extends State<SignUpPage> {
                           TextField(
                             controller: _emailController,
                             style: context.text.bodyMedium,
-                            decoration: const InputDecoration(
+                            decoration: InputDecoration(
                               labelText: 'E-mail',
+                              errorText: emailError,
                             ),
                             keyboardType: TextInputType.emailAddress,
                             textInputAction: TextInputAction.next,

@@ -195,4 +195,36 @@ void main() {
 
     expect(find.text('Use de 2 a 50 caracteres.'), findsNothing);
   });
+
+  // REQ-010: state SignUpFieldsInvalid([invalidEmail]): "Confira o e-mail." once below E-mail, no name warning
+  testWidgets('should show email warning below E-mail', (tester) async {
+    when(
+      () => bloc.state,
+    ).thenReturn(SignUpFieldsInvalid([AccountFieldErrorEnum.invalidEmail]));
+    await pump(tester);
+
+    expect(find.text('Confira o e-mail.'), findsOneWidget);
+    expect(find.text('Use de 2 a 50 caracteres.'), findsNothing);
+  });
+
+  // REQ-010, REQ-011: state SignUpFieldsInvalid([displayNameLength, invalidEmail]): both warnings at the same time
+  testWidgets('should show name and email warnings together', (tester) async {
+    when(() => bloc.state).thenReturn(
+      SignUpFieldsInvalid([
+        AccountFieldErrorEnum.displayNameLength,
+        AccountFieldErrorEnum.invalidEmail,
+      ]),
+    );
+    await pump(tester);
+
+    expect(find.text('Use de 2 a 50 caracteres.'), findsOneWidget);
+    expect(find.text('Confira o e-mail.'), findsOneWidget);
+  });
+
+  // REQ-010: state SignUpIdle: no e-mail warning
+  testWidgets('should not show email warning when idle', (tester) async {
+    await pump(tester);
+
+    expect(find.text('Confira o e-mail.'), findsNothing);
+  });
 }

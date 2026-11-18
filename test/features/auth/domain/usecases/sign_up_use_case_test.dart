@@ -415,4 +415,387 @@ void main() {
       ),
     );
   });
+
+  // REQ-010: Sign up, E-mail "ana@exemplo.com": accepted, repository called once
+  test('should call repository once when email is ana@exemplo.com', () async {
+    final result = await useCase(
+      SignUpParams(
+        displayName: 'Ana',
+        email: 'ana@exemplo.com',
+        password: 'Abcd1234',
+      ),
+    );
+
+    expect(result, const Right<Failure, Unit>(unit));
+    verify(
+      () => repo.signUp(
+        displayName: 'Ana',
+        email: 'ana@exemplo.com',
+        password: 'Abcd1234',
+      ),
+    ).called(1);
+  });
+
+  // REQ-010: Sign up, E-mail "a@b.co": accepted, repository called once
+  test('should call repository once when email is a@b.co', () async {
+    final result = await useCase(
+      SignUpParams(displayName: 'Ana', email: 'a@b.co', password: 'Abcd1234'),
+    );
+
+    expect(result, const Right<Failure, Unit>(unit));
+    verify(
+      () => repo.signUp(
+        displayName: 'Ana',
+        email: 'a@b.co',
+        password: 'Abcd1234',
+      ),
+    ).called(1);
+  });
+
+  // REQ-010: Sign up, E-mail "ana@": rejected with invalidEmail, repository not called
+  test(
+    'should return invalidEmail and not call repository when email is ana@',
+    () async {
+      final result = await useCase(
+        SignUpParams(displayName: 'Ana', email: 'ana@', password: 'Abcd1234'),
+      );
+
+      expect(
+        result,
+        Left<Failure, Unit>(
+          InvalidAccountFieldsFailure([AccountFieldErrorEnum.invalidEmail]),
+        ),
+      );
+      verifyNever(
+        () => repo.signUp(
+          displayName: any(named: 'displayName'),
+          email: any(named: 'email'),
+          password: any(named: 'password'),
+        ),
+      );
+    },
+  );
+
+  // REQ-010: Sign up, E-mail "ana.exemplo.com" (no "@"): rejected with invalidEmail, repository not called
+  test(
+    'should return invalidEmail and not call repository when email is ana.exemplo.com',
+    () async {
+      final result = await useCase(
+        SignUpParams(
+          displayName: 'Ana',
+          email: 'ana.exemplo.com',
+          password: 'Abcd1234',
+        ),
+      );
+
+      expect(
+        result,
+        Left<Failure, Unit>(
+          InvalidAccountFieldsFailure([AccountFieldErrorEnum.invalidEmail]),
+        ),
+      );
+      verifyNever(
+        () => repo.signUp(
+          displayName: any(named: 'displayName'),
+          email: any(named: 'email'),
+          password: any(named: 'password'),
+        ),
+      );
+    },
+  );
+
+  // REQ-010: Sign up, Empty e-mail: rejected with invalidEmail, repository not called
+  test(
+    'should return invalidEmail and not call repository when email is empty',
+    () async {
+      final result = await useCase(
+        SignUpParams(displayName: 'Ana', email: '', password: 'Abcd1234'),
+      );
+
+      expect(
+        result,
+        Left<Failure, Unit>(
+          InvalidAccountFieldsFailure([AccountFieldErrorEnum.invalidEmail]),
+        ),
+      );
+      verifyNever(
+        () => repo.signUp(
+          displayName: any(named: 'displayName'),
+          email: any(named: 'email'),
+          password: any(named: 'password'),
+        ),
+      );
+    },
+  );
+
+  // REQ-010: Sign up, E-mail "@exemplo.com" (nothing before "@"): rejected with invalidEmail, repository not called
+  test(
+    'should return invalidEmail and not call repository when email is @exemplo.com',
+    () async {
+      final result = await useCase(
+        SignUpParams(
+          displayName: 'Ana',
+          email: '@exemplo.com',
+          password: 'Abcd1234',
+        ),
+      );
+
+      expect(
+        result,
+        Left<Failure, Unit>(
+          InvalidAccountFieldsFailure([AccountFieldErrorEnum.invalidEmail]),
+        ),
+      );
+      verifyNever(
+        () => repo.signUp(
+          displayName: any(named: 'displayName'),
+          email: any(named: 'email'),
+          password: any(named: 'password'),
+        ),
+      );
+    },
+  );
+
+  // REQ-010: Sign up, E-mail "ana@@exemplo.com" (two "@"): rejected with invalidEmail, repository not called
+  test(
+    'should return invalidEmail and not call repository when email is ana@@exemplo.com',
+    () async {
+      final result = await useCase(
+        SignUpParams(
+          displayName: 'Ana',
+          email: 'ana@@exemplo.com',
+          password: 'Abcd1234',
+        ),
+      );
+
+      expect(
+        result,
+        Left<Failure, Unit>(
+          InvalidAccountFieldsFailure([AccountFieldErrorEnum.invalidEmail]),
+        ),
+      );
+      verifyNever(
+        () => repo.signUp(
+          displayName: any(named: 'displayName'),
+          email: any(named: 'email'),
+          password: any(named: 'password'),
+        ),
+      );
+    },
+  );
+
+  // REQ-010: Sign up, E-mail "ana@exemplo" (domain without dot): rejected with invalidEmail, repository not called
+  test(
+    'should return invalidEmail and not call repository when email is ana@exemplo',
+    () async {
+      final result = await useCase(
+        SignUpParams(
+          displayName: 'Ana',
+          email: 'ana@exemplo',
+          password: 'Abcd1234',
+        ),
+      );
+
+      expect(
+        result,
+        Left<Failure, Unit>(
+          InvalidAccountFieldsFailure([AccountFieldErrorEnum.invalidEmail]),
+        ),
+      );
+      verifyNever(
+        () => repo.signUp(
+          displayName: any(named: 'displayName'),
+          email: any(named: 'email'),
+          password: any(named: 'password'),
+        ),
+      );
+    },
+  );
+
+  // REQ-010: Sign up, E-mail "ana@exemplo." (dot at the end): rejected with invalidEmail, repository not called
+  test(
+    'should return invalidEmail and not call repository when email is ana@exemplo.',
+    () async {
+      final result = await useCase(
+        SignUpParams(
+          displayName: 'Ana',
+          email: 'ana@exemplo.',
+          password: 'Abcd1234',
+        ),
+      );
+
+      expect(
+        result,
+        Left<Failure, Unit>(
+          InvalidAccountFieldsFailure([AccountFieldErrorEnum.invalidEmail]),
+        ),
+      );
+      verifyNever(
+        () => repo.signUp(
+          displayName: any(named: 'displayName'),
+          email: any(named: 'email'),
+          password: any(named: 'password'),
+        ),
+      );
+    },
+  );
+
+  // REQ-010: Sign up, E-mail "ana@.exemplo.com" (dot at the start of the domain): rejected with invalidEmail, repository not called
+  test(
+    'should return invalidEmail and not call repository when email is ana@.exemplo.com',
+    () async {
+      final result = await useCase(
+        SignUpParams(
+          displayName: 'Ana',
+          email: 'ana@.exemplo.com',
+          password: 'Abcd1234',
+        ),
+      );
+
+      expect(
+        result,
+        Left<Failure, Unit>(
+          InvalidAccountFieldsFailure([AccountFieldErrorEnum.invalidEmail]),
+        ),
+      );
+      verifyNever(
+        () => repo.signUp(
+          displayName: any(named: 'displayName'),
+          email: any(named: 'email'),
+          password: any(named: 'password'),
+        ),
+      );
+    },
+  );
+
+  // REQ-010: Sign up, E-mail "ana @exemplo.com" (inner space): rejected with invalidEmail, repository not called
+  test(
+    'should return invalidEmail and not call repository when email is ana @exemplo.com',
+    () async {
+      final result = await useCase(
+        SignUpParams(
+          displayName: 'Ana',
+          email: 'ana @exemplo.com',
+          password: 'Abcd1234',
+        ),
+      );
+
+      expect(
+        result,
+        Left<Failure, Unit>(
+          InvalidAccountFieldsFailure([AccountFieldErrorEnum.invalidEmail]),
+        ),
+      );
+      verifyNever(
+        () => repo.signUp(
+          displayName: any(named: 'displayName'),
+          email: any(named: 'email'),
+          password: any(named: 'password'),
+        ),
+      );
+    },
+  );
+
+  // REQ-010: Sign up, E-mail "ana@exemplo..com" (two dots in a row in the domain): rejected with invalidEmail, repository not called
+  test(
+    'should return invalidEmail and not call repository when email is ana@exemplo..com',
+    () async {
+      final result = await useCase(
+        SignUpParams(
+          displayName: 'Ana',
+          email: 'ana@exemplo..com',
+          password: 'Abcd1234',
+        ),
+      );
+
+      expect(
+        result,
+        Left<Failure, Unit>(
+          InvalidAccountFieldsFailure([AccountFieldErrorEnum.invalidEmail]),
+        ),
+      );
+      verifyNever(
+        () => repo.signUp(
+          displayName: any(named: 'displayName'),
+          email: any(named: 'email'),
+          password: any(named: 'password'),
+        ),
+      );
+    },
+  );
+
+  // REQ-010: Sign up, E-mail "ana..lima@exemplo.com" (two dots in a row before "@"): rejected with invalidEmail, repository not called
+  test(
+    'should return invalidEmail and not call repository when email is ana..lima@exemplo.com',
+    () async {
+      final result = await useCase(
+        SignUpParams(
+          displayName: 'Ana',
+          email: 'ana..lima@exemplo.com',
+          password: 'Abcd1234',
+        ),
+      );
+
+      expect(
+        result,
+        Left<Failure, Unit>(
+          InvalidAccountFieldsFailure([AccountFieldErrorEnum.invalidEmail]),
+        ),
+      );
+      verifyNever(
+        () => repo.signUp(
+          displayName: any(named: 'displayName'),
+          email: any(named: 'email'),
+          password: any(named: 'password'),
+        ),
+      );
+    },
+  );
+
+  // REQ-010: Sign up, E-mail "ana.lima@exemplo.com.br" (separate dots): accepted, repository called once
+  test(
+    'should call repository once when email is ana.lima@exemplo.com.br',
+    () async {
+      final result = await useCase(
+        SignUpParams(
+          displayName: 'Ana',
+          email: 'ana.lima@exemplo.com.br',
+          password: 'Abcd1234',
+        ),
+      );
+
+      expect(result, const Right<Failure, Unit>(unit));
+      verify(
+        () => repo.signUp(
+          displayName: 'Ana',
+          email: 'ana.lima@exemplo.com.br',
+          password: 'Abcd1234',
+        ),
+      ).called(1);
+    },
+  );
+
+  // REQ-010, REQ-011: Name "A" and e-mail "ana@" together: both errors in field order (name, then e-mail), repository not called
+  test('should return name and email errors together in field order', () async {
+    final result = await useCase(
+      SignUpParams(displayName: 'A', email: 'ana@', password: 'Abcd1234'),
+    );
+
+    expect(
+      result,
+      Left<Failure, Unit>(
+        InvalidAccountFieldsFailure([
+          AccountFieldErrorEnum.displayNameLength,
+          AccountFieldErrorEnum.invalidEmail,
+        ]),
+      ),
+    );
+    verifyNever(
+      () => repo.signUp(
+        displayName: any(named: 'displayName'),
+        email: any(named: 'email'),
+        password: any(named: 'password'),
+      ),
+    );
+  });
 }

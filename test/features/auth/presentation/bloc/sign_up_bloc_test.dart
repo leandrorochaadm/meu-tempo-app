@@ -200,4 +200,22 @@ void main() {
     expect: () => [const SignUpInProgress()],
     verify: (_) => verify(() => signUp(params)).called(1),
   );
+
+  // REQ-010: the use case rejects the e-mail with invalidEmail: the bloc emits SignUpFieldsInvalid with that error
+  blocTest<SignUpBloc, SignUpState>(
+    'should emit SignUpFieldsInvalid with invalidEmail',
+    build: () {
+      when(() => signUp(any())).thenAnswer(
+        (_) async => Left(
+          InvalidAccountFieldsFailure([AccountFieldErrorEnum.invalidEmail]),
+        ),
+      );
+      return SignUpBloc(signUp);
+    },
+    act: (bloc) => bloc.add(submitted),
+    expect: () => [
+      const SignUpInProgress(),
+      SignUpFieldsInvalid([AccountFieldErrorEnum.invalidEmail]),
+    ],
+  );
 }

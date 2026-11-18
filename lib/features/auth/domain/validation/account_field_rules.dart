@@ -1,6 +1,7 @@
 import 'package:characters/characters.dart';
 
 import '../../../../core/error/account_field_error_enum.dart';
+import '../usecases/normalize_email.dart';
 
 const int displayNameMinLength = 2; // REQ-002
 const int displayNameMaxLength = 50; // REQ-002
@@ -13,4 +14,26 @@ List<AccountFieldErrorEnum> checkDisplayName(String displayName) {
     return const [AccountFieldErrorEnum.displayNameLength];
   }
   return const [];
+}
+
+const String _emailAtSign = '@';
+const String _emailDot = '.';
+const String _emailDoubleDot = '..';
+final RegExp _whitespace = RegExp(r'\s');
+
+/// Checks the e-mail format after normalizing it.
+List<AccountFieldErrorEnum> checkEmail(String email) {
+  // REQ-005: normalize before checking.
+  final normalized = normalizeEmail(email);
+  // REQ-010
+  final parts = normalized.split(_emailAtSign);
+  final valid =
+      parts.length == 2 &&
+      parts[0].isNotEmpty &&
+      parts[1].contains(_emailDot) &&
+      !parts[1].startsWith(_emailDot) &&
+      !parts[1].endsWith(_emailDot) &&
+      !_whitespace.hasMatch(normalized) &&
+      !normalized.contains(_emailDoubleDot);
+  return valid ? const [] : const [AccountFieldErrorEnum.invalidEmail];
 }
