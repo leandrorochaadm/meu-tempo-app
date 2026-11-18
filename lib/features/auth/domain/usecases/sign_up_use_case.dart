@@ -18,11 +18,12 @@ class SignUpUseCase implements UseCase<Unit, SignUpParams> {
 
   @override
   Future<Either<Failure, Unit>> call(SignUpParams params) async {
-    // REQ-002, REQ-003, REQ-010, REQ-011
+    // REQ-002, REQ-003, REQ-004, REQ-010, REQ-011
     final errors = [
       ...checkDisplayName(params.displayName),
       ...checkEmail(params.email),
       ...checkPassword(params.password),
+      ...checkPrivacyPolicyAccepted(params.acceptedPrivacyPolicy),
     ];
     if (errors.isNotEmpty) return Left(InvalidAccountFieldsFailure(errors));
     // REQ-001, REQ-005
@@ -40,12 +41,20 @@ class SignUpParams extends Equatable {
     required this.displayName,
     required this.email,
     required this.password,
+    // Default true only so older callers keep compiling; app callers pass it explicitly.
+    this.acceptedPrivacyPolicy = true,
   });
 
   final String displayName;
   final String email;
   final String password;
+  final bool acceptedPrivacyPolicy;
 
   @override
-  List<Object?> get props => [displayName, email, password];
+  List<Object?> get props => [
+    displayName,
+    email,
+    password,
+    acceptedPrivacyPolicy,
+  ];
 }

@@ -66,7 +66,7 @@ class AppRouter {
       GoRoute(
         path: Routes.signUp,
         builder: (_, _) => BlocProvider(
-          create: (_) => getIt<SignUpBloc>(),
+          create: (_) => getIt<SignUpBloc>()..add(const SignUpStarted()),
           child: const SignUpPage(),
         ),
       ),

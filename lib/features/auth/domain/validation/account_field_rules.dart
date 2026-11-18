@@ -59,3 +59,11 @@ AccountFieldErrorEnum _errorFor(PasswordRuleEnum rule) => switch (rule) {
   PasswordRuleEnum.uppercase => AccountFieldErrorEnum.passwordMissingUppercase,
   PasswordRuleEnum.lowercase => AccountFieldErrorEnum.passwordMissingLowercase,
 };
+
+/// Checks the privacy policy box.
+List<AccountFieldErrorEnum> checkPrivacyPolicyAccepted(bool accepted) {
+  // REQ-004
+  return accepted
+      ? const []
+      : const [AccountFieldErrorEnum.privacyPolicyNotAccepted];
+}

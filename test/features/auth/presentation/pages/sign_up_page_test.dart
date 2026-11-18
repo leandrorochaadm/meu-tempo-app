@@ -253,4 +253,51 @@ void main() {
     expect(find.text('Pelo menos 1 número'), findsNothing);
     expect(find.text('Use no máximo 71 caracteres.'), findsNothing);
   });
+
+  // REQ-004: sign-up screen open: 1 unchecked box and 1 link "política de privacidade"
+  testWidgets('should show one unchecked box and one privacy policy link', (
+    tester,
+  ) async {
+    await pump(tester);
+
+    expect(find.byType(Checkbox), findsOneWidget);
+    expect(tester.widget<Checkbox>(find.byType(Checkbox)).value, isFalse);
+    expect(
+      find.widgetWithText(TextButton, 'política de privacidade'),
+      findsOneWidget,
+    );
+  });
+
+  // REQ-004: tapping the box adds SignUpPrivacyPolicyChanged(true) once and the box becomes checked
+  testWidgets('should add SignUpPrivacyPolicyChanged when tapping the box', (
+    tester,
+  ) async {
+    await pump(tester);
+    await tester.ensureVisible(find.byType(Checkbox));
+    await tester.tap(find.byType(Checkbox));
+    await tester.pump();
+
+    verify(() => bloc.add(const SignUpPrivacyPolicyChanged(true))).called(1);
+    expect(tester.widget<Checkbox>(find.byType(Checkbox)).value, isTrue);
+  });
+
+  // REQ-004: state SignUpFieldsInvalid([privacyPolicyNotAccepted]): "Marque para continuar." once, no SnackBar
+  testWidgets('should show Marque para continuar when policy is not accepted', (
+    tester,
+  ) async {
+    when(() => bloc.state).thenReturn(
+      SignUpFieldsInvalid([AccountFieldErrorEnum.privacyPolicyNotAccepted]),
+    );
+    await pump(tester);
+
+    expect(find.text('Marque para continuar.'), findsOneWidget);
+    expect(find.byType(SnackBar), findsNothing);
+  });
+
+  // REQ-004: state SignUpIdle: no policy warning
+  testWidgets('should not show policy warning when idle', (tester) async {
+    await pump(tester);
+
+    expect(find.text('Marque para continuar.'), findsNothing);
+  });
 }

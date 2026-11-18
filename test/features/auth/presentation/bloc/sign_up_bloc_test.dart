@@ -236,4 +236,103 @@ void main() {
       SignUpFieldsInvalid([AccountFieldErrorEnum.passwordTooLong]),
     ],
   );
+
+  // REQ-004: SignUpStarted then SignUpSubmitted: the use case is called with acceptedPrivacyPolicy false
+  blocTest<SignUpBloc, SignUpState>(
+    'should send acceptedPrivacyPolicy false after SignUpStarted',
+    build: () {
+      when(() => signUp(any())).thenAnswer((_) async => const Right(unit));
+      return SignUpBloc(signUp);
+    },
+    act: (bloc) => bloc
+      ..add(const SignUpStarted())
+      ..add(submitted),
+    verify: (_) => verify(
+      () => signUp(
+        const SignUpParams(
+          displayName: 'Ana',
+          email: 'ana@exemplo.com',
+          password: 'Abcd1234',
+          acceptedPrivacyPolicy: false,
+        ),
+      ),
+    ).called(1),
+  );
+
+  // REQ-004: SignUpStarted, box checked, then SignUpSubmitted: the use case is called with acceptedPrivacyPolicy true
+  blocTest<SignUpBloc, SignUpState>(
+    'should send acceptedPrivacyPolicy true after checking the box',
+    build: () {
+      when(() => signUp(any())).thenAnswer((_) async => const Right(unit));
+      return SignUpBloc(signUp);
+    },
+    act: (bloc) => bloc
+      ..add(const SignUpStarted())
+      ..add(const SignUpPrivacyPolicyChanged(true))
+      ..add(submitted),
+    verify: (_) => verify(
+      () => signUp(
+        const SignUpParams(
+          displayName: 'Ana',
+          email: 'ana@exemplo.com',
+          password: 'Abcd1234',
+          acceptedPrivacyPolicy: true,
+        ),
+      ),
+    ).called(1),
+  );
+
+  // REQ-004: box checked and unchecked before submitting: the use case is called with false
+  blocTest<SignUpBloc, SignUpState>(
+    'should send the last box value',
+    build: () {
+      when(() => signUp(any())).thenAnswer((_) async => const Right(unit));
+      return SignUpBloc(signUp);
+    },
+    act: (bloc) => bloc
+      ..add(const SignUpStarted())
+      ..add(const SignUpPrivacyPolicyChanged(true))
+      ..add(const SignUpPrivacyPolicyChanged(false))
+      ..add(submitted),
+    verify: (_) => verify(
+      () => signUp(
+        const SignUpParams(
+          displayName: 'Ana',
+          email: 'ana@exemplo.com',
+          password: 'Abcd1234',
+          acceptedPrivacyPolicy: false,
+        ),
+      ),
+    ).called(1),
+  );
+
+  // REQ-004: the use case rejects with privacyPolicyNotAccepted: the bloc emits SignUpFieldsInvalid with that error
+  blocTest<SignUpBloc, SignUpState>(
+    'should emit SignUpFieldsInvalid with privacyPolicyNotAccepted',
+    build: () {
+      when(() => signUp(any())).thenAnswer(
+        (_) async => Left(
+          InvalidAccountFieldsFailure([
+            AccountFieldErrorEnum.privacyPolicyNotAccepted,
+          ]),
+        ),
+      );
+      return SignUpBloc(signUp);
+    },
+    act: (bloc) => bloc.add(submitted),
+    expect: () => [
+      const SignUpInProgress(),
+      SignUpFieldsInvalid([AccountFieldErrorEnum.privacyPolicyNotAccepted]),
+    ],
+  );
+
+  // REQ-004: SignUpStarted and SignUpPrivacyPolicyChanged alone emit no state
+  blocTest<SignUpBloc, SignUpState>(
+    'should emit nothing on SignUpStarted and SignUpPrivacyPolicyChanged',
+    build: () => SignUpBloc(signUp),
+    act: (bloc) => bloc
+      ..add(const SignUpStarted())
+      ..add(const SignUpPrivacyPolicyChanged(true)),
+    expect: () => <SignUpState>[],
+  );
 }

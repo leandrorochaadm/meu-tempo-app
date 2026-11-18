@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
+import '../../../../core/constants/app_links.dart';
 import '../../../../core/error/account_field_error_enum.dart';
 import '../../../../core/router/routes.dart';
 import '../../../../core/theme/theme_context_extensions.dart';
@@ -22,6 +24,7 @@ class _SignUpPageState extends State<SignUpPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _obscurePassword = true;
+  bool _acceptedPrivacyPolicy = false;
 
   void _submit() {
     FocusScope.of(context).unfocus();
@@ -74,6 +77,13 @@ class _SignUpPageState extends State<SignUpPage> {
                 state is SignUpFieldsInvalid &&
                     state.errors.contains(AccountFieldErrorEnum.passwordTooLong)
                 ? AccountFieldErrorEnum.passwordTooLong.label
+                : null;
+            final policyError =
+                state is SignUpFieldsInvalid &&
+                    state.errors.contains(
+                      AccountFieldErrorEnum.privacyPolicyNotAccepted,
+                    )
+                ? AccountFieldErrorEnum.privacyPolicyNotAccepted.label
                 : null;
             return SingleChildScrollView(
               child: Padding(
@@ -141,6 +151,40 @@ class _SignUpPageState extends State<SignUpPage> {
                         ],
                       ),
                     ),
+                    CheckboxListTile(
+                      controlAffinity: ListTileControlAffinity.leading,
+                      contentPadding: EdgeInsets.zero,
+                      value: _acceptedPrivacyPolicy,
+                      onChanged: (value) {
+                        setState(() => _acceptedPrivacyPolicy = value ?? false);
+                        context.read<SignUpBloc>().add(
+                          SignUpPrivacyPolicyChanged(value ?? false),
+                        );
+                      },
+                      title: Wrap(
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [
+                          Text(
+                            'Li e aceito a ',
+                            style: context.text.bodyMedium,
+                          ),
+                          TextButton(
+                            onPressed: () => launchUrl(
+                              Uri.parse(AppLinks.privacyPolicy),
+                              mode: LaunchMode.externalApplication,
+                            ),
+                            child: const Text('política de privacidade'),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (policyError != null)
+                      Text(
+                        policyError,
+                        style: context.text.bodySmall?.copyWith(
+                          color: context.colors.danger,
+                        ),
+                      ),
                     SizedBox(height: context.space.xxl),
                     AppPrimaryButton(
                       label: 'Criar conta',

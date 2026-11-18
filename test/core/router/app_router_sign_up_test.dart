@@ -147,4 +147,12 @@ void main() {
 
     expect(find.byType(TaskListPage), findsOneWidget);
   });
+
+  // REQ-004: opening the sign-up route without a session adds SignUpStarted to the bloc once
+  testWidgets('should add SignUpStarted when opening sign-up', (tester) async {
+    setSession(const AuthUnauthenticated());
+    await open(tester, Routes.signUp);
+
+    verify(() => getIt<SignUpBloc>().add(const SignUpStarted())).called(1);
+  });
 }

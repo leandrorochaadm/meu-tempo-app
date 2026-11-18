@@ -22,3 +22,18 @@ final class SignUpSubmitted extends SignUpEvent {
   @override
   List<Object?> get props => [displayName, email, password];
 }
+
+/// The sign-up screen opened: the privacy policy box starts unchecked (REQ-004).
+final class SignUpStarted extends SignUpEvent {
+  const SignUpStarted();
+}
+
+/// The person checked or unchecked the privacy policy box.
+final class SignUpPrivacyPolicyChanged extends SignUpEvent {
+  const SignUpPrivacyPolicyChanged(this.accepted);
+
+  final bool accepted;
+
+  @override
+  List<Object?> get props => [accepted];
+}

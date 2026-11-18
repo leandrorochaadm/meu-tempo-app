@@ -222,4 +222,18 @@ void main() {
       expect(checkPassword('        '), [noDigit, noUpper, noLower]);
     });
   });
+
+  group('checkPrivacyPolicyAccepted', () {
+    // REQ-004: acceptance checked: no error
+    test('should return no error when accepted', () {
+      expect(checkPrivacyPolicyAccepted(true), isEmpty);
+    });
+
+    // REQ-004: acceptance unchecked: privacyPolicyNotAccepted
+    test('should return privacyPolicyNotAccepted when not accepted', () {
+      expect(checkPrivacyPolicyAccepted(false), [
+        AccountFieldErrorEnum.privacyPolicyNotAccepted,
+      ]);
+    });
+  });
 }

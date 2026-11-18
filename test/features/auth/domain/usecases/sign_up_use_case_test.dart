@@ -976,4 +976,103 @@ void main() {
       },
     );
   });
+
+  // REQ-004: Name "Ana", E-mail "ana@exemplo.com", Password "Abcd1234", acceptance unchecked: rejected with privacyPolicyNotAccepted, repository not called
+  test(
+    'should reject with privacyPolicyNotAccepted when policy is not accepted',
+    () async {
+      final result = await useCase(
+        const SignUpParams(
+          displayName: 'Ana',
+          email: 'ana@exemplo.com',
+          password: 'Abcd1234',
+          acceptedPrivacyPolicy: false,
+        ),
+      );
+
+      expect(
+        result,
+        Left<Failure, Unit>(
+          InvalidAccountFieldsFailure([
+            AccountFieldErrorEnum.privacyPolicyNotAccepted,
+          ]),
+        ),
+      );
+      verifyNever(
+        () => repo.signUp(
+          displayName: any(named: 'displayName'),
+          email: any(named: 'email'),
+          password: any(named: 'password'),
+        ),
+      );
+    },
+  );
+
+  // REQ-004: same data, acceptance checked: repository called once
+  test('should create the account when policy is accepted', () async {
+    final result = await useCase(
+      const SignUpParams(
+        displayName: 'Ana',
+        email: 'ana@exemplo.com',
+        password: 'Abcd1234',
+        acceptedPrivacyPolicy: true,
+      ),
+    );
+
+    expect(result, const Right<Failure, Unit>(unit));
+    verify(
+      () => repo.signUp(
+        displayName: 'Ana',
+        email: 'ana@exemplo.com',
+        password: 'Abcd1234',
+      ),
+    ).called(1);
+  });
+
+  // REQ-004, REQ-011: Name "A" with acceptance unchecked: errors in order displayNameLength, privacyPolicyNotAccepted
+  test('should put privacyPolicyNotAccepted after field errors', () async {
+    final result = await useCase(
+      const SignUpParams(
+        displayName: 'A',
+        email: 'ana@exemplo.com',
+        password: 'Abcd1234',
+        acceptedPrivacyPolicy: false,
+      ),
+    );
+
+    expect(
+      result,
+      Left<Failure, Unit>(
+        InvalidAccountFieldsFailure([
+          AccountFieldErrorEnum.displayNameLength,
+          AccountFieldErrorEnum.privacyPolicyNotAccepted,
+        ]),
+      ),
+    );
+    verifyNever(
+      () => repo.signUp(
+        displayName: any(named: 'displayName'),
+        email: any(named: 'email'),
+        password: any(named: 'password'),
+      ),
+    );
+  });
+
+  // REQ-004: params equal except acceptedPrivacyPolicy are not equal
+  test('should differ when acceptedPrivacyPolicy differs', () {
+    const accepted = SignUpParams(
+      displayName: 'Ana',
+      email: 'ana@exemplo.com',
+      password: 'Abcd1234',
+      acceptedPrivacyPolicy: true,
+    );
+    const notAccepted = SignUpParams(
+      displayName: 'Ana',
+      email: 'ana@exemplo.com',
+      password: 'Abcd1234',
+      acceptedPrivacyPolicy: false,
+    );
+
+    expect(accepted, isNot(notAccepted));
+  });
 }

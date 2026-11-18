@@ -17,12 +17,18 @@ part 'sign_up_state.dart';
 @injectable
 class SignUpBloc extends Bloc<SignUpEvent, SignUpState> {
   SignUpBloc(this._signUp) : super(const SignUpIdle()) {
+    on<SignUpStarted>((_, _) => _acceptedPrivacyPolicy = false);
+    on<SignUpPrivacyPolicyChanged>(
+      (event, _) => _acceptedPrivacyPolicy = event.accepted,
+    );
     on<SignUpSubmitted>(_onSubmitted);
   }
 
   static const Duration _signUpTimeout = Duration(seconds: 30);
 
   final SignUpUseCase _signUp;
+  // Starts true only for callers that never send SignUpStarted; the router always does.
+  bool _acceptedPrivacyPolicy = true;
 
   Future<void> _onSubmitted(
     SignUpSubmitted event,
@@ -36,6 +42,7 @@ class SignUpBloc extends Bloc<SignUpEvent, SignUpState> {
           displayName: event.displayName,
           email: event.email,
           password: event.password,
+          acceptedPrivacyPolicy: _acceptedPrivacyPolicy,
         ),
       ).timeout(_signUpTimeout);
       result.match(
