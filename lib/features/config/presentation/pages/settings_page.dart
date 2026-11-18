@@ -6,6 +6,7 @@ import '../../../../core/ui/app_empty_state.dart';
 import '../../../../core/ui/app_list_skeleton.dart';
 import '../../../../core/utils/formatters/duration_formatter.dart';
 import '../../../auth/presentation/widgets/delete_account_section.dart';
+import '../../../auth/presentation/widgets/profile_section.dart';
 import '../bloc/settings_bloc.dart';
 
 /// Configurações do dia. Por ora: horas disponíveis para o "cabe no dia"
@@ -85,6 +86,8 @@ class _SettingsBody extends StatelessWidget {
     return ListView(
       padding: EdgeInsets.all(context.space.lg),
       children: [
+        const ProfileSection(),
+        SizedBox(height: context.space.xl),
         Text('Horas disponíveis por dia', style: context.text.titleMedium),
         SizedBox(height: context.space.xs),
         Text(

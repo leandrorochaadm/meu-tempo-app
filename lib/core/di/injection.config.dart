@@ -62,6 +62,8 @@ import 'package:meu_tempo/features/auth/domain/usecases/sign_out_use_case.dart'
     as _i846;
 import 'package:meu_tempo/features/auth/domain/usecases/sign_up_use_case.dart'
     as _i389;
+import 'package:meu_tempo/features/auth/domain/usecases/update_display_name_use_case.dart'
+    as _i486;
 import 'package:meu_tempo/features/auth/domain/usecases/watch_auth_state_use_case.dart'
     as _i1046;
 import 'package:meu_tempo/features/auth/presentation/bloc/auth_bloc.dart'
@@ -72,6 +74,8 @@ import 'package:meu_tempo/features/auth/presentation/bloc/delete_account_bloc.da
     as _i721;
 import 'package:meu_tempo/features/auth/presentation/bloc/sign_up_bloc.dart'
     as _i1020;
+import 'package:meu_tempo/features/auth/presentation/bloc/update_display_name_bloc.dart'
+    as _i390;
 import 'package:meu_tempo/features/config/data/datasources/config_remote_data_source.dart'
     as _i584;
 import 'package:meu_tempo/features/config/data/repositories/config_repository_impl.dart'
@@ -400,6 +404,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i389.SignUpUseCase>(
       () => _i389.SignUpUseCase(gh<_i224.AuthRepository>()),
     );
+    gh.lazySingleton<_i486.UpdateDisplayNameUseCase>(
+      () => _i486.UpdateDisplayNameUseCase(gh<_i224.AuthRepository>()),
+    );
     gh.lazySingleton<_i1046.WatchAuthStateUseCase>(
       () => _i1046.WatchAuthStateUseCase(gh<_i224.AuthRepository>()),
     );
@@ -415,6 +422,9 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i846.SignOutUseCase>(),
         gh<_i1046.WatchAuthStateUseCase>(),
       ),
+    );
+    gh.factory<_i390.UpdateDisplayNameBloc>(
+      () => _i390.UpdateDisplayNameBloc(gh<_i486.UpdateDisplayNameUseCase>()),
     );
     gh.factory<_i1020.SignUpBloc>(
       () => _i1020.SignUpBloc(gh<_i389.SignUpUseCase>()),
