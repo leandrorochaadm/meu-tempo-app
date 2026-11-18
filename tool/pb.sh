@@ -8,6 +8,7 @@ PB_PORT="${PB_PORT:-8095}"
 BIN_DIR="tool/.bin/$PB_VERSION"
 DATA_DIR="${PB_DATA_DIR:-.pb/pb_data}"
 MIGRATIONS_DIR="pocketbase/pb_migrations"
+HOOKS_DIR="pocketbase/pb_hooks"
 
 download() {
   local os arch zip
@@ -38,14 +39,14 @@ download() {
 case "${1:-}" in
   serve)
     exec "$BIN_DIR/pocketbase" serve --http="127.0.0.1:$PB_PORT" \
-      --dir="$DATA_DIR" --migrationsDir="$MIGRATIONS_DIR" --automigrate=false
+      --dir="$DATA_DIR" --migrationsDir="$MIGRATIONS_DIR" --hooksDir="$HOOKS_DIR" --automigrate=false
     ;;
   superuser)
     email="${2:?Usage: tool/pb.sh superuser <email>}"
     read -rs -p "Password: " password
     echo
     "$BIN_DIR/pocketbase" superuser upsert "$email" "$password" \
-      --dir="$DATA_DIR" --migrationsDir="$MIGRATIONS_DIR"
+      --dir="$DATA_DIR" --migrationsDir="$MIGRATIONS_DIR" --hooksDir="$HOOKS_DIR"
     ;;
   *)
     echo "Usage: tool/pb.sh serve | superuser <email>" >&2

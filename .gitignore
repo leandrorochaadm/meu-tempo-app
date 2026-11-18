@@ -57,9 +57,10 @@ temp/
 tool/.bin/
 .pb/
 
-# PocketBase: only migrations are versioned
+# PocketBase: only migrations and hooks are versioned
 pocketbase/*
 !pocketbase/pb_migrations/
+!pocketbase/pb_hooks/
 # Build-time config: only the examples are versioned
 config/*.json
 !config/*.json.example

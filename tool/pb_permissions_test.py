@@ -552,6 +552,85 @@ def check_users(res: Results, su: Actor, a: Owner, b: Owner) -> None:
                   r.status_code == 200 and before_value != "" and stored() == before_value,
                   f"{r.status_code} {r.text[:200]}")
 
+    # REQ-007 (server): change-email and sign-out-other-devices routes. New users, so A and B stay untouched.
+    def field_code(r: httpx.Response, field: str) -> str | None:
+        try:
+            return r.json()["data"][field]["code"]
+        except (ValueError, KeyError, TypeError):
+            return None
+
+    ana_email = f"ana{secrets.token_hex(4)}@pb-test.local"
+    bia_email = f"bia{secrets.token_hex(4)}@pb-test.local"
+    ana_pwd = secrets.token_urlsafe(24)
+    bia_pwd = secrets.token_urlsafe(24)
+    ana_id = create_user(su, ana_email, ana_pwd)
+    bia_id = create_user(su, bia_email, bia_pwd)
+    ana = login("users", ana_email, ana_pwd, "ana")
+    change_path = "/api/account/change-email"
+    signout_path = "/api/account/sign-out-other-devices"
+
+    r = request(ANON, "POST", change_path, json={"email": "x@pb-test.local", "oldPassword": "x"})
+    res.check("users:change-email:anon", r.status_code == 401, str(r.status_code))
+
+    # REQ-007: Ana tries Bia's e-mail with a wrong password: refused as wrong password, no word on the e-mail, 0 changes.
+    r = request(ana, "POST", change_path, json={"email": bia_email, "oldPassword": ana_pwd + "x"})
+    res.check("users:change-email:wrong-password",
+              r.status_code == 400 and field_code(r, "oldPassword") == "validation_invalid_old_password"
+              and field_code(r, "email") is None
+              and su_get(su, "users", ana_id).json()["email"] == ana_email
+              and su_get(su, "users", bia_id).json()["email"] == bia_email,
+              f"{r.status_code} {r.text[:200]}")
+
+    r = request(ana, "POST", change_path, json={"email": bia_email, "oldPassword": ana_pwd})
+    res.check("users:change-email:email-in-use",
+              r.status_code == 400 and field_code(r, "email") == "validation_not_unique"
+              and su_get(su, "users", ana_id).json()["email"] == ana_email,
+              f"{r.status_code} {r.text[:200]}")
+
+    # REQ-007: Ana changes to a new e-mail with the right password: new one signs in, old one does not, 1 change.
+    new_email = f"ana.lima{secrets.token_hex(4)}@pb-test.local"
+    r = request(ana, "POST", change_path, json={"email": new_email, "oldPassword": ana_pwd})
+    token_ok = r.status_code == 200 and "token" in r.json()
+    new_login_ok = False
+    old_login_refused = False
+    try:
+        login("users", new_email, ana_pwd, "ana-new")
+        new_login_ok = True
+    except EnvError:
+        pass
+    try:
+        login("users", ana_email, ana_pwd, "ana-old")
+    except EnvError:
+        old_login_refused = True
+    res.check("users:change-email:ok",
+              token_ok and new_login_ok and old_login_refused
+              and su_get(su, "users", ana_id).json()["email"] == new_email,
+              f"{r.status_code} {r.text[:200]}")
+
+    # The standard update must stay locked for the e-mail.
+    ana2 = login("users", new_email, ana_pwd, "ana2")
+    direct = f"direct{secrets.token_hex(4)}@pb-test.local"
+    r = request(ana2, "PATCH", rec("users", ana_id), json={"email": direct})
+    res.check("users:update:email:direct",
+              su_get(su, "users", ana_id).json()["email"] == new_email, f"{r.status_code} {r.text[:200]}")
+
+    r = request(ANON, "POST", signout_path, json={})
+    res.check("users:sign-out-other-devices:anon", r.status_code == 401, str(r.status_code))
+
+    # REQ-009: two logins T1 and T2; T1 signs out the others and gets T3: T2 refused, T3 accepted.
+    so_email = f"so{secrets.token_hex(4)}@pb-test.local"
+    so_pwd = secrets.token_urlsafe(24)
+    create_user(su, so_email, so_pwd)
+    t1 = login("users", so_email, so_pwd, "t1")
+    t2 = login("users", so_email, so_pwd, "t2")
+    r = request(t1, "POST", signout_path, json={})
+    t3_token = r.json().get("token") if r.status_code == 200 else None
+    r2 = request(t2, "POST", "/api/collections/users/auth-refresh")
+    r3 = (request(Actor("t3", t3_token, t1.user_id), "POST", "/api/collections/users/auth-refresh")
+          if t3_token else None)
+    res.check("users:sign-out-other-devices",
+              t3_token is not None and r2.status_code == 401 and r3 is not None and r3.status_code == 200,
+              f"{r.status_code} {r2.status_code} {r3.status_code if r3 else None}")
 
 
 def check_account_deletion(res: Results, su: Actor) -> None:
