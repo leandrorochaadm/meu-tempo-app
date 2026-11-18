@@ -44,7 +44,7 @@ void main() {
     expect(find.text('E-mail'), findsOneWidget);
     expect(find.text('Senha'), findsOneWidget);
     expect(find.text('Entrar'), findsOneWidget);
-    expect(find.text('Sem conta? Fale com quem cuida do app.'), findsOneWidget);
+    expect(find.text('Não tem conta?'), findsOneWidget);
   });
 
   testWidgets(

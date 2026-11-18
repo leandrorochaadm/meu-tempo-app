@@ -81,3 +81,14 @@ List<AccountFieldErrorEnum> checkSignUpFields({
   ...checkPassword(password),
   ...checkPrivacyPolicyAccepted(acceptedPrivacyPolicy),
 ]);
+
+/// Checks the new password of the change-password form: the sign-up rules plus "not the current one".
+/// The current password is never checked against the rules (old accounts may break them).
+// REQ-003, REQ-008, REQ-011
+List<AccountFieldErrorEnum> checkNewPassword({
+  required String currentPassword,
+  required String newPassword,
+}) => List.unmodifiable([
+  ...checkPassword(newPassword),
+  if (newPassword == currentPassword) AccountFieldErrorEnum.samePassword,
+]);

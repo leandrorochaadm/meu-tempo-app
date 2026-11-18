@@ -66,6 +66,8 @@ import 'package:meu_tempo/features/auth/domain/usecases/watch_auth_state_use_cas
     as _i1046;
 import 'package:meu_tempo/features/auth/presentation/bloc/auth_bloc.dart'
     as _i708;
+import 'package:meu_tempo/features/auth/presentation/bloc/change_password_form_bloc.dart'
+    as _i645;
 import 'package:meu_tempo/features/auth/presentation/bloc/delete_account_bloc.dart'
     as _i721;
 import 'package:meu_tempo/features/auth/presentation/bloc/sign_up_bloc.dart'
@@ -285,6 +287,9 @@ extension GetItInjectableX on _i174.GetIt {
     await gh.factoryAsync<_i460.SharedPreferences>(
       () => preferencesModule.prefs,
       preResolve: true,
+    );
+    gh.factory<_i645.ChangePasswordFormBloc>(
+      () => _i645.ChangePasswordFormBloc(),
     );
     await gh.singletonAsync<_i169.PocketBase>(
       () => pocketBaseModule.pocketBase,

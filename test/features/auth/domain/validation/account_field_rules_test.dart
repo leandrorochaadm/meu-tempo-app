@@ -299,4 +299,55 @@ void main() {
       );
     });
   });
+
+  group('checkNewPassword', () {
+    // REQ-008: current "abcd1234", new "Wxyz567" (7 characters): passwordTooShort
+    test('should return passwordTooShort when new has 7 characters', () {
+      expect(
+        checkNewPassword(currentPassword: 'abcd1234', newPassword: 'Wxyz567'),
+        [AccountFieldErrorEnum.passwordTooShort],
+      );
+    });
+
+    // REQ-008: current "abcd1234", new "wxyz5678" (no uppercase): passwordMissingUppercase
+    test(
+      'should return passwordMissingUppercase when new has no uppercase',
+      () {
+        expect(
+          checkNewPassword(
+            currentPassword: 'abcd1234',
+            newPassword: 'wxyz5678',
+          ),
+          [AccountFieldErrorEnum.passwordMissingUppercase],
+        );
+      },
+    );
+
+    // REQ-008: current "Abcd1234", new "Abcd1234": samePassword
+    test('should return samePassword when new equals current', () {
+      expect(
+        checkNewPassword(currentPassword: 'Abcd1234', newPassword: 'Abcd1234'),
+        [AccountFieldErrorEnum.samePassword],
+      );
+    });
+
+    // REQ-008: current "Abcd123", new "Abcd123": passwordTooShort then samePassword
+    test('should return passwordTooShort then samePassword', () {
+      expect(
+        checkNewPassword(currentPassword: 'Abcd123', newPassword: 'Abcd123'),
+        [
+          AccountFieldErrorEnum.passwordTooShort,
+          AccountFieldErrorEnum.samePassword,
+        ],
+      );
+    });
+
+    // REQ-012: current "Abcd1234", new "Abcd1234 " (trailing space): different, no errors
+    test('should not trim when comparing passwords', () {
+      expect(
+        checkNewPassword(currentPassword: 'Abcd1234', newPassword: 'Abcd1234 '),
+        isEmpty,
+      );
+    });
+  });
 }
