@@ -287,7 +287,7 @@ usar sem depender de quem cuida do app.
 
 **Critérios de aceitação:**
 - **Dado** a tela de cadastro, **quando** informo nome "Ana", e-mail "ana@exemplo.com",
-  senha "abcd1234" e marco "Li e aceito a política de privacidade", **então** a conta é
+  senha "Abcd1234" e marco "Li e aceito a política de privacidade", **então** a conta é
   criada e entro direto no app, sem confirmar o e-mail, com a lista "Entrada" e a tarefa
   de exemplo do primeiro acesso (H13).
 - **Dado** um nome com 1 ou com 51 caracteres (sem os espaços das pontas, contando emoji e
@@ -295,18 +295,22 @@ usar sem depender de quem cuida do app.
   2 ou 50, é aceita.
 - **Dado** uma senha com 7 ou com 72 caracteres, **quando** tento criar a conta,
   **então** ela é recusada com aviso; com 8 ou 71, é aceita. Espaços contam.
+- **Dado** uma senha sem número, sem maiúscula ou sem minúscula ("Abcdefgh", "abcd1234",
+  "ABCD1234"), **quando** digito, **então** o critério que falta fica sem verde no checklist
+  e o botão "Criar conta" continua desativado; com "Abcd1234", os 4 critérios ficam verdes.
+- **Dado** nome, e-mail e senha certos, **quando** a caixa da política está desmarcada,
+  **então** o botão "Criar conta" fica desativado; ao marcar, ele ativa.
 - **Dado** um e-mail mal escrito ("ana@", "ana.exemplo.com", vazio), **quando** tento
   criar a conta, **então** ela é recusada com aviso.
-- **Dado** a caixa da política desmarcada, **quando** tento criar a conta, **então** ela
-  é recusada com aviso.
-- **Dado** vários campos errados ao mesmo tempo, **quando** tento criar a conta,
-  **então** cada campo mostra o seu aviso, todos de uma vez.
+- **Dado** vários campos errados ao mesmo tempo, **quando** saio de cada um, **então**
+  cada campo mostra o seu aviso, e os avisos ficam visíveis juntos.
 - **Dado** que "ana@exemplo.com" já tem conta, **quando** tento criar outra com
   "Ana@Exemplo.com", **então** ela é recusada com aviso. O e-mail é guardado em
   minúsculas e sem espaços nas pontas.
 
 **Regras de negócio envolvidas:** Dados por usuário. Detalhes e cenários:
-`specs/sign_up.md` (REQ-001 a REQ-005, REQ-010, REQ-011).
+`specs/sign_up.md` (REQ-001 a REQ-005, REQ-010 a REQ-012). Telas:
+`docs/wireframe-cadastro-e-perfil.md`.
 
 ### H17 — Editar o perfil `(origem: Requisito Essencial 17)`
 
@@ -325,7 +329,10 @@ em dia.
 - **Dado** um e-mail novo igual ao atual ou já usado por outra conta, **quando** tento
   trocar, **então** a troca é recusada com aviso.
 - **Dado** a senha atual certa, **quando** troco a senha para uma nova de 8 a 71
-  caracteres e diferente da atual, **então** passo a entrar com a nova.
+  caracteres, com número, maiúscula e minúscula, e diferente da atual, **então** passo a
+  entrar com a nova. Enquanto a nova não atende ao checklist, o botão fica desativado.
+- **Dado** uma conta antiga com a senha "abcd1234" (sem maiúscula), **quando** entro no
+  app, **então** entro normalmente; a regra nova só vale para a senha nova.
 - **Dado** que troquei o e-mail ou a senha no celular, **quando** o navegador está com o
   app aberto, **então** ele volta para a tela de entrada em segundos, sem eu tocar nele;
   aparelho fechado volta ao abrir. O celular continua dentro.
@@ -333,7 +340,7 @@ em dia.
 
 **Regras de negócio envolvidas:** Dados por usuário. Detalhes e cenários:
 `specs/profile.md` (REQ-006 a REQ-009) e `specs/sign_up.md` (REQ-002, REQ-003, REQ-005,
-REQ-010, REQ-011).
+REQ-010 a REQ-012). Tela de trocar senha: `docs/wireframe-cadastro-e-perfil.md`, seção 8.
 
 **Notas técnicas:** trocar o e-mail sem link de confirmação exige rota própria no
 servidor; a saída dos outros aparelhos usa `subscribe` no próprio registro de `users`

@@ -58,7 +58,7 @@ Cenários:
 Fonte: requisitos-time-control.md, Requisitos, Essencial, req. 17 ("Trocar a senha").
 
 Quando o Usuário pedir para trocar a Senha informando a Senha atual correta e uma senha
-nova válida (REQ-003), o sistema deve gravar a senha nova, manter este aparelho dentro e
+nova válida (REQ-003, com o checklist e o botão do REQ-012), o sistema deve gravar a senha nova, manter este aparelho dentro e
 Encerrar outros aparelhos (REQ-009).
 
 Se a senha nova for igual à Senha atual digitada, então o sistema deve recusar com o Erro
@@ -68,13 +68,14 @@ Se a Senha atual estiver errada, então o sistema deve recusar com
 `WrongCurrentPasswordFailure` e manter a Senha.
 
 Cenários:
-- Atual "abcd1234", nova "wxyz5678" (8 caracteres): repositório chamado 1 vez, e 1 chamada para encerrar outros aparelhos
-- Atual "abcd1234", nova "wxyz567" (7 caracteres): recusado com `passwordTooShort`, 0 chamadas ao servidor
-- Atual "abcd1234", nova "abcd1234": recusado com `samePassword`, 0 chamadas ao servidor
-- Atual "abcd123", nova "abcd123": recusado com 2 erros (`passwordTooShort`, `samePassword`), 0 chamadas ao servidor
+- Atual "abcd1234" (conta antiga, sem maiúscula), nova "Wxyz5678" (8 caracteres): repositório chamado 1 vez, e 1 chamada para encerrar outros aparelhos
+- Atual "abcd1234", nova "Wxyz567" (7 caracteres): recusado com `passwordTooShort`, 0 chamadas ao servidor
+- Atual "abcd1234", nova "wxyz5678" (sem maiúscula): recusado com `passwordMissingUppercase`, 0 chamadas ao servidor
+- Atual "Abcd1234", nova "Abcd1234": recusado com `samePassword`, 0 chamadas ao servidor
+- Atual "Abcd123", nova "Abcd123": recusado com 2 erros (`passwordTooShort`, `samePassword`), 0 chamadas ao servidor
 - Servidor responde senha atual errada: recusado com `WrongCurrentPasswordFailure`, 0 chamadas para encerrar outros aparelhos
-- (servidor) Senha "abcd1234"; troca com atual "abcd1234" e nova "wxyz5678": entrar com "wxyz5678" funciona, com "abcd1234" não, 1 troca
-- (servidor) Senha "abcd1234"; troca com atual "abcd1235" e nova "wxyz5678": recusado, Senha continua "abcd1234", 0 trocas
+- (servidor) Senha "abcd1234"; troca com atual "abcd1234" e nova "Wxyz5678": entrar com "Wxyz5678" funciona, com "abcd1234" não, 1 troca
+- (servidor) Senha "abcd1234"; troca com atual "abcd1235" e nova "Wxyz5678": recusado, Senha continua "abcd1234", 0 trocas
 
 ## REQ-009 Outros aparelhos saem na hora após trocar e-mail ou senha [pronto]
 

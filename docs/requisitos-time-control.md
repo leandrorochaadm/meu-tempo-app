@@ -203,19 +203,20 @@ rituais e demais medições ficam em **Próximas versões**. A versão 1 também
 16. **Criar conta pelo app.**
     - Na tela de entrada, qualquer pessoa cria a própria conta informando **nome**, **e-mail** e **senha**.
     - **Nome:** de 2 a 50 caracteres, contados depois de tirar os espaços das pontas e do jeito que a pessoa vê (um emoji ou uma letra acentuada contam 1).
-    - **E-mail:** precisa estar bem escrito (ex.: "ana@", "ana.exemplo.com" e vazio são recusados com aviso). É guardado em minúsculas e sem espaços nas pontas.
-    - **Senha:** de 8 a 71 caracteres, valendo exatamente como digitada (espaços contam).
-    - **Política de privacidade:** a pessoa marca a caixa "Li e aceito a política de privacidade" (com link para a política); sem marcar, a conta não é criada.
-    - **Avisos todos de uma vez:** se vários campos estiverem errados, cada um mostra o seu aviso ao mesmo tempo.
+    - **E-mail:** precisa estar bem escrito (ex.: "ana@", "ana.exemplo.com", vazio, com espaço no meio ou com dois pontos seguidos são recusados com aviso). É guardado em minúsculas e sem espaços nas pontas.
+    - **Senha:** de 8 a 71 caracteres, com pelo menos 1 número, 1 letra maiúscula e 1 letra minúscula (acentuadas contam), valendo exatamente como digitada (espaços contam). Quem já tem conta continua entrando com a senha antiga, mesmo fora dessas regras.
+    - **Checklist da senha:** abaixo do campo aparecem os critérios ("Pelo menos 8 caracteres", "Pelo menos 1 número", "Pelo menos 1 letra maiúscula", "Pelo menos 1 letra minúscula"); cada um fica verde assim que é atendido, enquanto a pessoa digita.
+    - **Política de privacidade:** a pessoa marca a caixa "Li e aceito a política de privacidade" (com link para a política); sem marcar, a conta não é criada. A conta guarda a data do aceite, marcada pelo servidor, como prova do consentimento.
+    - **Botão só com tudo certo:** "Criar conta" fica desativado até nome, e-mail, senha e aceite estarem certos. Cada campo errado mostra o seu aviso quando a pessoa sai dele, e vários avisos podem aparecer ao mesmo tempo.
     - **Sem confirmação de e-mail:** criada a conta, a pessoa já entra no app e vê o primeiro acesso guiado (req. 13).
     - E-mail que já tem conta não cria outra. Maiúsculas e minúsculas não diferenciam o e-mail ("Ana@Exemplo.com" é o mesmo que "ana@exemplo.com"), no cadastro e na entrada.
     - **Esqueci a senha** não entra: quem esquecer fala com quem cuida do app, que redefine a senha.
-    - _Pronto quando:_ crio a conta "Ana" com o e-mail ana@exemplo.com e a senha "abcd1234", marco a caixa da política, e entro direto no app, com a lista "Entrada" e nenhum dado de outra pessoa.
+    - _Pronto quando:_ crio a conta "Ana" com o e-mail ana@exemplo.com e a senha "Abcd1234" (o checklist fica todo verde e o botão ativa), marco a caixa da política, e entro direto no app, com a lista "Entrada" e nenhum dado de outra pessoa.
 17. **Editar o perfil.**
     - O usuário edita o próprio **nome**, **e-mail** e **senha**, com os mesmos limites do cadastro e avisos todos de uma vez.
     - **Nome:** nome igual ao atual é recusado com aviso. Conta antiga sem nome mostra o campo vazio pedindo "Informe seu nome"; o nome fica vazio até a pessoa preencher.
     - **Trocar o e-mail:** pede a senha atual e troca na hora, sem e-mail de confirmação. E-mail que já tem conta não é aceito, e o e-mail igual ao atual é recusado com aviso. Com a senha atual errada, o app não diz se o e-mail novo já tem conta.
-    - **Trocar a senha:** pede a senha atual e a nova. Senha nova igual à atual é recusada com aviso.
+    - **Trocar a senha:** pede a senha atual e a nova. A nova segue as regras e o checklist do cadastro, e o botão só ativa com a senha atual preenchida e a nova atendendo a todos os critérios. Senha nova igual à atual é recusada com aviso.
     - Depois de trocar o e-mail ou a senha, os **outros aparelhos saem da conta na hora** (o aparelho aberto volta para a tela de entrada em segundos; o fechado, ao abrir); o aparelho onde a troca foi feita continua dentro.
     - _Pronto quando:_ troco meu nome para "Ana Lima" e ele aparece no perfil; troco o e-mail informando a senha atual e passo a entrar com o novo; troco a senha no celular e o outro aparelho volta para a tela de entrada, enquanto o celular continua dentro.
 
@@ -657,3 +658,11 @@ Decisões que encerraram as pendências anteriores:
   exatamente como digitada; avisos de todos os campos de uma vez; nome igual ao atual
   recusado; conta antiga sem nome pede o nome no perfil; outros aparelhos saem na hora
   após trocar e-mail ou senha. Atualizados req. 16 e 17.
+- 2026-11-17 — **Auditoria da spec do cadastro.** A conta guarda a data do aceite da
+  política de privacidade, marcada pelo servidor (prova do consentimento para a LGPD).
+  E-mail com espaço no meio ou com dois pontos seguidos é recusado. Atualizado req. 16.
+- 2026-11-17 (cont.) — **Senha com checklist.** A senha (cadastro e troca) passa a exigir
+  pelo menos 1 número, 1 letra maiúscula e 1 minúscula, além de 8 a 71 caracteres. Um
+  checklist abaixo do campo fica verde a cada critério atendido, e o botão só ativa com
+  tudo certo (no cadastro, todos os campos). Contas antigas continuam entrando com a senha
+  que já têm. Atualizados req. 16 e 17.
