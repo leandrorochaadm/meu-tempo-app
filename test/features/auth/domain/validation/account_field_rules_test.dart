@@ -412,4 +412,48 @@ void main() {
       );
     });
   });
+
+  group('checkEmailChange', () {
+    // REQ-007: current "ana@exemplo.com", new "ana@": only invalidEmail
+    test('should return only invalidEmail when new email is malformed', () {
+      expect(
+        checkEmailChange(currentEmail: 'ana@exemplo.com', newEmail: 'ana@'),
+        [AccountFieldErrorEnum.invalidEmail],
+      );
+    });
+
+    // REQ-007: current "ana@exemplo.com", new " ANA@exemplo.com ": only sameEmail
+    test('should return only sameEmail when new email equals current', () {
+      expect(
+        checkEmailChange(
+          currentEmail: 'ana@exemplo.com',
+          newEmail: ' ANA@exemplo.com ',
+        ),
+        [AccountFieldErrorEnum.sameEmail],
+      );
+    });
+
+    // REQ-007: current "ana@exemplo.com", new "ana.lima@exemplo.com": no errors
+    test('should return no errors when new email is valid and different', () {
+      expect(
+        checkEmailChange(
+          currentEmail: 'ana@exemplo.com',
+          newEmail: 'ana.lima@exemplo.com',
+        ),
+        isEmpty,
+      );
+    });
+
+    // REQ-007: the returned list cannot be changed
+    test('should return an unmodifiable list', () {
+      final errors = checkEmailChange(
+        currentEmail: 'ana@exemplo.com',
+        newEmail: 'ana@',
+      );
+      expect(
+        () => errors.add(AccountFieldErrorEnum.sameEmail),
+        throwsUnsupportedError,
+      );
+    });
+  });
 }

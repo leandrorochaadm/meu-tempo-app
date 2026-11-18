@@ -10,6 +10,9 @@ import '../../../../core/error/pocketbase_error_mapper.dart';
 import '../models/user_model.dart';
 
 const int _statusBadRequest = 400;
+const String _methodPost = 'POST';
+const String _keyToken = 'token';
+const String _keyRecord = 'record';
 
 /// PocketBase auth access. Throws [AppException] on error.
 abstract class AuthRemoteDataSource {
@@ -32,6 +35,18 @@ abstract class AuthRemoteDataSource {
   /// Saves the signed-in user's name. The SDK refreshes the auth store, so
   /// [authState] emits the new name.
   Future<void> updateDisplayName(String displayName);
+
+  /// Changes the e-mail through the server route; the SDK auth store gets the
+  /// new token. Throws [WrongCurrentPasswordException] or
+  /// [EmailAlreadyInUseException] (REQ-007), else [AppException].
+  Future<void> changeEmail({
+    required String email,
+    required String currentPassword,
+  });
+
+  /// Renews the token key on the server (other devices lose the session) and
+  /// saves the new token of this device. // REQ-009
+  Future<void> signOutOtherDevices();
   Stream<UserModel?> authState();
   UserModel? currentUser();
 }
@@ -100,6 +115,54 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     } on ClientException catch (e) {
       throw mapPocketBaseError(e);
     }
+  }
+
+  @override
+  Future<void> changeEmail({
+    required String email,
+    required String currentPassword,
+  }) async {
+    _requireSession();
+    try {
+      final json = await _session.client.send<Map<String, dynamic>>(
+        PbRoutes.changeEmail,
+        method: _methodPost,
+        body: {PbFields.email: email, PbFields.oldPassword: currentPassword},
+      );
+      _saveSession(json);
+    } on ClientException catch (e) {
+      if (isInvalidOldPassword(e, PbFields.oldPassword)) {
+        throw const WrongCurrentPasswordException(); // REQ-007
+      }
+      if (isFieldNotUnique(e, PbFields.email)) {
+        throw const EmailAlreadyInUseException(); // REQ-007
+      }
+      throw mapPocketBaseError(e);
+    }
+  }
+
+  @override
+  Future<void> signOutOtherDevices() async {
+    _requireSession();
+    try {
+      final json = await _session.client.send<Map<String, dynamic>>(
+        PbRoutes.signOutOtherDevices,
+        method: _methodPost,
+      );
+      _saveSession(json);
+    } on ClientException catch (e) {
+      throw mapPocketBaseError(e);
+    }
+  }
+
+  /// Throws [UnauthenticatedException] when signed out, before any request.
+  void _requireSession() => _session.userId;
+
+  void _saveSession(Map<String, dynamic> json) {
+    _session.client.authStore.save(
+      json[_keyToken] as String,
+      RecordModel.fromJson(json[_keyRecord] as Map<String, dynamic>),
+    );
   }
 
   @override

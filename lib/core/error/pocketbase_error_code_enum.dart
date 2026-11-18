@@ -6,6 +6,7 @@ enum PocketBaseErrorCodeEnum {
   /// Repeated record id on `create` (checked in step 02, proof P5).
   duplicateId('validation_pk_invalid'),
   batchRequestFailed('batch_request_failed'),
+  invalidOldPassword('validation_invalid_old_password'),
   unknown('unknown');
 
   const PocketBaseErrorCodeEnum(this.apiValue);

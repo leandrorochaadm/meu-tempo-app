@@ -54,6 +54,8 @@ import 'package:meu_tempo/features/auth/domain/repositories/account_data_reposit
     as _i295;
 import 'package:meu_tempo/features/auth/domain/repositories/auth_repository.dart'
     as _i224;
+import 'package:meu_tempo/features/auth/domain/usecases/change_email_use_case.dart'
+    as _i997;
 import 'package:meu_tempo/features/auth/domain/usecases/delete_account_use_case.dart'
     as _i975;
 import 'package:meu_tempo/features/auth/domain/usecases/sign_in_with_email_use_case.dart'
@@ -394,6 +396,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i208.RealtimeSubscriber>(
       () => _i208.PocketBaseRealtimeSubscriber(gh<_i864.PocketBaseSession>()),
+    );
+    gh.lazySingleton<_i997.ChangeEmailUseCase>(
+      () => _i997.ChangeEmailUseCase(gh<_i224.AuthRepository>()),
     );
     gh.lazySingleton<_i850.SignInWithEmailUseCase>(
       () => _i850.SignInWithEmailUseCase(gh<_i224.AuthRepository>()),

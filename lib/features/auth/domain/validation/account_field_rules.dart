@@ -103,3 +103,14 @@ List<AccountFieldErrorEnum> checkNewPassword({
   ...checkPassword(newPassword),
   if (newPassword == currentPassword) AccountFieldErrorEnum.samePassword,
 ]);
+
+/// Checks the new e-mail of the change-e-mail form: the sign-up format rules plus "not the current one".
+// REQ-005, REQ-007, REQ-010, REQ-011
+List<AccountFieldErrorEnum> checkEmailChange({
+  required String currentEmail,
+  required String newEmail,
+}) => List.unmodifiable([
+  ...checkEmail(newEmail),
+  if (normalizeEmail(newEmail) == normalizeEmail(currentEmail))
+    AccountFieldErrorEnum.sameEmail,
+]);

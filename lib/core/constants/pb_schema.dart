@@ -11,6 +11,12 @@ abstract final class PbCollections {
   static const activeTimers = 'active_timers';
 }
 
+/// Custom server routes (`pocketbase/pb_hooks`).
+abstract final class PbRoutes {
+  static const changeEmail = '/api/account/change-email';
+  static const signOutOtherDevices = '/api/account/sign-out-other-devices';
+}
+
 /// PocketBase field names. Shared fields appear once.
 abstract final class PbFields {
   // common
@@ -23,6 +29,7 @@ abstract final class PbFields {
   static const email = 'email';
   static const password = 'password';
   static const passwordConfirm = 'passwordConfirm';
+  static const oldPassword = 'oldPassword';
 
   // task_lists
   static const name = 'name';

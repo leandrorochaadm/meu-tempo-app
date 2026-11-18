@@ -70,6 +70,34 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<Either<Failure, Unit>> changeEmail({
+    required String email,
+    required String currentPassword,
+  }) async {
+    try {
+      await _dataSource.changeEmail(
+        email: email,
+        currentPassword: currentPassword,
+      );
+      return const Right(unit);
+    } on AppException catch (e, s) {
+      AppLogger.logError('changeEmail failed', error: e, stackTrace: s);
+      return Left(e.toFailure());
+    }
+  }
+
+  @override
+  Future<Either<Failure, Unit>> signOutOtherDevices() async {
+    try {
+      await _dataSource.signOutOtherDevices();
+      return const Right(unit);
+    } on AppException catch (e, s) {
+      AppLogger.logError('signOutOtherDevices failed', error: e, stackTrace: s);
+      return Left(e.toFailure());
+    }
+  }
+
+  @override
   Future<Either<Failure, Unit>> deleteCurrentUser() async {
     try {
       await _dataSource.deleteCurrentUser();

@@ -21,6 +21,11 @@ class EmailAlreadyInUseFailure extends Failure {
   const EmailAlreadyInUseFailure();
 }
 
+/// The server refused the current password. // REQ-007, REQ-008
+class WrongCurrentPasswordFailure extends Failure {
+  const WrongCurrentPasswordFailure();
+}
+
 /// One or more account fields were refused; carries every reason at once.
 class InvalidAccountFieldsFailure extends Failure {
   InvalidAccountFieldsFailure(List<AccountFieldErrorEnum> errors)

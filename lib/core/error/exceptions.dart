@@ -48,6 +48,13 @@ class EmailAlreadyInUseException extends ConflictException {
   Failure toFailure() => const EmailAlreadyInUseFailure();
 }
 
+/// The server refused the current password. // REQ-007, REQ-008
+class WrongCurrentPasswordException extends AppException {
+  const WrongCurrentPasswordException();
+  @override
+  Failure toFailure() => const WrongCurrentPasswordFailure();
+}
+
 class UnauthenticatedException extends AppException {
   const UnauthenticatedException();
   @override

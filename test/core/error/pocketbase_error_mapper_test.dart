@@ -198,4 +198,55 @@ void main() {
   test('ConflictException maps to ServerFailure', () {
     expect(const ConflictException().toFailure(), isA<ServerFailure>());
   });
+
+  group('isInvalidOldPassword', () {
+    // REQ-007: 400 with validation_invalid_old_password on the asked field: true
+    test('should be true when the asked field has the old password code', () {
+      final e = _error(
+        400,
+        _body({
+          'oldPassword': {'code': 'validation_invalid_old_password'},
+        }),
+      );
+      expect(isInvalidOldPassword(e, 'oldPassword'), isTrue);
+    });
+
+    // REQ-007: 400 with the code on another field: false
+    test('should be false when another field has the code', () {
+      final e = _error(
+        400,
+        _body({
+          'email': {'code': 'validation_invalid_old_password'},
+        }),
+      );
+      expect(isInvalidOldPassword(e, 'oldPassword'), isFalse);
+    });
+
+    // REQ-007: 400 with another code on the asked field: false
+    test('should be false when the code is another one', () {
+      final e = _error(
+        400,
+        _body({
+          'oldPassword': {'code': 'validation_not_unique'},
+        }),
+      );
+      expect(isInvalidOldPassword(e, 'oldPassword'), isFalse);
+    });
+
+    // REQ-007: status 401 even with the right body: false
+    test('should be false when the status is 401', () {
+      final e = _error(
+        401,
+        _body({
+          'oldPassword': {'code': 'validation_invalid_old_password'},
+        }),
+      );
+      expect(isInvalidOldPassword(e, 'oldPassword'), isFalse);
+    });
+
+    // REQ-007: 400 without data: false
+    test('should be false when there is no data', () {
+      expect(isInvalidOldPassword(_error(400), 'oldPassword'), isFalse);
+    });
+  });
 }

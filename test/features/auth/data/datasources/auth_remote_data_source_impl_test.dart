@@ -420,4 +420,152 @@ void main() {
       },
     );
   });
+
+  group('changeEmail', () {
+    http.Response changed() => pbJson({
+      'token': _jwt(_future.add(const Duration(minutes: 5))),
+      'record': {
+        'id': 'user-a',
+        'collectionName': 'users',
+        'email': 'ana.lima@exemplo.com',
+      },
+    });
+
+    Future<void> change(AuthRemoteDataSourceImpl ds) => ds.changeEmail(
+      email: 'ana.lima@exemplo.com',
+      currentPassword: 'abcd1234',
+    );
+
+    // REQ-007: change accepted: POST on the change-email route with email and oldPassword; auth store has the returned token and email
+    test(
+      'should post to the change-email route and save the returned session',
+      () async {
+        final ds = build((_) async => changed());
+        client.authStore.save(_jwt(_future), _record());
+        final oldToken = client.authStore.token;
+
+        await change(ds);
+
+        expect(requests.single.method, 'POST');
+        expect(requests.single.url.path, PbRoutes.changeEmail);
+        final body = jsonDecode(requests.single.body) as Map<String, Object?>;
+        expect(body[PbFields.email], 'ana.lima@exemplo.com');
+        expect(body[PbFields.oldPassword], 'abcd1234');
+        expect(ds.currentUser()?.email, 'ana.lima@exemplo.com');
+        expect(client.authStore.token, isNot(oldToken));
+      },
+    );
+
+    // REQ-007: 400 oldPassword = validation_invalid_old_password: WrongCurrentPasswordException, auth store unchanged
+    test(
+      'should throw WrongCurrentPasswordException when the current password is wrong',
+      () async {
+        final ds = build(
+          (_) async => pbError(
+            400,
+            data: {
+              'oldPassword': {'code': 'validation_invalid_old_password'},
+            },
+          ),
+        );
+        client.authStore.save(_jwt(_future), _record());
+        final oldToken = client.authStore.token;
+
+        await expectLater(
+          change(ds),
+          throwsA(isA<WrongCurrentPasswordException>()),
+        );
+        expect(client.authStore.token, oldToken);
+        expect(ds.currentUser()?.email, 'a@b.com');
+      },
+    );
+
+    // REQ-007: 400 email = validation_not_unique: EmailAlreadyInUseException
+    test(
+      'should throw EmailAlreadyInUseException when the email is taken',
+      () async {
+        final ds = build((_) async => pbNotUnique('email'));
+        client.authStore.save(_jwt(_future), _record());
+
+        await expectLater(
+          change(ds),
+          throwsA(isA<EmailAlreadyInUseException>()),
+        );
+      },
+    );
+
+    // REQ-007: no connection (status 0) and 500: NetworkException and ServerException
+    test('should map network and server errors', () async {
+      final offline = build((_) async => throw const SocketException('down'));
+      client.authStore.save(_jwt(_future), _record());
+      await expectLater(change(offline), throwsA(isA<NetworkException>()));
+
+      final broken = build((_) async => status(500));
+      client.authStore.save(_jwt(_future), _record());
+      await expectLater(change(broken), throwsA(isA<ServerException>()));
+    });
+
+    // REQ-007: no session: UnauthenticatedException and no request
+    test(
+      'should throw UnauthenticatedException without a request when signed out',
+      () async {
+        final ds = build((_) async => changed());
+
+        await expectLater(change(ds), throwsA(isA<UnauthenticatedException>()));
+        expect(requests, isEmpty);
+      },
+    );
+  });
+
+  group('signOutOtherDevices', () {
+    // REQ-009: sign out other devices: POST on the route and the new token is saved
+    test('should post to the route and save the new token', () async {
+      final newToken = _jwt(_future.add(const Duration(minutes: 5)));
+      final ds = build(
+        (_) async => pbJson({
+          'token': newToken,
+          'record': {
+            'id': 'user-a',
+            'collectionName': 'users',
+            'email': 'a@b.com',
+          },
+        }),
+      );
+      client.authStore.save(_jwt(_future), _record());
+
+      await ds.signOutOtherDevices();
+
+      expect(requests.single.method, 'POST');
+      expect(requests.single.url.path, PbRoutes.signOutOtherDevices);
+      expect(client.authStore.token, newToken);
+    });
+
+    // REQ-009: expired session (401): PermissionException
+    test(
+      'should throw PermissionException when the token is no longer valid',
+      () async {
+        final ds = build((_) async => status(401));
+        client.authStore.save(_jwt(_future), _record());
+
+        await expectLater(
+          ds.signOutOtherDevices(),
+          throwsA(isA<PermissionException>()),
+        );
+      },
+    );
+
+    // REQ-009: no session: UnauthenticatedException and no request
+    test(
+      'should throw UnauthenticatedException without a request when signed out',
+      () async {
+        final ds = build((_) async => status(401));
+
+        await expectLater(
+          ds.signOutOtherDevices(),
+          throwsA(isA<UnauthenticatedException>()),
+        );
+        expect(requests, isEmpty);
+      },
+    );
+  });
 }

@@ -26,6 +26,16 @@ abstract class AuthRepository {
   /// Saves the signed-in user's display name. The new name arrives through [authState].
   Future<Either<Failure, Unit>> updateDisplayName(String displayName);
 
+  /// Changes the signed-in user's e-mail. [email] is already normalized; the new
+  /// user arrives through [authState]. // REQ-007
+  Future<Either<Failure, Unit>> changeEmail({
+    required String email,
+    required String currentPassword,
+  });
+
+  /// Ends every other device's session and keeps this one. // REQ-009
+  Future<Either<Failure, Unit>> signOutOtherDevices();
+
   /// Fluxo do estado de autenticação (`null` = deslogado).
   Stream<UserEntity?> authState();
 

@@ -22,4 +22,17 @@ void main() {
       PocketBaseErrorCodeEnum.unknown,
     );
   });
+
+  // REQ-007: validation_invalid_old_password becomes invalidOldPassword and is not a conflict
+  test(
+    'should parse validation_invalid_old_password and not be a conflict',
+    () {
+      final code = PocketBaseErrorCodeEnum.fromApi(
+        'validation_invalid_old_password',
+      );
+
+      expect(code, PocketBaseErrorCodeEnum.invalidOldPassword);
+      expect(code.isConflict, isFalse);
+    },
+  );
 }

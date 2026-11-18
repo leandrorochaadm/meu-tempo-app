@@ -42,4 +42,17 @@ void main() {
     );
     expect(const EmailAlreadyInUseFailure(), isNot(const ServerFailure()));
   });
+
+  // REQ-007: WrongCurrentPasswordFailure equals another one and differs from ServerFailure
+  test('WrongCurrentPasswordFailure should be equal by value', () {
+    expect(
+      const WrongCurrentPasswordFailure(),
+      const WrongCurrentPasswordFailure(),
+    );
+    expect(
+      const WrongCurrentPasswordFailure().hashCode,
+      const WrongCurrentPasswordFailure().hashCode,
+    );
+    expect(const WrongCurrentPasswordFailure(), isNot(const ServerFailure()));
+  });
 }

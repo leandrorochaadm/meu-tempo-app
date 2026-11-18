@@ -181,4 +181,106 @@ void main() {
       const Left<Failure, Unit>(UnauthenticatedFailure()),
     );
   });
+
+  group('changeEmail', () {
+    Future<Either<Failure, Unit>> change() => repo.changeEmail(
+      email: 'ana.lima@exemplo.com',
+      currentPassword: 'abcd1234',
+    );
+
+    void dsThrows(Object error) => when(
+      () => ds.changeEmail(
+        email: any(named: 'email'),
+        currentPassword: any(named: 'currentPassword'),
+      ),
+    ).thenThrow(error);
+
+    // REQ-007: data source succeeds: Right(unit), called once with the same values
+    test(
+      'changeEmail should return Right(unit) when data source succeeds',
+      () async {
+        when(
+          () => ds.changeEmail(
+            email: 'ana.lima@exemplo.com',
+            currentPassword: 'abcd1234',
+          ),
+        ).thenAnswer((_) async {});
+
+        expect(await change(), const Right<Failure, Unit>(unit));
+        verify(
+          () => ds.changeEmail(
+            email: 'ana.lima@exemplo.com',
+            currentPassword: 'abcd1234',
+          ),
+        ).called(1);
+      },
+    );
+
+    // REQ-007: WrongCurrentPasswordException becomes WrongCurrentPasswordFailure
+    test(
+      'changeEmail should return WrongCurrentPasswordFailure when the password is wrong',
+      () async {
+        dsThrows(const WrongCurrentPasswordException());
+
+        expect(
+          await change(),
+          const Left<Failure, Unit>(WrongCurrentPasswordFailure()),
+        );
+      },
+    );
+
+    // REQ-007: EmailAlreadyInUseException becomes EmailAlreadyInUseFailure
+    test(
+      'changeEmail should return EmailAlreadyInUseFailure when the email is taken',
+      () async {
+        dsThrows(const EmailAlreadyInUseException());
+
+        expect(
+          await change(),
+          const Left<Failure, Unit>(EmailAlreadyInUseFailure()),
+        );
+      },
+    );
+
+    // REQ-007: NetworkException becomes NetworkFailure
+    test(
+      'changeEmail should return NetworkFailure when there is no connection',
+      () async {
+        dsThrows(const NetworkException());
+
+        expect(await change(), const Left<Failure, Unit>(NetworkFailure()));
+      },
+    );
+  });
+
+  group('signOutOtherDevices', () {
+    // REQ-009: data source succeeds: Right(unit)
+    test(
+      'signOutOtherDevices should return Right(unit) when data source succeeds',
+      () async {
+        when(() => ds.signOutOtherDevices()).thenAnswer((_) async {});
+
+        expect(
+          await repo.signOutOtherDevices(),
+          const Right<Failure, Unit>(unit),
+        );
+        verify(() => ds.signOutOtherDevices()).called(1);
+      },
+    );
+
+    // REQ-009: NetworkException becomes NetworkFailure
+    test(
+      'signOutOtherDevices should return NetworkFailure when there is no connection',
+      () async {
+        when(
+          () => ds.signOutOtherDevices(),
+        ).thenThrow(const NetworkException());
+
+        expect(
+          await repo.signOutOtherDevices(),
+          const Left<Failure, Unit>(NetworkFailure()),
+        );
+      },
+    );
+  });
 }
