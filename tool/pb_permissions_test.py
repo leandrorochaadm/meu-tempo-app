@@ -661,6 +661,94 @@ def check_users(res: Results, su: Actor, a: Owner, b: Owner) -> None:
               r.status_code == 200 and login_works(cp_new, "cp-new2") and not login_works(cp_pwd, "cp-old2"),
               f"{r.status_code} {r.text[:200]}")
 
+    # REQ-009 (server): other sessions leave and the session of the change stays. New users per case.
+    refresh_path = "/api/collections/users/auth-refresh"
+
+    def refresh_status(actor: Actor) -> int:
+        return request(actor, "POST", refresh_path).status_code
+
+    def new_account(prefix: str) -> tuple[str, str, str]:
+        email = f"{prefix}{secrets.token_hex(4)}@pb-test.local"
+        pwd = secrets.token_urlsafe(24)
+        return create_user(su, email, pwd), email, pwd
+
+    def signed_out_actor(name: str, token: str | None, user_id: str | None) -> Actor:
+        return Actor(name, token, user_id)
+
+    # REQ-009: Ana changes the password on the phone: the browser gets 401, the phone (new token) gets 200, 1 open session.
+    uid, email, pwd = new_account("op")
+    phone = login("users", email, pwd, "phone")
+    browser = login("users", email, pwd, "browser")
+    pwd_new = secrets.token_urlsafe(24)
+    r = request(phone, "PATCH", rec("users", uid),
+                json={"password": pwd_new, "passwordConfirm": pwd_new, "oldPassword": pwd})
+    phone = login("users", email, pwd_new, "phone-new")
+    r2 = request(phone, "POST", signout_path, json={})
+    phone_token = r2.json().get("token") if r2.status_code == 200 else None
+    browser_status = refresh_status(browser)
+    phone_status = refresh_status(signed_out_actor("phone-final", phone_token, uid)) if phone_token else None
+    res.check("users:change-password:other-session-revoked",
+              r.status_code == 200 and phone_token is not None and browser_status == 401 and phone_status == 200,
+              f"{r.status_code} {r2.status_code} {browser_status} {phone_status}")
+
+    # REQ-009: Ana with 3 sessions changes the e-mail in the first one: the other 2 get 401, the final token gets 200.
+    uid, email, pwd = new_account("oe")
+    sessions = [login("users", email, pwd, f"s{i}") for i in range(3)]
+    new_email = f"ana.lima{secrets.token_hex(4)}@pb-test.local"
+    r = request(sessions[0], "POST", change_path, json={"email": new_email, "oldPassword": pwd})
+    changed_token = r.json().get("token") if r.status_code == 200 else None
+    r2 = (request(signed_out_actor("s0-new", changed_token, uid), "POST", signout_path, json={})
+          if changed_token else None)
+    final_token = r2.json().get("token") if r2 is not None and r2.status_code == 200 else None
+    others = [refresh_status(sessions[1]), refresh_status(sessions[2])]
+    final_status = refresh_status(signed_out_actor("s0-final", final_token, uid)) if final_token else None
+    res.check("users:change-email:other-session-revoked",
+              final_token is not None and others == [401, 401] and final_status == 200,
+              f"{r.status_code} {r2.status_code if r2 is not None else None} {others} {final_status}")
+
+    # REQ-009: change refused (wrong current password): no sign out is called, both sessions still get 200.
+    uid, email, pwd = new_account("rk")
+    first = login("users", email, pwd, "k1")
+    second = login("users", email, pwd, "k2")
+    wrong_new = secrets.token_urlsafe(24)
+    r = request(first, "POST", change_path,
+                json={"email": f"x{secrets.token_hex(4)}@pb-test.local", "oldPassword": pwd + "x"})
+    r2 = request(first, "PATCH", rec("users", uid),
+                 json={"password": wrong_new, "passwordConfirm": wrong_new, "oldPassword": pwd + "x"})
+    statuses = [refresh_status(first), refresh_status(second)]
+    res.check("users:change:refused-keeps-sessions",
+              r.status_code == 400 and r2.status_code == 400 and statuses == [200, 200],
+              f"{r.status_code} {r2.status_code} {statuses}")
+
+    # REQ-009: the server tells an open session by realtime when only the token key changes.
+    uid, email, pwd = new_account("rt")
+    actor_a = login("users", email, pwd, "rt-a")
+    actor_b = login("users", email, pwd, "rt-b")
+
+    async def token_key_event() -> bool:
+        sub = Subscriber(actor_b, [f"users/{uid}"])
+        async with httpx.AsyncClient(timeout=30) as client:
+            reader = asyncio.create_task(sub.read(client))
+            try:
+                await asyncio.wait_for(sub.connected.wait(), 10)
+                if await sub.subscribe(client) != 204:
+                    return False
+                await asyncio.to_thread(request, actor_a, "POST", signout_path, json={})
+                for _ in range(50):
+                    if sub.saw(uid, "update"):
+                        return True
+                    await asyncio.sleep(0.1)
+                return False
+            finally:
+                reader.cancel()
+
+    try:
+        event_seen = asyncio.run(token_key_event())
+    except Exception as exc:  # noqa: BLE001 - the case reports it, the script must not crash
+        event_seen = False
+        print(f"INFO users:realtime:token-key-event {exc!r}")
+    res.check("users:realtime:token-key-event", event_seen, "no update event within 5 s")
+
 
 def check_account_deletion(res: Results, su: Actor) -> None:
     """Account deletion as the app does it: tasks and recurring tasks first, then the user."""

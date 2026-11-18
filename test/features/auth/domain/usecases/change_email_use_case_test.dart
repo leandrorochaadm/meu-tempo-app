@@ -223,4 +223,33 @@ void main() {
       isNot(const ChangeEmailParams(newEmail: 'a@b.com', currentPassword: 'y')),
     );
   });
+
+  // REQ-009: email change to "ana.lima@exemplo.com" accepted: 1 call to sign out other devices
+  test(
+    'should sign out other devices once when email change is accepted (REQ-009)',
+    () async {
+      final result = await change('ana.lima@exemplo.com');
+
+      expect(result, const Right<Failure, Unit>(unit));
+      verify(() => repo.signOutOtherDevices()).called(1);
+    },
+  );
+
+  // REQ-009: server answers WrongCurrentPasswordFailure on the email change: 0 calls to sign out other devices
+  test(
+    'should not sign out other devices when change is refused (REQ-009)',
+    () async {
+      when(
+        () => repo.changeEmail(
+          email: any(named: 'email'),
+          currentPassword: any(named: 'currentPassword'),
+        ),
+      ).thenAnswer((_) async => const Left(WrongCurrentPasswordFailure()));
+
+      final result = await change('ana.lima@exemplo.com');
+
+      expect(result, const Left<Failure, Unit>(WrongCurrentPasswordFailure()));
+      verifyNever(() => repo.signOutOtherDevices());
+    },
+  );
 }

@@ -353,12 +353,6 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i864.PocketBaseSession>(
       () => _i864.PocketBaseSession(gh<_i169.PocketBase>()),
     );
-    gh.lazySingleton<_i788.AuthRemoteDataSource>(
-      () => _i788.AuthRemoteDataSourceImpl(gh<_i864.PocketBaseSession>()),
-    );
-    gh.lazySingleton<_i224.AuthRepository>(
-      () => _i534.AuthRepositoryImpl(gh<_i788.AuthRemoteDataSource>()),
-    );
     gh.lazySingleton<_i843.GetTaskEditContextUseCase>(
       () => _i843.GetTaskEditContextUseCase(gh<_i27.BuildTaskTreeUseCase>()),
     );
@@ -403,6 +397,36 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i208.RealtimeSubscriber>(
       () => _i208.PocketBaseRealtimeSubscriber(gh<_i864.PocketBaseSession>()),
     );
+    gh.lazySingleton<_i788.AuthRemoteDataSource>(
+      () => _i788.AuthRemoteDataSourceImpl.create(
+        gh<_i864.PocketBaseSession>(),
+        gh<_i208.RealtimeSubscriber>(),
+      ),
+    );
+    gh.lazySingleton<_i295.AccountDataRepository>(
+      () => _i781.AccountDataRepositoryImpl(
+        gh<_i657.AccountDataRemoteDataSource>(),
+        gh<_i214.AccountLocalDataSource>(),
+      ),
+    );
+    gh.lazySingleton<_i224.AuthRepository>(
+      () => _i534.AuthRepositoryImpl(gh<_i788.AuthRemoteDataSource>()),
+    );
+    gh.lazySingleton<_i975.DeleteAccountUseCase>(
+      () => _i975.DeleteAccountUseCase(
+        gh<_i224.AuthRepository>(),
+        gh<_i295.AccountDataRepository>(),
+      ),
+    );
+    gh.lazySingleton<_i811.RecordWatcher>(
+      () => _i811.RecordWatcher(gh<_i208.RealtimeSubscriber>()),
+    );
+    gh.lazySingleton<_i247.GetTaskListFilterUseCase>(
+      () => _i247.GetTaskListFilterUseCase(gh<_i74.TaskListFilterRepository>()),
+    );
+    gh.lazySingleton<_i32.SaveTaskListFilterUseCase>(
+      () => _i32.SaveTaskListFilterUseCase(gh<_i74.TaskListFilterRepository>()),
+    );
     gh.lazySingleton<_i997.ChangeEmailUseCase>(
       () => _i997.ChangeEmailUseCase(gh<_i224.AuthRepository>()),
     );
@@ -424,10 +448,13 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i1046.WatchAuthStateUseCase>(
       () => _i1046.WatchAuthStateUseCase(gh<_i224.AuthRepository>()),
     );
-    gh.lazySingleton<_i295.AccountDataRepository>(
-      () => _i781.AccountDataRepositoryImpl(
-        gh<_i657.AccountDataRemoteDataSource>(),
-        gh<_i214.AccountLocalDataSource>(),
+    gh.factory<_i721.DeleteAccountBloc>(
+      () => _i721.DeleteAccountBloc(gh<_i975.DeleteAccountUseCase>()),
+    );
+    gh.lazySingleton<_i813.TaskListRemoteDataSource>(
+      () => _i813.TaskListRemoteDataSourceImpl(
+        gh<_i864.PocketBaseSession>(),
+        gh<_i811.RecordWatcher>(),
       ),
     );
     gh.factory<_i708.AuthBloc>(
@@ -442,36 +469,6 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.factory<_i1020.SignUpBloc>(
       () => _i1020.SignUpBloc(gh<_i389.SignUpUseCase>()),
-    );
-    gh.factory<_i90.ChangePasswordBloc>(
-      () => _i90.ChangePasswordBloc(gh<_i646.ChangePasswordUseCase>()),
-    );
-    gh.lazySingleton<_i975.DeleteAccountUseCase>(
-      () => _i975.DeleteAccountUseCase(
-        gh<_i224.AuthRepository>(),
-        gh<_i295.AccountDataRepository>(),
-      ),
-    );
-    gh.lazySingleton<_i811.RecordWatcher>(
-      () => _i811.RecordWatcher(gh<_i208.RealtimeSubscriber>()),
-    );
-    gh.lazySingleton<_i247.GetTaskListFilterUseCase>(
-      () => _i247.GetTaskListFilterUseCase(gh<_i74.TaskListFilterRepository>()),
-    );
-    gh.lazySingleton<_i32.SaveTaskListFilterUseCase>(
-      () => _i32.SaveTaskListFilterUseCase(gh<_i74.TaskListFilterRepository>()),
-    );
-    gh.factory<_i694.ChangeEmailBloc>(
-      () => _i694.ChangeEmailBloc(gh<_i997.ChangeEmailUseCase>()),
-    );
-    gh.factory<_i721.DeleteAccountBloc>(
-      () => _i721.DeleteAccountBloc(gh<_i975.DeleteAccountUseCase>()),
-    );
-    gh.lazySingleton<_i813.TaskListRemoteDataSource>(
-      () => _i813.TaskListRemoteDataSourceImpl(
-        gh<_i864.PocketBaseSession>(),
-        gh<_i811.RecordWatcher>(),
-      ),
     );
     gh.lazySingleton<_i588.TimerRemoteDataSource>(
       () => _i588.TimerRemoteDataSourceImpl(
@@ -517,6 +514,9 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i621.AppointmentRemoteDataSource>(),
       ),
     );
+    gh.factory<_i90.ChangePasswordBloc>(
+      () => _i90.ChangePasswordBloc(gh<_i646.ChangePasswordUseCase>()),
+    );
     gh.lazySingleton<_i381.TimerRepository>(
       () => _i825.TimerRepositoryImpl(gh<_i588.TimerRemoteDataSource>()),
     );
@@ -538,6 +538,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i73.ResumeTimerUseCase>(
       () => _i73.ResumeTimerUseCase(gh<_i381.TimerRepository>()),
+    );
+    gh.factory<_i694.ChangeEmailBloc>(
+      () => _i694.ChangeEmailBloc(gh<_i997.ChangeEmailUseCase>()),
     );
     gh.lazySingleton<_i641.RecurringTaskRepository>(
       () => _i133.RecurringTaskRepositoryImpl(

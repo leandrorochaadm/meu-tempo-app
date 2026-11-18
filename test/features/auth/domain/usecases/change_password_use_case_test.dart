@@ -195,4 +195,28 @@ void main() {
       isNot(const ChangePasswordParams(currentPassword: 'x', newPassword: 'z')),
     );
   });
+
+  // REQ-009: password change accepted: 1 call to sign out other devices
+  test(
+    'should sign out other devices once when password change is accepted (REQ-009)',
+    () async {
+      final result = await change('abcd1234', 'Wxyz5678');
+
+      expect(result, const Right<Failure, Unit>(unit));
+      verify(() => repo.signOutOtherDevices()).called(1);
+    },
+  );
+
+  // REQ-009: change refused with WrongCurrentPasswordFailure: 0 calls to sign out other devices
+  test(
+    'should not sign out other devices when change is refused (REQ-009)',
+    () async {
+      changeReturns(const Left(WrongCurrentPasswordFailure()));
+
+      final result = await change('abcd1234', 'Wxyz5678');
+
+      expect(result, const Left<Failure, Unit>(WrongCurrentPasswordFailure()));
+      verifyNever(() => repo.signOutOtherDevices());
+    },
+  );
 }

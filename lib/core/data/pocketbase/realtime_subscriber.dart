@@ -15,6 +15,8 @@ abstract final class RealtimeTopics {
   static const String connect = 'PB_CONNECT';
 
   static String allRecords(String collection) => '$collection/*';
+
+  static String record(String collection, String id) => '$collection/$id';
 }
 
 @LazySingleton(as: RealtimeSubscriber)

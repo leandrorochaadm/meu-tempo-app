@@ -127,6 +127,17 @@ void main() {
       expect(session.isSignedIn, isTrue);
     });
 
+    // REQ-009: another device changed the password, this one was closed and opens the app: refresh gets 401, session cleared
+    test(
+      'REQ-009: token revoked by another device (401) clears the session on app start',
+      () async {
+        final session = build(respond(401));
+        await session.refreshSession();
+        expect(session.isSignedIn, isFalse);
+        expect(session.client.authStore.token, isEmpty);
+      },
+    );
+
     test('timeout keeps the session and finishes', () async {
       final session = build((_) async {
         await Future<void>.delayed(const Duration(seconds: 2));
