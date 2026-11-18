@@ -10,23 +10,45 @@ import 'password_checklist_widget.dart';
 
 /// "Trocar senha" section, ready to be placed in the profile screen.
 class ChangePasswordFormWidget extends StatelessWidget {
-  const ChangePasswordFormWidget({super.key, required this.onSubmit});
+  const ChangePasswordFormWidget({
+    super.key,
+    required this.onSubmit,
+    this.loading = false,
+    this.currentPasswordError,
+    this.newPasswordError,
+  });
 
   final void Function(String currentPassword, String newPassword) onSubmit;
+  final bool loading;
+  final String? currentPasswordError;
+  final String? newPasswordError;
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (_) => getIt<ChangePasswordFormBloc>(),
-      child: _ChangePasswordFormView(onSubmit: onSubmit),
+      child: _ChangePasswordFormView(
+        onSubmit: onSubmit,
+        loading: loading,
+        currentPasswordError: currentPasswordError,
+        newPasswordError: newPasswordError,
+      ),
     );
   }
 }
 
 class _ChangePasswordFormView extends StatefulWidget {
-  const _ChangePasswordFormView({required this.onSubmit});
+  const _ChangePasswordFormView({
+    required this.onSubmit,
+    required this.loading,
+    required this.currentPasswordError,
+    required this.newPasswordError,
+  });
 
   final void Function(String currentPassword, String newPassword) onSubmit;
+  final bool loading;
+  final String? currentPasswordError;
+  final String? newPasswordError;
 
   @override
   State<_ChangePasswordFormView> createState() =>
@@ -81,6 +103,7 @@ class _ChangePasswordFormViewState extends State<_ChangePasswordFormView> {
                   obscureText: _obscureCurrent,
                   decoration: InputDecoration(
                     labelText: 'Senha atual',
+                    errorText: widget.currentPasswordError,
                     suffixIcon: _eye(
                       _obscureCurrent,
                       () => setState(() => _obscureCurrent = !_obscureCurrent),
@@ -97,7 +120,9 @@ class _ChangePasswordFormViewState extends State<_ChangePasswordFormView> {
                   obscureText: _obscureNew,
                   decoration: InputDecoration(
                     labelText: 'Senha nova',
-                    errorText: form.newPasswordWarning?.label,
+                    errorText:
+                        form.newPasswordWarning?.label ??
+                        widget.newPasswordError,
                     suffixIcon: _eye(
                       _obscureNew,
                       () => setState(() => _obscureNew = !_obscureNew),
@@ -111,6 +136,7 @@ class _ChangePasswordFormViewState extends State<_ChangePasswordFormView> {
                 SizedBox(height: context.space.lg),
                 AppPrimaryButton(
                   label: 'Trocar senha',
+                  loading: widget.loading,
                   onPressed: form.canSubmit
                       ? () => widget.onSubmit(
                           _currentController.text,

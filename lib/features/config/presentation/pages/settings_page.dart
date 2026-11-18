@@ -6,6 +6,7 @@ import '../../../../core/ui/app_empty_state.dart';
 import '../../../../core/ui/app_list_skeleton.dart';
 import '../../../../core/utils/formatters/duration_formatter.dart';
 import '../../../auth/presentation/widgets/change_email_section.dart';
+import '../../../auth/presentation/widgets/change_password_section.dart';
 import '../../../auth/presentation/widgets/delete_account_section.dart';
 import '../../../auth/presentation/widgets/profile_section.dart';
 import '../bloc/settings_bloc.dart';
@@ -90,6 +91,8 @@ class _SettingsBody extends StatelessWidget {
         const ProfileSection(),
         SizedBox(height: context.space.lg),
         const ChangeEmailSection(),
+        SizedBox(height: context.space.lg),
+        const ChangePasswordSection(),
         SizedBox(height: context.space.xl),
         Text('Horas disponíveis por dia', style: context.text.titleMedium),
         SizedBox(height: context.space.xs),

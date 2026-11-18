@@ -122,4 +122,63 @@ void main() {
       expect(find.text('Use no máximo 71 caracteres.'), findsOneWidget);
     },
   );
+
+  Future<void> pumpWith(
+    WidgetTester tester, {
+    bool loading = false,
+    String? currentPasswordError,
+    String? newPasswordError,
+  }) {
+    tester.view.physicalSize = const Size(390, 1200);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    return tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.dark,
+        home: Scaffold(
+          body: SingleChildScrollView(
+            child: ChangePasswordFormWidget(
+              onSubmit: (current, next) => calls.add((current, next)),
+              loading: loading,
+              currentPasswordError: currentPasswordError,
+              newPasswordError: newPasswordError,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // REQ-008: loading true with valid fields: the button is in loading
+  testWidgets('should pass loading to the button', (tester) async {
+    await pumpWith(tester, loading: true);
+    await type(tester, 'abcd1234', 'Wxyz5678');
+
+    expect(tester.widget<AppPrimaryButton>(button()).loading, isTrue);
+  });
+
+  // REQ-008: currentPasswordError "Senha atual incorreta." shows under the current password
+  testWidgets('should show current password error from parent', (tester) async {
+    await pumpWith(tester, currentPasswordError: 'Senha atual incorreta.');
+
+    expect(
+      tester
+          .widget<TextField>(find.byType(TextField).at(0))
+          .decoration
+          ?.errorText,
+      'Senha atual incorreta.',
+    );
+  });
+
+  // REQ-008: local warning wins over newPasswordError ("Abcd1234" / "Abcd1234")
+  testWidgets('should prefer local warning over parent new password error', (
+    tester,
+  ) async {
+    await pumpWith(tester, newPasswordError: 'Erro de fora.');
+    await type(tester, 'Abcd1234', 'Abcd1234');
+
+    expect(find.text('É igual à senha atual.'), findsOneWidget);
+    expect(find.text('Erro de fora.'), findsNothing);
+  });
 }
