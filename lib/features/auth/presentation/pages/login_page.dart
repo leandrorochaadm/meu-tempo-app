@@ -31,6 +31,17 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
+  /// Web: a stale hidden copy of the fields (dormant autofill form) left in
+  /// the DOM locks the password field (the old value keeps coming back).
+  /// Ending the autofill context removes it; no save, nothing was submitted.
+  void _resetAutofillForm() =>
+      TextInput.finishAutofillContext(shouldSave: false);
+
+  void _togglePasswordVisibility() {
+    _resetAutofillForm();
+    setState(() => _obscurePassword = !_obscurePassword);
+  }
+
   @override
   void dispose() {
     _emailController.dispose();
@@ -46,12 +57,8 @@ class _LoginPageState extends State<LoginPage> {
           listenWhen: (_, curr) => curr is AuthError,
           listener: (context, state) {
             if (state is AuthError) {
-              // Web: unfocusing on submit leaves a hidden copy of the fields
-              // in the DOM (dormant autofill form), and Chrome keeps pushing
-              // the old password back, so the field can no longer be edited.
-              // Ending the autofill context removes that form; no save, since
-              // the login failed.
-              TextInput.finishAutofillContext(shouldSave: false);
+              // Unfocusing on submit left the dormant form behind.
+              _resetAutofillForm();
               ScaffoldMessenger.of(context)
                 ..hideCurrentSnackBar()
                 ..showSnackBar(SnackBar(content: Text(state.message)));
@@ -104,9 +111,7 @@ class _LoginPageState extends State<LoginPage> {
                                         ? Icons.visibility_rounded
                                         : Icons.visibility_off_rounded,
                                   ),
-                                  onPressed: () => setState(
-                                    () => _obscurePassword = !_obscurePassword,
-                                  ),
+                                  onPressed: _togglePasswordVisibility,
                                 ),
                               ),
                               textInputAction: TextInputAction.done,

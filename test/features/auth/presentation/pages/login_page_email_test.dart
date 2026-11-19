@@ -103,20 +103,7 @@ void main() {
   testWidgets('should end the autofill context without saving on AuthError', (
     tester,
   ) async {
-    final calls = <MethodCall>[];
-    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
-      SystemChannels.textInput,
-      (call) async {
-        calls.add(call);
-        return null;
-      },
-    );
-    addTearDown(
-      () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
-        SystemChannels.textInput,
-        null,
-      ),
-    );
+    final finishArgs = recordFinishAutofillContext(tester);
     whenListen(
       bloc,
       Stream<AuthState>.fromIterable([
@@ -126,9 +113,35 @@ void main() {
     );
     await pump(tester);
     await tester.pump();
-    final finish = calls.where(
-      (c) => c.method == 'TextInput.finishAutofillContext',
-    );
-    expect(finish.map((c) => c.arguments), [false]);
+    expect(finishArgs, [false]);
   });
+
+  testWidgets(
+    'should end the autofill context without saving when toggling the eye',
+    (tester) async {
+      final finishArgs = recordFinishAutofillContext(tester);
+      await pump(tester);
+      await tester.tap(find.byTooltip('Mostrar senha'));
+      await tester.pump();
+      await tester.tap(find.byTooltip('Esconder senha'));
+      await tester.pump();
+      expect(finishArgs, [false, false]);
+    },
+  );
+}
+
+/// Records the `shouldSave` argument of every `finishAutofillContext` call.
+List<Object?> recordFinishAutofillContext(WidgetTester tester) {
+  final args = <Object?>[];
+  final messenger = tester.binding.defaultBinaryMessenger;
+  messenger.setMockMethodCallHandler(SystemChannels.textInput, (call) async {
+    if (call.method == 'TextInput.finishAutofillContext') {
+      args.add(call.arguments);
+    }
+    return null;
+  });
+  addTearDown(
+    () => messenger.setMockMethodCallHandler(SystemChannels.textInput, null),
+  );
+  return args;
 }
