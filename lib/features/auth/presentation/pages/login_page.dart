@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
@@ -45,6 +46,12 @@ class _LoginPageState extends State<LoginPage> {
           listenWhen: (_, curr) => curr is AuthError,
           listener: (context, state) {
             if (state is AuthError) {
+              // Web: unfocusing on submit leaves a hidden copy of the fields
+              // in the DOM (dormant autofill form), and Chrome keeps pushing
+              // the old password back, so the field can no longer be edited.
+              // Ending the autofill context removes that form; no save, since
+              // the login failed.
+              TextInput.finishAutofillContext(shouldSave: false);
               ScaffoldMessenger.of(context)
                 ..hideCurrentSnackBar()
                 ..showSnackBar(SnackBar(content: Text(state.message)));

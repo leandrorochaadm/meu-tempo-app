@@ -1,5 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:meu_tempo/core/theme/app_theme.dart';
@@ -97,5 +98,37 @@ void main() {
     await tester.pump();
     expect(find.text('E-mail ou senha incorretos.'), findsOneWidget);
     expect(find.text('a@b.com'), findsOneWidget);
+  });
+
+  testWidgets('should end the autofill context without saving on AuthError', (
+    tester,
+  ) async {
+    final calls = <MethodCall>[];
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      SystemChannels.textInput,
+      (call) async {
+        calls.add(call);
+        return null;
+      },
+    );
+    addTearDown(
+      () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.textInput,
+        null,
+      ),
+    );
+    whenListen(
+      bloc,
+      Stream<AuthState>.fromIterable([
+        const AuthError('E-mail ou senha incorretos.'),
+      ]),
+      initialState: const AuthUnauthenticated(),
+    );
+    await pump(tester);
+    await tester.pump();
+    final finish = calls.where(
+      (c) => c.method == 'TextInput.finishAutofillContext',
+    );
+    expect(finish.map((c) => c.arguments), [false]);
   });
 }
