@@ -11,6 +11,8 @@ import 'package:meu_tempo/features/auth/presentation/bloc/change_password_form_b
 import 'package:meu_tempo/features/auth/presentation/widgets/change_password_section.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/autofill_test_support.dart';
+
 class _MockChangePasswordBloc
     extends MockBloc<ChangePasswordEvent, ChangePasswordState>
     implements ChangePasswordBloc {}
@@ -177,5 +179,20 @@ void main() {
     await tester.pump();
 
     verifyNever(() => bloc.add(any()));
+  });
+
+  testWidgets('should end the autofill context without saving on failure', (
+    tester,
+  ) async {
+    final finishArgs = recordFinishAutofillContext(tester);
+    final states = StreamController<ChangePasswordState>();
+    addTearDown(states.close);
+    whenListen(bloc, states.stream, initialState: const ChangePasswordIdle());
+    await pump(tester);
+    states.add(const ChangePasswordFailed('Sem internet. Tente de novo.'));
+    await tester.pump();
+    states.add(ChangePasswordInvalid([AccountFieldErrorEnum.samePassword]));
+    await tester.pump();
+    expect(finishArgs, [false, false]);
   });
 }

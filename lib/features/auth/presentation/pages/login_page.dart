@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/router/routes.dart';
 import '../../../../core/theme/theme_context_extensions.dart';
 import '../../../../core/ui/app_primary_button.dart';
+import '../../../../core/ui/autofill_form_reset.dart';
 import '../bloc/auth_bloc.dart';
 
 /// Tela de login — e-mail, senha e botão "Entrar".
@@ -31,14 +31,8 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  /// Web: a stale hidden copy of the fields (dormant autofill form) left in
-  /// the DOM locks the password field (the old value keeps coming back).
-  /// Ending the autofill context removes it; no save, nothing was submitted.
-  void _resetAutofillForm() =>
-      TextInput.finishAutofillContext(shouldSave: false);
-
   void _togglePasswordVisibility() {
-    _resetAutofillForm();
+    resetAutofillForm();
     setState(() => _obscurePassword = !_obscurePassword);
   }
 
@@ -58,7 +52,7 @@ class _LoginPageState extends State<LoginPage> {
           listener: (context, state) {
             if (state is AuthError) {
               // Unfocusing on submit left the dormant form behind.
-              _resetAutofillForm();
+              resetAutofillForm();
               ScaffoldMessenger.of(context)
                 ..hideCurrentSnackBar()
                 ..showSnackBar(SnackBar(content: Text(state.message)));

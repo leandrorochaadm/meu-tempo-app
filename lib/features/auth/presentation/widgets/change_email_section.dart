@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/theme/theme_context_extensions.dart';
 import '../../../../core/ui/app_primary_button.dart';
+import '../../../../core/ui/autofill_form_reset.dart';
 import '../account_field_error_label.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/change_email_bloc.dart';
@@ -47,13 +48,20 @@ class _ChangeEmailViewState extends State<_ChangeEmailView> {
           ? Icons.visibility_rounded
           : Icons.visibility_off_rounded,
     ),
-    onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+    onPressed: () {
+      resetAutofillForm();
+      setState(() => _obscurePassword = !_obscurePassword);
+    },
   );
 
   @override
   Widget build(BuildContext context) {
     return BlocListener<ChangeEmailBloc, ChangeEmailState>(
       listener: (context, state) {
+        if (state is ChangeEmailFailed || state is ChangeEmailInvalid) {
+          // Clicking the button left the dormant autofill form behind.
+          resetAutofillForm();
+        }
         if (state is ChangeEmailDone) {
           _emailController.clear();
           _passwordController.clear();

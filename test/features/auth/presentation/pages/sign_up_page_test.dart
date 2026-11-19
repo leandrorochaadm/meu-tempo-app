@@ -13,6 +13,8 @@ import 'package:meu_tempo/features/auth/presentation/bloc/sign_up_bloc.dart';
 import 'package:meu_tempo/features/auth/presentation/pages/sign_up_page.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/autofill_test_support.dart';
+
 class _MockSignUpBloc extends MockBloc<SignUpEvent, SignUpState>
     implements SignUpBloc {}
 
@@ -391,6 +393,34 @@ void main() {
         find.text('Não foi possível criar a conta. Tente de novo.'),
         findsOneWidget,
       );
+    },
+  );
+
+  testWidgets(
+    'should end the autofill context without saving on SignUpFailed',
+    (tester) async {
+      final finishArgs = recordFinishAutofillContext(tester);
+      whenListen(
+        bloc,
+        Stream<SignUpState>.fromIterable([
+          const SignUpFailed('Sem internet. Tente de novo.'),
+        ]),
+        initialState: const SignUpIdle(),
+      );
+      await pump(tester);
+      await tester.pump();
+      expect(finishArgs, [false]);
+    },
+  );
+
+  testWidgets(
+    'should end the autofill context without saving when toggling the eye',
+    (tester) async {
+      final finishArgs = recordFinishAutofillContext(tester);
+      await pump(tester);
+      await tester.tap(find.byTooltip('Mostrar senha'));
+      await tester.pump();
+      expect(finishArgs, [false]);
     },
   );
 }

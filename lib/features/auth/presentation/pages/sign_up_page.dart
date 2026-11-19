@@ -8,6 +8,7 @@ import '../../../../core/error/account_field_error_enum.dart';
 import '../../../../core/router/routes.dart';
 import '../../../../core/theme/theme_context_extensions.dart';
 import '../../../../core/ui/app_primary_button.dart';
+import '../../../../core/ui/autofill_form_reset.dart';
 import '../../domain/entities/sign_up_form_entity.dart';
 import '../account_field_error_label.dart';
 import '../bloc/sign_up_bloc.dart';
@@ -93,6 +94,8 @@ class _SignUpPageState extends State<SignUpPage> {
               _form = state.form;
             }
             if (state is SignUpFailed) {
+              // Unfocusing on submit left the dormant autofill form behind.
+              resetAutofillForm();
               ScaffoldMessenger.of(context)
                 ..hideCurrentSnackBar()
                 ..showSnackBar(SnackBar(content: Text(state.message)));
@@ -184,9 +187,12 @@ class _SignUpPageState extends State<SignUpPage> {
                                       ? Icons.visibility_rounded
                                       : Icons.visibility_off_rounded,
                                 ),
-                                onPressed: () => setState(
-                                  () => _obscurePassword = !_obscurePassword,
-                                ),
+                                onPressed: () {
+                                  resetAutofillForm();
+                                  setState(
+                                    () => _obscurePassword = !_obscurePassword,
+                                  );
+                                },
                               ),
                             ),
                             textInputAction: TextInputAction.done,

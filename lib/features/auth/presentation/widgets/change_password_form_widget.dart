@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/theme/theme_context_extensions.dart';
 import '../../../../core/ui/app_primary_button.dart';
+import '../../../../core/ui/autofill_form_reset.dart';
 import '../account_field_error_label.dart';
 import '../bloc/change_password_form_bloc.dart';
 import 'password_checklist_widget.dart';
@@ -82,7 +83,10 @@ class _ChangePasswordFormViewState extends State<_ChangePasswordFormView> {
     icon: Icon(
       obscure ? Icons.visibility_rounded : Icons.visibility_off_rounded,
     ),
-    onPressed: onPressed,
+    onPressed: () {
+      resetAutofillForm();
+      onPressed();
+    },
   );
 
   @override

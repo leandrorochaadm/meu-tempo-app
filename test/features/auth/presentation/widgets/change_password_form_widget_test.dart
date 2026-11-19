@@ -6,6 +6,8 @@ import 'package:meu_tempo/core/ui/app_primary_button.dart';
 import 'package:meu_tempo/features/auth/presentation/bloc/change_password_form_bloc.dart';
 import 'package:meu_tempo/features/auth/presentation/widgets/change_password_form_widget.dart';
 
+import '../../../../helpers/autofill_test_support.dart';
+
 void main() {
   final getIt = GetIt.instance;
   final calls = <(String, String)>[];
@@ -181,4 +183,17 @@ void main() {
     expect(find.text('É igual à senha atual.'), findsOneWidget);
     expect(find.text('Erro de fora.'), findsNothing);
   });
+
+  testWidgets(
+    'should end the autofill context without saving when toggling each eye',
+    (tester) async {
+      final finishArgs = recordFinishAutofillContext(tester);
+      await pump(tester);
+      await tester.tap(find.byTooltip('Mostrar senha').at(0));
+      await tester.pump();
+      await tester.tap(find.byTooltip('Mostrar senha').first);
+      await tester.pump();
+      expect(finishArgs, [false, false]);
+    },
+  );
 }

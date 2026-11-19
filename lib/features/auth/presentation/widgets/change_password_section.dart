@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/di/injection.dart';
 import '../../../../core/theme/theme_context_extensions.dart';
+import '../../../../core/ui/autofill_form_reset.dart';
 import '../account_field_error_label.dart';
 import '../bloc/change_password_bloc.dart';
 import 'change_password_form_widget.dart';
@@ -35,6 +36,10 @@ class _ChangePasswordViewState extends State<_ChangePasswordView> {
   Widget build(BuildContext context) {
     return BlocListener<ChangePasswordBloc, ChangePasswordState>(
       listener: (context, state) {
+        if (state is ChangePasswordFailed || state is ChangePasswordInvalid) {
+          // Clicking the button left the dormant autofill form behind.
+          resetAutofillForm();
+        }
         if (state is ChangePasswordDone) {
           setState(() => _formGeneration++);
           ScaffoldMessenger.of(

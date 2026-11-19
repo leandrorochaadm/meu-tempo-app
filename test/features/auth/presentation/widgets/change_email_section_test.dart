@@ -13,6 +13,8 @@ import 'package:meu_tempo/features/auth/presentation/bloc/change_email_bloc.dart
 import 'package:meu_tempo/features/auth/presentation/widgets/change_email_section.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/autofill_test_support.dart';
+
 class _MockAuthBloc extends MockBloc<AuthEvent, AuthState>
     implements AuthBloc {}
 
@@ -252,4 +254,28 @@ void main() {
     await tester.pump();
     expect(obscured(), isTrue);
   });
+
+  testWidgets('should end the autofill context without saving on failure', (
+    tester,
+  ) async {
+    final finishArgs = recordFinishAutofillContext(tester);
+    final states = StreamController<ChangeEmailState>();
+    addTearDown(states.close);
+    whenListen(bloc, states.stream, initialState: const ChangeEmailIdle());
+    await tester.pumpWidget(harness());
+    states.add(const ChangeEmailFailed('Sem internet. Tente de novo.'));
+    await tester.pump();
+    expect(finishArgs, [false]);
+  });
+
+  testWidgets(
+    'should end the autofill context without saving when toggling the eye',
+    (tester) async {
+      final finishArgs = recordFinishAutofillContext(tester);
+      await tester.pumpWidget(harness());
+      await tester.tap(find.byTooltip('Mostrar senha'));
+      await tester.pump();
+      expect(finishArgs, [false]);
+    },
+  );
 }

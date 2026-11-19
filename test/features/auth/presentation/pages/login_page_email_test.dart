@@ -1,6 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:meu_tempo/core/theme/app_theme.dart';
@@ -8,6 +7,8 @@ import 'package:meu_tempo/core/ui/app_primary_button.dart';
 import 'package:meu_tempo/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:meu_tempo/features/auth/presentation/pages/login_page.dart';
 import 'package:mocktail/mocktail.dart';
+
+import '../../../../helpers/autofill_test_support.dart';
 
 class _MockAuthBloc extends MockBloc<AuthEvent, AuthState>
     implements AuthBloc {}
@@ -128,20 +129,4 @@ void main() {
       expect(finishArgs, [false, false]);
     },
   );
-}
-
-/// Records the `shouldSave` argument of every `finishAutofillContext` call.
-List<Object?> recordFinishAutofillContext(WidgetTester tester) {
-  final args = <Object?>[];
-  final messenger = tester.binding.defaultBinaryMessenger;
-  messenger.setMockMethodCallHandler(SystemChannels.textInput, (call) async {
-    if (call.method == 'TextInput.finishAutofillContext') {
-      args.add(call.arguments);
-    }
-    return null;
-  });
-  addTearDown(
-    () => messenger.setMockMethodCallHandler(SystemChannels.textInput, null),
-  );
-  return args;
 }
